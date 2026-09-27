@@ -59,8 +59,11 @@ public class Vertex
 public class CloudVisionService : MonoBehaviour
 {
     [Header("Backend Proxy Setup")]
-    [Tooltip("URL of your secure backend proxy (e.g. http://localhost:3000/api/ocr or production URL)")]
+    [Tooltip("URL of your secure backend proxy (e.g. https://akshar-ar.vercel.app/api/ocr)")]
     [SerializeField] private string proxyUrl = "http://localhost:3000/api/ocr";
+
+    [Tooltip("Optional pre-shared authentication secret header for Vercel proxy security")]
+    [SerializeField] private string proxyAuthToken = "AksharAR_Secret_Token_2026_x9k2";
 
     [Header("Controller Reference")]
     [SerializeField] private ARLineOverlayController overlayController;
@@ -69,6 +72,12 @@ public class CloudVisionService : MonoBehaviour
     {
         get => proxyUrl;
         set => proxyUrl = value;
+    }
+
+    public string ProxyAuthToken
+    {
+        get => proxyAuthToken;
+        set => proxyAuthToken = value;
     }
 
     /// <summary>
@@ -104,6 +113,12 @@ public class CloudVisionService : MonoBehaviour
             webRequest.uploadHandler = new UploadHandlerRaw(bodyRaw);
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
+
+            // Inject security header if configured
+            if (!string.IsNullOrEmpty(proxyAuthToken))
+            {
+                webRequest.SetRequestHeader("X-Proxy-Auth-Token", proxyAuthToken);
+            }
 
             Debug.Log($"[CloudVisionService] Sending request to Secure Backend Proxy: {proxyUrl}");
             yield return webRequest.SendWebRequest();

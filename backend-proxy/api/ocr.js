@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Proxy-Auth-Token');
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -26,6 +26,16 @@ module.exports = async (req, res) => {
     }
 
     try {
+        // Pre-Shared Proxy Authentication Check (Optional Security Header)
+        const expectedToken = process.env.PROXY_AUTH_TOKEN;
+        if (expectedToken) {
+            const clientToken = req.headers['x-proxy-auth-token'];
+            if (!clientToken || clientToken !== expectedToken) {
+                console.warn('[Vercel Auth Error] Unauthorized POST request rejected (missing/invalid X-Proxy-Auth-Token).');
+                return res.status(401).json({ error: 'Unauthorized: Invalid or missing X-Proxy-Auth-Token header.' });
+            }
+        }
+
         const apiKey = process.env.GOOGLE_VISION_API_KEY;
 
         if (!apiKey) {
