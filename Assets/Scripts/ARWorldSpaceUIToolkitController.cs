@@ -335,18 +335,33 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             float scaledW = Math.Max(60f, line.boundingBox.width * scaleX);
             float scaledH = Math.Max(30f, line.boundingBox.height * scaleY);
 
+            // Fill the line height snugly (88% of detected line height)
+            float heightBasedSize = scaledH * 0.88f;
+
+            // Strip out empty spaces so character count reflects true visual text density
+            int nonSpaceChars = Mathf.Max(1, line.text.Replace(" ", "").Length);
+            float widthBasedSize = (scaledW / nonSpaceChars) * 1.35f;
+
+            // Pick optimal font size that respects both height and box width
+            float fontSize = Mathf.Clamp(Mathf.Min(heightBasedSize, widthBasedSize), 28f, 180f);
+
             label.style.position = Position.Absolute;
             label.style.left = scaledX;
             label.style.top = scaledY;
             label.style.width = scaledW;
-            label.style.height = scaledH * 1.15f;
+            label.style.height = scaledH;
+            label.style.fontSize = fontSize;
+            label.style.unityTextAlign = line.text.Length < 15
+                ? new StyleEnum<TextAnchor>(TextAnchor.MiddleCenter)
+                : new StyleEnum<TextAnchor>(TextAnchor.MiddleLeft);
+            label.style.paddingLeft = 4f;
+            label.style.paddingRight = 4f;
+            label.style.paddingTop = 0f;
+            label.style.paddingBottom = 0f;
             label.style.overflow = Overflow.Visible;
             label.style.whiteSpace = WhiteSpace.Normal;
             label.style.color = new StyleColor(new Color(0.05f, 0.05f, 0.05f, 1.0f));
             label.style.backgroundColor = new StyleColor(new Color(1.0f, 1.0f, 1.0f, 0.92f));
-
-            float fontSize = Mathf.Clamp(scaledH * 0.65f, 24f, 140f);
-            label.style.fontSize = fontSize;
 
             textContainer.Add(label);
             Debug.Log($"[World-Space Line #{index++}] \"{line.text}\" | X:{scaledX:F0} Y:{scaledY:F0} W:{scaledW:F0} H:{scaledH:F0} Font:{fontSize:F0}px");
@@ -362,9 +377,15 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
 
     public void ClearOverlays()
     {
+        pendingLines = null;
         if (textContainer != null)
         {
             textContainer.Clear();
+            textContainer.MarkDirtyRepaint();
+        }
+        if (uiDocument != null && uiDocument.rootVisualElement != null)
+        {
+            uiDocument.rootVisualElement.MarkDirtyRepaint();
         }
     }
 

@@ -25,9 +25,13 @@ public class ARPageScanController : MonoBehaviour
     [Tooltip("If true, captures raw CPU image directly from ARCameraManager with Aspect Crop. If false, uses clean upright ScreenCapture.")]
     [SerializeField] private bool useDirectCameraManager = false;
 
+    [Tooltip("Delay in seconds after tapping scan to let camera focus and hand movement settle before frame capture")]
+    [SerializeField] private float scanCaptureDelay = 0.2f;
+
     private bool isScanning = false;
     private float lastScanTime = -10f;
     private MutableRuntimeReferenceImageLibrary mutableLibrary;
+    private string activePageId = "";
 
     private void Awake()
     {
@@ -122,6 +126,14 @@ public class ARPageScanController : MonoBehaviour
 
     private void AlignCanvasToTrackedImage(ARTrackedImage trackedImage)
     {
+        if (trackedImage == null) return;
+
+        // If an active target is established, prioritize it so multiple overlapping scans do not fight
+        if (!string.IsNullOrEmpty(activePageId) && trackedImage.referenceImage.name != activePageId)
+        {
+            return;
+        }
+
         if (worldSpaceCanvasTransform != null)
         {
             worldSpaceCanvasTransform.position = trackedImage.transform.position;
@@ -150,6 +162,13 @@ public class ARPageScanController : MonoBehaviour
             return;
         }
 
+        // Clear existing overlays immediately when a new scan starts
+        ARWorldSpaceUIToolkitController worldSpaceUIToolkit = FindFirstObjectByType<ARWorldSpaceUIToolkitController>();
+        if (worldSpaceUIToolkit != null)
+        {
+            worldSpaceUIToolkit.ClearOverlays();
+        }
+
         StartCoroutine(CaptureAndScanFrame());
     }
 
@@ -157,7 +176,13 @@ public class ARPageScanController : MonoBehaviour
     {
         isScanning = true;
         lastScanTime = Time.time;
-        Debug.Log("[ARPageScanController] Capturing camera frame for Vision API & Dynamic AR Tracking...");
+        Debug.Log("[ARPageScanController] Settling camera & capturing frame for Vision API...");
+
+        // Settling delay: lets auto-focus, exposure, and tap vibrations stabilize
+        if (scanCaptureDelay > 0f)
+        {
+            yield return new WaitForSeconds(scanCaptureDelay);
+        }
 
         Texture2D liveFrameTexture = null;
 
@@ -213,6 +238,17 @@ public class ARPageScanController : MonoBehaviour
             InitializeMutableRuntimeLibrary();
         }
 
+        // Only reset if library accumulates too many images (avoids abrupt tracking drops)
+        if (mutableLibrary != null && mutableLibrary.count >= 4 && trackedImageManager != null)
+        {
+            var newLib = trackedImageManager.CreateRuntimeLibrary();
+            if (newLib is MutableRuntimeReferenceImageLibrary mutable)
+            {
+                mutableLibrary = mutable;
+                trackedImageManager.referenceLibrary = mutableLibrary;
+            }
+        }
+
         if (mutableLibrary != null)
         {
             Texture2D uncompressed = GetUncompressedCopy(pageTexture);
@@ -235,6 +271,8 @@ public class ARPageScanController : MonoBehaviour
 
             if (jobState.status == AddReferenceImageJobStatus.Success)
             {
+                // Smoothly switch active target to the newly learned image
+                activePageId = pageId;
                 Debug.Log($"[ARPageScanController] SUCCESS: '{pageId}' added to ARCore live reference library! Active tracking count: {mutableLibrary.count}");
             }
             else
