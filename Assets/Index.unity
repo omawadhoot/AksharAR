@@ -542,6 +542,7 @@ GameObject:
   - component: {fileID: 1275683961}
   - component: {fileID: 1275683960}
   - component: {fileID: 1275683959}
+  - component: {fileID: 1275683963}
   m_Layer: 0
   m_Name: ScanButtonCanvas
   m_TagString: Untagged
@@ -633,6 +634,27 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1275683963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1275683958}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3655fd1bf74ec644c96a49ac6d03e5b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReadingWindowViewfinder
+  windowWidthNormalized: 0.86
+  windowHeightNormalized: 0.38
+  windowCenterYNormalized: 0.54
+  cornerReticleColor: {r: 0.12, g: 0.53, b: 0.96, a: 0.95}
+  maskShadeColor: {r: 0, g: 0, b: 0, a: 0.4}
+  cornerThickness: 4
+  cornerLength: 32
+  windowBoxTransform: {fileID: 0}
+  visualRoot: {fileID: 0}
 --- !u!1 &1509708880
 GameObject:
   m_ObjectHideFlags: 0
@@ -1117,6 +1139,8 @@ MonoBehaviour:
   worldSpaceCanvasTransform: {fileID: 0}
   scanCooldown: 3
   useDirectCameraManager: 0
+  scanCaptureDelay: 0.2
+  readingWindowViewfinder: {fileID: 0}
 --- !u!114 &1887132526
 MonoBehaviour:
   m_ObjectHideFlags: 0

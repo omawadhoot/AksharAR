@@ -144,6 +144,10 @@ public class ARLineOverlayController : MonoBehaviour
 
         if (rootElement != null)
             rootElement.style.display = visible ? UIToolkit.DisplayStyle.Flex : UIToolkit.DisplayStyle.None;
+
+        var viewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
+        if (viewfinder != null)
+            viewfinder.SetVisibility(visible);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

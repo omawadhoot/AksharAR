@@ -28,6 +28,9 @@ public class ARPageScanController : MonoBehaviour
     [Tooltip("Delay in seconds after tapping scan to let camera focus and hand movement settle before frame capture")]
     [SerializeField] private float scanCaptureDelay = 0.2f;
 
+    [Header("Reading Window Viewfinder")]
+    [SerializeField] private ReadingWindowViewfinder readingWindowViewfinder;
+
     private bool isScanning = false;
     private float lastScanTime = -10f;
     private MutableRuntimeReferenceImageLibrary mutableLibrary;
@@ -40,6 +43,9 @@ public class ARPageScanController : MonoBehaviour
 
     private void Start()
     {
+        if (readingWindowViewfinder == null)
+            readingWindowViewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
+
         InitializeMutableRuntimeLibrary();
     }
 
@@ -91,6 +97,9 @@ public class ARPageScanController : MonoBehaviour
 
         if (overlayController == null)
             overlayController = FindFirstObjectByType<ARLineOverlayController>();
+
+        if (readingWindowViewfinder == null)
+            readingWindowViewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
 
         if (trackedImageManager != null)
         {
@@ -207,21 +216,36 @@ public class ARPageScanController : MonoBehaviour
 
         if (liveFrameTexture != null)
         {
-            Debug.Log($"[ARPageScanController] Upright Frame Captured ({liveFrameTexture.width}x{liveFrameTexture.height}). Sending to CloudVisionService...");
+            Texture2D textureToSend = liveFrameTexture;
+            float physicalWidthMeters = 0.22f;
+
+            // Crop texture to the 2D "Reading Window" viewport for high-density paragraph OCR
+            if (readingWindowViewfinder != null)
+            {
+                Texture2D cropped = readingWindowViewfinder.CropTextureToReadingWindow(liveFrameTexture);
+                if (cropped != null)
+                {
+                    textureToSend = cropped;
+                    physicalWidthMeters = 0.19f; // ~19cm physical paragraph width
+                    Destroy(liveFrameTexture);
+                }
+            }
+
+            Debug.Log($"[ARPageScanController] Sending Reading Window Frame ({textureToSend.width}x{textureToSend.height}) to CloudVisionService...");
 
             if (visionService != null)
             {
-                visionService.DetectTextFromTexture(liveFrameTexture);
+                visionService.DetectTextFromTexture(textureToSend);
             }
             else
             {
                 Debug.LogError("[ARPageScanController] CloudVisionService reference missing!");
             }
 
-            // Register captured page into ARTrackedImageManager's Mutable Runtime Reference Library
-            StartCoroutine(AddPageToMutableLibrary(liveFrameTexture));
+            // Register cropped paragraph window into ARCore Mutable Runtime Reference Library
+            StartCoroutine(AddPageToMutableLibrary(textureToSend, physicalWidthMeters));
 
-            Destroy(liveFrameTexture);
+            Destroy(textureToSend);
         }
         else
         {
@@ -231,7 +255,7 @@ public class ARPageScanController : MonoBehaviour
         isScanning = false;
     }
 
-    private IEnumerator AddPageToMutableLibrary(Texture2D pageTexture)
+    private IEnumerator AddPageToMutableLibrary(Texture2D pageTexture, float physicalWidthMeters = 0.22f)
     {
         if (mutableLibrary == null)
         {
@@ -253,9 +277,7 @@ public class ARPageScanController : MonoBehaviour
         {
             Texture2D uncompressed = GetUncompressedCopy(pageTexture);
             string pageId = $"Page_{System.DateTime.Now:HHmmss}";
-            float physicalWidthMeters = 0.22f; // ~22cm textbook page width
-
-            Debug.Log($"[ARPageScanController] Dynamically learning image '{pageId}' in ARCore...");
+            Debug.Log($"[ARPageScanController] Dynamically learning image '{pageId}' ({physicalWidthMeters}m) in ARCore...");
 
             var jobState = mutableLibrary.ScheduleAddImageWithValidationJob(
                 uncompressed,
