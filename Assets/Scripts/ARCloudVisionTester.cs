@@ -1,42 +1,95 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 public class ARCloudVisionTester : MonoBehaviour
 {
-    [Header("Controller Reference")]
+    [Header("Script References")]
+    [SerializeField] private CloudVisionService visionService;
     [SerializeField] private ARLineOverlayController overlayController;
 
-    [Header("Cloud Vision API Config")]
-    [SerializeField] private string apiKey = "YOUR_GOOGLE_CLOUD_VISION_API_KEY";
-    [SerializeField] private bool testInEditorOnStart = true;
+    [Header("Live API Test Config")]
+    [Tooltip("Assign a test image (e.g. Assets/Images/Page1.png) to test live OCR API requests")]
+    [SerializeField] private Texture2D testImage;
+
+    [Tooltip("If true, automatically sends testImage to Vercel API on Start()")]
+    [SerializeField] private bool testLiveApiOnStart = false; // DISABLED BY DEFAULT
 
     private void Start()
     {
+        if (visionService == null)
+            visionService = GetComponent<CloudVisionService>();
+
         if (overlayController == null)
             overlayController = GetComponent<ARLineOverlayController>();
 
-        if (testInEditorOnStart)
+        if (testLiveApiOnStart && testImage != null)
         {
-            RunMockVisionTest();
+            RunLiveApiTest();
         }
     }
 
     private void Update()
     {
-        // Press SPACE in Editor Play Mode to re-trigger test
+        bool spacePressed = false;
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            spacePressed = true;
+        }
+#else
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Debug.Log("[ARCloudVisionTester] Triggering Mock Cloud Vision Test...");
-            RunMockVisionTest();
+            spacePressed = true;
         }
+#endif
+
+        if (spacePressed)
+        {
+            if (testImage != null)
+            {
+                Debug.Log("[ARCloudVisionTester] SPACE pressed: Triggering LIVE API Test...");
+                RunLiveApiTest();
+            }
+            else
+            {
+                Debug.Log("[ARCloudVisionTester] SPACE pressed: Triggering Mock Test (No testImage assigned)...");
+                RunMockVisionTest();
+            }
+        }
+    }
+
+    [ContextMenu("Run Live API Test")]
+    public void RunLiveApiTest()
+    {
+        if (visionService == null)
+        {
+            Debug.LogError("[ARCloudVisionTester] CloudVisionService reference is missing!");
+            return;
+        }
+
+        if (testImage == null)
+        {
+            Debug.LogError("[ARCloudVisionTester] Please assign a test Texture2D (e.g. Page1.png) in the Inspector!");
+            return;
+        }
+
+        Debug.Log($"==================================================");
+        Debug.Log($"[ARCloudVisionTester] Sending '{testImage.name}' ({testImage.width}x{testImage.height}) to Live Vercel Proxy...");
+        Debug.Log($"==================================================");
+
+        visionService.DetectTextFromTexture(testImage);
     }
 
     [ContextMenu("Run Mock Vision Test")]
     public void RunMockVisionTest()
     {
         Debug.Log("==================================================");
-        Debug.Log("[Cloud Vision OCR Test] Simulated API Response Received");
+        Debug.Log("[ARCloudVisionTester] Running Mock Offline Test");
         Debug.Log("==================================================");
 
         Vector2 visionImageSize = new Vector2(1080, 1920);

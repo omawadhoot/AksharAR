@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -60,13 +61,25 @@ public class CloudVisionService : MonoBehaviour
 {
     [Header("Backend Proxy Setup")]
     [Tooltip("URL of your secure backend proxy (e.g. https://akshar-ar.vercel.app/api/ocr)")]
-    [SerializeField] private string proxyUrl = "http://localhost:3000/api/ocr";
+    [SerializeField] private string proxyUrl = "https://akshar-ar.vercel.app/api/ocr";
 
     [Tooltip("Optional pre-shared authentication secret header for Vercel proxy security")]
     [SerializeField] private string proxyAuthToken = "AksharAR_Secret_Token_2026_x9k2";
 
-    [Header("Controller Reference")]
+    [Header("Overlay Controllers")]
+    [SerializeField] private ARWorldSpaceUIToolkitController worldSpaceUIToolkitController;
     [SerializeField] private ARLineOverlayController overlayController;
+    [SerializeField] private ARWorldSpaceOverlayController worldSpaceOverlayController;
+
+    private void Awake()
+    {
+        if (worldSpaceUIToolkitController == null)
+            worldSpaceUIToolkitController = FindFirstObjectByType<ARWorldSpaceUIToolkitController>();
+        if (overlayController == null)
+            overlayController = FindFirstObjectByType<ARLineOverlayController>();
+        if (worldSpaceOverlayController == null)
+            worldSpaceOverlayController = FindFirstObjectByType<ARWorldSpaceOverlayController>();
+    }
 
     public string ProxyUrl
     {
@@ -82,6 +95,7 @@ public class CloudVisionService : MonoBehaviour
 
     /// <summary>
     /// Sends a Texture2D to your secure backend proxy for Hindi text detection.
+    /// Safely uncompresses any compressed texture format before encoding.
     /// </summary>
     public void DetectTextFromTexture(Texture2D inputTexture)
     {
@@ -97,10 +111,37 @@ public class CloudVisionService : MonoBehaviour
             return;
         }
 
-        byte[] imageBytes = inputTexture.EncodeToJPG(85);
+        Texture2D readableTexture = GetUncompressedTexture(inputTexture);
+
+        byte[] imageBytes = readableTexture.EncodeToJPG(85);
         string base64Image = Convert.ToBase64String(imageBytes);
 
+        Destroy(readableTexture);
+
         StartCoroutine(SendProxyApiRequest(base64Image, inputTexture.width, inputTexture.height));
+    }
+
+    private Texture2D GetUncompressedTexture(Texture2D source)
+    {
+        RenderTexture rt = RenderTexture.GetTemporary(
+            source.width, 
+            source.height, 
+            0, 
+            RenderTextureFormat.Default, 
+            RenderTextureReadWrite.Linear);
+
+        Graphics.Blit(source, rt);
+        RenderTexture previous = RenderTexture.active;
+        RenderTexture.active = rt;
+
+        Texture2D readableTexture = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
+        readableTexture.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        readableTexture.Apply();
+
+        RenderTexture.active = previous;
+        RenderTexture.ReleaseTemporary(rt);
+
+        return readableTexture;
     }
 
     private IEnumerator SendProxyApiRequest(string base64Image, int imageWidth, int imageHeight)
@@ -114,7 +155,6 @@ public class CloudVisionService : MonoBehaviour
             webRequest.downloadHandler = new DownloadHandlerBuffer();
             webRequest.SetRequestHeader("Content-Type", "application/json");
 
-            // Inject security header if configured
             if (!string.IsNullOrEmpty(proxyAuthToken))
             {
                 webRequest.SetRequestHeader("X-Proxy-Auth-Token", proxyAuthToken);
@@ -130,12 +170,24 @@ public class CloudVisionService : MonoBehaviour
             }
 
             string responseJson = webRequest.downloadHandler.text;
-            Debug.Log($"==================================================");
-            Debug.Log($"[CloudVisionService] SUCCESS Response Received from Backend Proxy:\n{responseJson}");
-            Debug.Log($"==================================================");
+            Debug.Log($"[CloudVisionService] SUCCESS Response Received from Backend Proxy.");
 
             ProcessVisionResponse(responseJson, imageWidth, imageHeight);
         }
+    }
+
+    private struct WordBox
+    {
+        public string text;
+        public float minX, minY, maxX, maxY;
+        public float centerY => (minY + maxY) / 2f;
+        public float height => maxY - minY;
+    }
+
+    private class LineCluster
+    {
+        public float averageY;
+        public List<WordBox> words = new List<WordBox>();
     }
 
     private void ProcessVisionResponse(string responseJson, int imageWidth, int imageHeight)
@@ -158,36 +210,94 @@ public class CloudVisionService : MonoBehaviour
                 return;
             }
 
-            if (firstResponse.textAnnotations == null || firstResponse.textAnnotations.Count == 0)
+            if (firstResponse.textAnnotations == null || firstResponse.textAnnotations.Count <= 1)
             {
                 Debug.LogWarning("[CloudVisionService] No text detected on image.");
                 return;
             }
 
             string fullPageText = firstResponse.textAnnotations[0].description;
-            Debug.Log($"[CloudVisionService] Full Detected Page Text:\n{fullPageText}");
+            Debug.Log($"[CloudVisionService] Full Detected Page Text Length: {fullPageText.Length} chars.");
 
-            List<DetectedTextLine> detectedLines = new List<DetectedTextLine>();
+            List<WordBox> rawWords = new List<WordBox>();
 
+            // Collect all individual word boxes (skipping index 0 which is full page text)
             for (int i = 1; i < firstResponse.textAnnotations.Count; i++)
             {
                 EntityAnnotation annotation = firstResponse.textAnnotations[i];
                 if (annotation.boundingPoly == null || annotation.boundingPoly.vertices == null || annotation.boundingPoly.vertices.Count < 4)
                     continue;
 
-                float minX = annotation.boundingPoly.vertices[0].x;
-                float minY = annotation.boundingPoly.vertices[0].y;
-                float maxX = annotation.boundingPoly.vertices[2].x;
-                float maxY = annotation.boundingPoly.vertices[2].y;
+                var verts = annotation.boundingPoly.vertices;
+                // BoundingPoly Catch: Use minimum/average across top-left vertices to keep lines level on tilted snaps
+                float minX = Mathf.Min(verts[0].x, verts[3].x); // Leftmost of left vertices
+                float minY = Mathf.Min(verts[0].y, verts[1].y); // Topmost of top vertices (keeps lines level)
+                float maxX = Mathf.Max(verts[1].x, verts[2].x); // Rightmost of right vertices
+                float maxY = Mathf.Max(verts[2].y, verts[3].y); // Bottommost of bottom vertices
 
-                float width = Math.Max(10f, maxX - minX);
-                float height = Math.Max(10f, maxY - minY);
+                rawWords.Add(new WordBox
+                {
+                    text = annotation.description,
+                    minX = minX,
+                    minY = minY,
+                    maxX = maxX,
+                    maxY = maxY
+                });
+            }
+
+            // Cluster individual word boxes into cohesive horizontal lines using optimal vertical tolerance
+            List<LineCluster> lines = new List<LineCluster>();
+            float avgHeight = rawWords.Count > 0 ? rawWords.Average(w => w.height) : 38f;
+            float lineTolerance = Mathf.Clamp(avgHeight * 0.6f, 16f, 30f);
+
+            foreach (var word in rawWords)
+            {
+                LineCluster matchingLine = lines.FirstOrDefault(l => Math.Abs(l.averageY - word.centerY) <= lineTolerance);
+
+                if (matchingLine != null)
+                {
+                    matchingLine.words.Add(word);
+                    matchingLine.averageY = matchingLine.words.Average(w => w.centerY);
+                }
+                else
+                {
+                    LineCluster newCluster = new LineCluster { averageY = word.centerY };
+                    newCluster.words.Add(word);
+                    lines.Add(newCluster);
+                }
+            }
+
+            // Sort lines top-to-bottom
+            lines = lines.OrderBy(l => l.averageY).ToList();
+
+            List<DetectedTextLine> detectedLines = new List<DetectedTextLine>();
+
+            foreach (var lineCluster in lines)
+            {
+                // Sort words inside line left-to-right
+                var sortedWords = lineCluster.words.OrderBy(w => w.minX).ToList();
+
+                string combinedLineText = string.Join(" ", sortedWords.Select(w => w.text));
+                float minX = sortedWords.Min(w => w.minX);
+                float minY = sortedWords.Min(w => w.minY);
+                float maxX = sortedWords.Max(w => w.maxX);
+                float maxY = sortedWords.Max(w => w.maxY);
+
+                float lineW = Math.Max(50f, maxX - minX);
+                float lineH = Math.Max(24f, maxY - minY);
 
                 detectedLines.Add(new DetectedTextLine
                 {
-                    text = annotation.description,
-                    boundingBox = new Rect(minX, minY, width, height)
+                    text = combinedLineText,
+                    boundingBox = new Rect(minX, minY, lineW, lineH)
                 });
+            }
+
+            Debug.Log($"[CloudVisionService] Grouped {rawWords.Count} words into {detectedLines.Count} clean text line strips.");
+
+            if (worldSpaceUIToolkitController != null)
+            {
+                worldSpaceUIToolkitController.DisplayDetectedLines(detectedLines, new Vector2(imageWidth, imageHeight));
             }
 
             if (overlayController != null)

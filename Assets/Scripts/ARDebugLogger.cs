@@ -4,9 +4,15 @@ using UnityEngine;
 public class ARDebugLogger : MonoBehaviour
 {
     [Header("On-Screen Log Display Settings")]
-    [SerializeField] private bool showOnScreenLogs = true;
+    [SerializeField] private bool showOnScreenLogs = false;
     [SerializeField] private int maxLogLines = 25;
     [SerializeField] private int fontSize = 20;
+
+    public bool ShowOnScreenLogs
+    {
+        get => showOnScreenLogs;
+        set => showOnScreenLogs = value;
+    }
 
     private readonly List<string> logBuffer = new List<string>();
     private Vector2 scrollPosition;

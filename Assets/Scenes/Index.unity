@@ -639,6 +639,7 @@ GameObject:
   - component: {fileID: 1887132520}
   - component: {fileID: 1887132521}
   - component: {fileID: 1887132522}
+  - component: {fileID: 1887132523}
   m_Layer: 0
   m_Name: AR_Manager
   m_TagString: Untagged
@@ -673,8 +674,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 20acda1255e48a74e8887b89b6d13e45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CloudVisionService
-  proxyUrl: http://localhost:3000/api/ocr
-  overlayController: {fileID: 0}
+  proxyUrl: https://akshar-ar.vercel.app/api/ocr
+  proxyAuthToken: AksharAR_Secret_Token_2026_x9k2
+  overlayController: {fileID: 1887132521}
 --- !u!114 &1887132521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -687,8 +689,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18adcb313e16a594e8cad11a9e33e8c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ARLineOverlayController
-  uiDocument: {fileID: 0}
-  lineStyleSheet: {fileID: 0}
+  uiDocument: {fileID: 1509708881}
+  lineStyleSheet: {fileID: 7433441132597879392, guid: ea9a53b44882d6d45aec87ea626c1e73, type: 3}
 --- !u!114 &1887132522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -704,6 +706,22 @@ MonoBehaviour:
   showOnScreenLogs: 1
   maxLogLines: 25
   fontSize: 20
+--- !u!114 &1887132523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1887132518}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 150d8fef0422f514f85246885eb9bb1a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ARCloudVisionTester
+  visionService: {fileID: 1887132520}
+  overlayController: {fileID: 1887132521}
+  testImage: {fileID: 2800000, guid: e72e6855d8d391143979613296c9edd5, type: 3}
+  testLiveApiOnStart: 1
 --- !u!1 &1968248729
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,95 +1,167 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
+using UIToolkit = UnityEngine.UIElements;
 
 [Serializable]
 public struct DetectedTextLine
 {
     public string text;
-    public Rect boundingBox; // Pixel coordinates: x, y, width, height
+    public Rect boundingBox;
 }
 
+/// <summary>
+/// Manages the screen HUD for AksharAR.
+/// The Scan button is a uGUI Button on a Screen Space - Overlay Canvas
+/// so that GraphicRaycaster handles Android touch independently of AR Foundation.
+/// UI Toolkit (ARLineOverlayDocument) is kept for purely visual overlay content — no interactivity.
+/// </summary>
 public class ARLineOverlayController : MonoBehaviour
 {
-    [Header("UI Toolkit Setup")]
-    [SerializeField] private UIDocument uiDocument;
-    [SerializeField] private StyleSheet lineStyleSheet;
+    [Header("uGUI Scan Button (Screen Space Overlay Canvas)")]
+    [SerializeField] private Button scanButton; // UnityEngine.UI.Button
 
-    private VisualElement containerElement;
+    [Header("UI Toolkit (Visual Overlay Only — no touch)")]
+    [SerializeField] private UIToolkit.UIDocument uiDocument;
 
-    private void Awake()
+    [Header("Scan Controller Reference")]
+    [SerializeField] private ARPageScanController pageScanController;
+
+    // UI Toolkit visual root (read-only, pass-through)
+    private UIToolkit.VisualElement rootElement;
+
+    private float lastClickTimestamp = -1f;
+
+    private void Start()
     {
-        InitializeUI();
+        InitializeScanButton();
+        InitializeUIToolkitVisual();
     }
 
-    private void InitializeUI()
+    private void OnDestroy()
     {
-        if (uiDocument == null)
-            uiDocument = GetComponent<UIDocument>();
+        if (scanButton != null)
+            scanButton.onClick.RemoveListener(OnScanButtonClicked);
+    }
 
-        if (uiDocument != null)
+    // ─── uGUI Button Setup ────────────────────────────────────────────────────
+
+    private void InitializeScanButton()
+    {
+        if (scanButton == null)
         {
-            containerElement = uiDocument.rootVisualElement;
-
-            if (lineStyleSheet != null && !containerElement.styleSheets.Contains(lineStyleSheet))
-            {
-                containerElement.styleSheets.Add(lineStyleSheet);
-            }
+            // Auto-find by name if not assigned in Inspector
+            var btnObj = GameObject.Find("ScanButton_UGUI");
+            if (btnObj != null)
+                scanButton = btnObj.GetComponent<Button>();
         }
-    }
 
-    /// <summary>
-    /// Spawns dynamic Hindi labels over detected line coordinates.
-    /// </summary>
-    public void DisplayDetectedLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize)
-    {
-        if (containerElement == null)
-            InitializeUI();
-
-        if (containerElement == null)
+        if (scanButton == null)
         {
-            Debug.LogError("[ARLineOverlayController] UIDocument RootVisualElement is null!");
+            Debug.LogError("[ARLineOverlayController] uGUI ScanButton not found! " +
+                           "Assign it in the Inspector or ensure 'ScanButton_UGUI' exists in the scene.");
             return;
         }
 
-        // 1. Clear previous labels
-        containerElement.Clear();
+        scanButton.onClick.RemoveAllListeners();
+        scanButton.onClick.AddListener(OnScanButtonClicked);
+        Debug.Log("[ARLineOverlayController] uGUI ScanButton bound via onClick.");
+    }
 
-        float containerWidth = containerElement.resolvedStyle.width;
-        float containerHeight = containerElement.resolvedStyle.height;
+    // ─── UI Toolkit Visual Setup (pass-through, no interaction) ───────────────
 
-        if (float.IsNaN(containerWidth) || containerWidth <= 0) containerWidth = 1080f;
-        if (float.IsNaN(containerHeight) || containerHeight <= 0) containerHeight = 1920f;
-
-        float scaleX = containerWidth / visionImageSize.x;
-        float scaleY = containerHeight / visionImageSize.y;
-
-        Debug.Log($"[ARLineOverlayController] Processing {detectedLines.Count} detected lines. Target Canvas: {containerWidth}x{containerHeight}, Scale: ({scaleX:F2}, {scaleY:F2})");
-
-        int index = 1;
-        foreach (var line in detectedLines)
+    private void InitializeUIToolkitVisual()
+    {
+        if (uiDocument == null)
         {
-            Label label = new Label(line.text);
-            label.AddToClassList("hindi-ar-line");
-
-            // Explicitly force Advanced Text Generator for Devanagari shaping
-            label.style.unityTextGenerator = new StyleEnum<TextGeneratorType>(TextGeneratorType.Advanced);
-
-            float scaledX = line.boundingBox.x * scaleX;
-            float scaledY = line.boundingBox.y * scaleY;
-            float scaledWidth = line.boundingBox.width * scaleX;
-            float scaledHeight = line.boundingBox.height * scaleY;
-
-            label.style.position = Position.Absolute;
-            label.style.left = scaledX;
-            label.style.top = scaledY;
-            label.style.width = scaledWidth;
-            label.style.height = scaledHeight;
-
-            containerElement.Add(label);
-
-            Debug.Log($"[Line #{index++}] Text: \"{line.text}\" | Bounds: [X:{scaledX:F0}, Y:{scaledY:F0}, W:{scaledWidth:F0}, H:{scaledHeight:F0}]");
+            var docObj = GameObject.Find("ARLineOverlayDocument");
+            if (docObj != null)
+                uiDocument = docObj.GetComponent<UIToolkit.UIDocument>();
         }
+
+        if (uiDocument == null) return;
+
+        rootElement = uiDocument.rootVisualElement;
+        if (rootElement == null) return;
+
+        // Entire UI Toolkit tree is pass-through — no interactive elements remain here
+        SetPickingModeRecursive(rootElement, UIToolkit.PickingMode.Ignore);
+        Debug.Log("[ARLineOverlayController] UI Toolkit visual overlay initialized (pass-through).");
+    }
+
+    private void SetPickingModeRecursive(UIToolkit.VisualElement el, UIToolkit.PickingMode mode)
+    {
+        el.pickingMode = mode;
+        foreach (var child in el.Children())
+            SetPickingModeRecursive(child, mode);
+    }
+
+    // ─── Button Callback ──────────────────────────────────────────────────────
+
+    public void OnScanButtonClicked()
+    {
+        if (Time.unscaledTime - lastClickTimestamp < 1.5f) return;
+        lastClickTimestamp = Time.unscaledTime;
+
+        Debug.Log("[ARLineOverlayController] >>> CAPTURE / SCAN BUTTON CLICKED <<<");
+
+        SetScanButtonText("⏳ Scanning...");
+        SetScanButtonInteractable(false);
+
+        if (pageScanController == null)
+            pageScanController = FindAnyObjectByType<ARPageScanController>();
+
+        if (pageScanController != null)
+        {
+            pageScanController.TriggerManualScan();
+        }
+        else
+        {
+            Debug.LogError("[ARLineOverlayController] ARPageScanController not found!");
+            ResetScanButton();
+        }
+    }
+
+    // ─── Public API ───────────────────────────────────────────────────────────
+
+    public void ResetScanButton()
+    {
+        SetScanButtonText("📷 Scan Page");
+        SetScanButtonInteractable(true);
+    }
+
+    public void DisplayDetectedLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize)
+    {
+        // OCR result received — re-enable the button
+        ResetScanButton();
+    }
+
+    public void SetUIVisibility(bool visible)
+    {
+        if (scanButton != null)
+            scanButton.gameObject.SetActive(visible);
+
+        if (rootElement != null)
+            rootElement.style.display = visible ? UIToolkit.DisplayStyle.Flex : UIToolkit.DisplayStyle.None;
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private void SetScanButtonText(string text)
+    {
+        if (scanButton == null) return;
+        var label = scanButton.GetComponentInChildren<Text>();
+        if (label != null) label.text = text;
+
+        // Also support TextMeshPro on the button label if present
+        var tmp = scanButton.GetComponentInChildren<TMPro.TMP_Text>();
+        if (tmp != null) tmp.text = text;
+    }
+
+    private void SetScanButtonInteractable(bool interactable)
+    {
+        if (scanButton != null)
+            scanButton.interactable = interactable;
     }
 }
