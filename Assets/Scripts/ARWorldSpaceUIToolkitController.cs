@@ -219,6 +219,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
 
     // Tracks the last known parent so we can restore it after re-initialization
     private Transform lastKnownParent;
+    private ARTrackedImage currentTrackedImage;
     // Pending lines to display if textContainer isn't ready yet
     private List<DetectedTextLine> pendingLines;
     private Vector2 pendingImageSize;
@@ -231,9 +232,31 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             pageSizeMeters = trackedImage.size;
 
         lastKnownParent = trackedImage.transform;
-        InitializeWorldSpaceUIToolkit(trackedImage.transform);
 
-        // Only show if actively tracking — but never HIDE if we already have text rendered
+        // If already parented to this tracked target, avoid redundant re-parenting and re-initialization
+        if (worldQuadObj != null && currentTrackedImage == trackedImage && worldQuadObj.transform.parent == trackedImage.transform)
+        {
+            if (trackedImage.trackingState == TrackingState.Tracking && !worldQuadObj.activeSelf)
+                worldQuadObj.SetActive(true);
+            return;
+        }
+
+        currentTrackedImage = trackedImage;
+
+        if (worldQuadObj == null || uiDocument == null)
+        {
+            InitializeWorldSpaceUIToolkit(trackedImage.transform);
+        }
+        else
+        {
+            // Smoothly parent to the new tracked image anchor
+            worldQuadObj.transform.SetParent(trackedImage.transform, false);
+            worldQuadObj.transform.localPosition = new Vector3(0f, 0.001f, 0f);
+            worldQuadObj.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            worldQuadObj.transform.localScale = new Vector3(pageSizeMeters.x, pageSizeMeters.y, 1f);
+        }
+
+        // Only show if actively tracking
         if (worldQuadObj != null && trackedImage.trackingState == TrackingState.Tracking)
             worldQuadObj.SetActive(true);
     }

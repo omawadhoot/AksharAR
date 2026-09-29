@@ -31,10 +31,13 @@ public class ARPageScanController : MonoBehaviour
     [Header("Reading Window Viewfinder")]
     [SerializeField] private ReadingWindowViewfinder readingWindowViewfinder;
 
-    private bool isScanning = false;
+    private bool isScanningOrHandoffInProgress = false;
     private float lastScanTime = -10f;
     private MutableRuntimeReferenceImageLibrary mutableLibrary;
     private string activePageId = "";
+    private string pendingPageId = "";
+    private int pendingStableFrameCount = 0;
+    private Coroutine timeoutCoroutine;
 
     private void Awake()
     {
@@ -56,6 +59,9 @@ public class ARPageScanController : MonoBehaviour
 
         if (trackedImageManager != null)
         {
+            // Ensure continuous 6-DoF ARCore tracking updates on moving/viewed images
+            trackedImageManager.requestedMaxNumberOfMovingImages = 1;
+
             if (trackedImageManager.referenceLibrary is MutableRuntimeReferenceImageLibrary runtimeLib)
             {
                 mutableLibrary = runtimeLib;
@@ -103,6 +109,7 @@ public class ARPageScanController : MonoBehaviour
 
         if (trackedImageManager != null)
         {
+            trackedImageManager.requestedMaxNumberOfMovingImages = 1;
             trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
         }
 
@@ -121,27 +128,60 @@ public class ARPageScanController : MonoBehaviour
     {
         foreach (ARTrackedImage trackedImage in eventArgs.added)
         {
-            AlignCanvasToTrackedImage(trackedImage);
+            HandleTrackedImageUpdate(trackedImage);
         }
 
         foreach (ARTrackedImage trackedImage in eventArgs.updated)
         {
             if (trackedImage.trackingState == TrackingState.Tracking)
             {
-                AlignCanvasToTrackedImage(trackedImage);
+                HandleTrackedImageUpdate(trackedImage);
             }
+        }
+    }
+
+    private void HandleTrackedImageUpdate(ARTrackedImage trackedImage)
+    {
+        if (trackedImage == null) return;
+        string imageName = trackedImage.referenceImage.name;
+
+        // Check if newly scanned target is now tracking stably
+        if (!string.IsNullOrEmpty(pendingPageId) && imageName == pendingPageId && trackedImage.trackingState == TrackingState.Tracking)
+        {
+            pendingStableFrameCount++;
+            if (pendingStableFrameCount >= 2)
+            {
+                // Smoothly promote pending target to active target
+                activePageId = pendingPageId;
+                pendingPageId = "";
+                pendingStableFrameCount = 0;
+                isScanningOrHandoffInProgress = false;
+
+                if (timeoutCoroutine != null)
+                {
+                    StopCoroutine(timeoutCoroutine);
+                    timeoutCoroutine = null;
+                }
+
+                if (overlayController != null)
+                    overlayController.ResetScanButton();
+
+                Debug.Log($"[ARPageScanController] Smooth tracking lock established on '{activePageId}'!");
+                AlignCanvasToTrackedImage(trackedImage);
+                return;
+            }
+        }
+
+        // Align if this is our active tracked target
+        if (!string.IsNullOrEmpty(activePageId) && imageName == activePageId)
+        {
+            AlignCanvasToTrackedImage(trackedImage);
         }
     }
 
     private void AlignCanvasToTrackedImage(ARTrackedImage trackedImage)
     {
         if (trackedImage == null) return;
-
-        // If an active target is established, prioritize it so multiple overlapping scans do not fight
-        if (!string.IsNullOrEmpty(activePageId) && trackedImage.referenceImage.name != activePageId)
-        {
-            return;
-        }
 
         if (worldSpaceCanvasTransform != null)
         {
@@ -164,11 +204,26 @@ public class ARPageScanController : MonoBehaviour
 
     public void TriggerManualScan()
     {
-        if (isScanning) return;
+        if (isScanningOrHandoffInProgress)
+        {
+            Debug.Log("[ARPageScanController] Scan / tracking handoff in progress. Ignoring tap.");
+            return;
+        }
+
         if (Time.time - lastScanTime < scanCooldown)
         {
             Debug.Log("[ARPageScanController] Scan cooldown active. Please wait.");
             return;
+        }
+
+        // Hard-lock scan button instantly
+        isScanningOrHandoffInProgress = true;
+        lastScanTime = Time.time;
+
+        if (overlayController != null)
+        {
+            overlayController.SetScanButtonInteractable(false);
+            overlayController.SetScanButtonText("⏳ Scanning...");
         }
 
         // Clear existing overlays immediately when a new scan starts
@@ -179,12 +234,27 @@ public class ARPageScanController : MonoBehaviour
         }
 
         StartCoroutine(CaptureAndScanFrame());
+
+        if (timeoutCoroutine != null) StopCoroutine(timeoutCoroutine);
+        timeoutCoroutine = StartCoroutine(HandoffTimeoutSafety(8f));
+    }
+
+    private IEnumerator HandoffTimeoutSafety(float timeoutSeconds)
+    {
+        yield return new WaitForSeconds(timeoutSeconds);
+        if (isScanningOrHandoffInProgress)
+        {
+            Debug.LogWarning("[ARPageScanController] Handoff timeout reached. Re-enabling scan button.");
+            isScanningOrHandoffInProgress = false;
+            pendingPageId = "";
+            pendingStableFrameCount = 0;
+            if (overlayController != null)
+                overlayController.ResetScanButton();
+        }
     }
 
     private IEnumerator CaptureAndScanFrame()
     {
-        isScanning = true;
-        lastScanTime = Time.time;
         Debug.Log("[ARPageScanController] Settling camera & capturing frame for Vision API...");
 
         // Settling delay: lets auto-focus, exposure, and tap vibrations stabilize
@@ -250,9 +320,10 @@ public class ARPageScanController : MonoBehaviour
         else
         {
             Debug.LogError("[ARPageScanController] Failed to capture live camera frame.");
+            isScanningOrHandoffInProgress = false;
+            if (overlayController != null)
+                overlayController.ResetScanButton();
         }
-
-        isScanning = false;
     }
 
     private IEnumerator AddPageToMutableLibrary(Texture2D pageTexture, float physicalWidthMeters = 0.22f)
@@ -277,6 +348,9 @@ public class ARPageScanController : MonoBehaviour
         {
             Texture2D uncompressed = GetUncompressedCopy(pageTexture);
             string pageId = $"Page_{System.DateTime.Now:HHmmss}";
+            pendingPageId = pageId;
+            pendingStableFrameCount = 0;
+
             Debug.Log($"[ARPageScanController] Dynamically learning image '{pageId}' ({physicalWidthMeters}m) in ARCore...");
 
             var jobState = mutableLibrary.ScheduleAddImageWithValidationJob(
@@ -293,13 +367,14 @@ public class ARPageScanController : MonoBehaviour
 
             if (jobState.status == AddReferenceImageJobStatus.Success)
             {
-                // Smoothly switch active target to the newly learned image
-                activePageId = pageId;
                 Debug.Log($"[ARPageScanController] SUCCESS: '{pageId}' added to ARCore live reference library! Active tracking count: {mutableLibrary.count}");
             }
             else
             {
                 Debug.LogWarning($"[ARPageScanController] AddReferenceImage status: {jobState.status}");
+                isScanningOrHandoffInProgress = false;
+                if (overlayController != null)
+                    overlayController.ResetScanButton();
             }
 
             Destroy(uncompressed);

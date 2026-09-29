@@ -152,7 +152,7 @@ public class ARLineOverlayController : MonoBehaviour
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
-    private void SetScanButtonText(string text)
+    public void SetScanButtonText(string text)
     {
         if (scanButton == null) return;
         var label = scanButton.GetComponentInChildren<Text>();
@@ -163,7 +163,7 @@ public class ARLineOverlayController : MonoBehaviour
         if (tmp != null) tmp.text = text;
     }
 
-    private void SetScanButtonInteractable(bool interactable)
+    public void SetScanButtonInteractable(bool interactable)
     {
         if (scanButton != null)
             scanButton.interactable = interactable;
