@@ -327,13 +327,45 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     {
         textContainer.Clear();
 
-        float panelWidth = offscreenRenderTexture != null ? offscreenRenderTexture.width : 2048f;
-        float panelHeight = offscreenRenderTexture != null ? offscreenRenderTexture.height : 2898f;
+        float texWidth = offscreenRenderTexture != null ? (float)offscreenRenderTexture.width : 2048f;
+        float texHeight = offscreenRenderTexture != null ? (float)offscreenRenderTexture.height : 2898f;
 
-        float scaleX = panelWidth / visionImageSize.x;
-        float scaleY = panelHeight / visionImageSize.y;
+        // 1. Calculate UNIFORM aspect scale factor (equal for both X and Y axes)
+        float uniformScale = texWidth / visionImageSize.x;
+        float activePanelHeight = visionImageSize.y * uniformScale;
 
-        Debug.Log($"[World-Space UI Toolkit] Rendering {detectedLines.Count} lines on 3D AR Quad ({panelWidth}x{panelHeight}). Quad active: {worldQuadObj?.activeSelf}");
+        // 2. Compute physical world-space dimensions matching the cropped paragraph
+        float physicalWidth = pageSizeMeters.x > 0f ? pageSizeMeters.x : 0.19f;
+        float physicalHeight = physicalWidth * (visionImageSize.y / visionImageSize.x);
+
+        if (worldQuadObj != null)
+        {
+            // Scale the 3D Quad to match the physical paragraph aspect ratio exactly
+            worldQuadObj.transform.localScale = new Vector3(physicalWidth, physicalHeight, 1f);
+
+            // 3. Map the active top rendered texture portion [0..activePanelHeight] across the full 3D Quad
+            if (quadMaterial != null)
+            {
+                float uvScaleY = Mathf.Clamp01(activePanelHeight / texHeight);
+                float uvOffsetY = 1f - uvScaleY;
+
+                Vector2 scale = new Vector2(1f, uvScaleY);
+                Vector2 offset = new Vector2(0f, uvOffsetY);
+
+                if (quadMaterial.HasProperty("_MainTex"))
+                {
+                    quadMaterial.SetTextureScale("_MainTex", scale);
+                    quadMaterial.SetTextureOffset("_MainTex", offset);
+                }
+                if (quadMaterial.HasProperty("_BaseMap"))
+                {
+                    quadMaterial.SetTextureScale("_BaseMap", scale);
+                    quadMaterial.SetTextureOffset("_BaseMap", offset);
+                }
+            }
+        }
+
+        Debug.Log($"[World-Space UI Toolkit] Rendering {detectedLines.Count} lines. ImageSize:{visionImageSize.x}x{visionImageSize.y} | Quad:{physicalWidth:F3}mx{physicalHeight:F3}m | ActivePixels:{texWidth}x{activePanelHeight:F0}");
 
         int index = 1;
         foreach (var line in detectedLines)
@@ -353,20 +385,14 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
                 label.style.unityFontDefinition = new StyleFontDefinition(FontDefinition.FromSDFFont(sdfFontAsset));
             }
 
-            float scaledX = line.boundingBox.x * scaleX;
-            float scaledY = line.boundingBox.y * scaleY;
-            float scaledW = Math.Max(60f, line.boundingBox.width * scaleX);
-            float scaledH = Math.Max(30f, line.boundingBox.height * scaleY);
+            // Uniform pixel positioning (no non-uniform stretching)
+            float scaledX = line.boundingBox.x * uniformScale;
+            float scaledY = line.boundingBox.y * uniformScale;
+            float scaledW = Math.Max(60f, line.boundingBox.width * uniformScale);
+            float scaledH = Math.Max(30f, line.boundingBox.height * uniformScale);
 
-            // Fill the line height snugly (88% of detected line height)
-            float heightBasedSize = scaledH * 0.88f;
-
-            // Strip out empty spaces so character count reflects true visual text density
-            int nonSpaceChars = Mathf.Max(1, line.text.Replace(" ", "").Length);
-            float widthBasedSize = (scaledW / nonSpaceChars) * 1.35f;
-
-            // Pick optimal font size that respects both height and box width
-            float fontSize = Mathf.Clamp(Mathf.Min(heightBasedSize, widthBasedSize), 28f, 180f);
+            // Font point size matches 92% of the physical detected line height
+            float fontSize = Mathf.Clamp(scaledH * 0.92f, 24f, 220f);
 
             label.style.position = Position.Absolute;
             label.style.left = scaledX;
