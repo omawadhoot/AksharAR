@@ -261,17 +261,14 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     {
         if (detectedLines == null || detectedLines.Count == 0) return;
 
-        // Ensure the quad exists but DO NOT call InitializeWorldSpaceUIToolkit() without a parent —
-        // that would set SetActive(false) and hide the quad.
-        // Instead, just make sure the quad is visible using the last known parent (or this transform).
+        // Halt any pending retries from prior scan
+        StopAllCoroutines();
+
+        // Ensure the quad exists
         if (worldQuadObj == null)
         {
             InitializeWorldSpaceUIToolkit();
         }
-
-        // Always show the quad once we have text — tracking attachment can come later
-        if (worldQuadObj != null)
-            worldQuadObj.SetActive(true);
 
         // If the UIDocument panel isn't ready yet (rootElement / textContainer null),
         // stash the data and retry next frame via coroutine.
@@ -306,7 +303,13 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             }
         }
 
+        // Explicit clean-slate: ensure textContainer is cleared before rendering new lines
+        textContainer.Clear();
         RenderLines(detectedLines, visionImageSize);
+
+        // Always show the quad once text is rendered
+        if (worldQuadObj != null)
+            worldQuadObj.SetActive(true);
     }
 
     private IEnumerator RetryDisplayNextFrame()
@@ -314,8 +317,10 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         yield return null; // wait one frame for UIDocument panel to initialize
         if (pendingLines != null)
         {
-            DisplayDetectedLines(pendingLines, pendingImageSize);
+            var lines = pendingLines;
+            var imgSize = pendingImageSize;
             pendingLines = null;
+            DisplayDetectedLines(lines, imgSize);
         }
     }
 
@@ -423,6 +428,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     public void ClearOverlays()
     {
         pendingLines = null;
+        StopAllCoroutines();
         if (textContainer != null)
         {
             textContainer.Clear();
@@ -431,6 +437,14 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         if (uiDocument != null && uiDocument.rootVisualElement != null)
         {
             uiDocument.rootVisualElement.MarkDirtyRepaint();
+        }
+        if (poseFilter != null)
+        {
+            poseFilter.ClearTarget();
+        }
+        if (worldQuadObj != null)
+        {
+            worldQuadObj.SetActive(false);
         }
     }
 

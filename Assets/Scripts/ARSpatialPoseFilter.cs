@@ -18,24 +18,33 @@ public class ARSpatialPoseFilter : MonoBehaviour
 
     [Header("Stage 2: Deadzone Thresholds (Zero-Jitter Lock)")]
     [Tooltip("Movement below this distance (meters) is treated as sensor noise")]
-    [SerializeField] private float positionDeadzoneMeters = 0.0025f; // 2.5 mm
+    [SerializeField] private float positionDeadzoneMeters = 0.0020f; // 2.0 mm
 
     [Tooltip("Rotation below this angle (degrees) is treated as sensor noise")]
-    [SerializeField] private float rotationDeadzoneDegrees = 0.60f;   // 0.60°
+    [SerializeField] private float rotationDeadzoneDegrees = 0.25f;   // 0.25° (responsive to subtle tilts)
 
     [Header("Stage 3: Adaptive EMA Smoothing")]
-    [Tooltip("Smoothing speed when moving slowly / holding still (silky smooth)")]
+    [Tooltip("Position smoothing speed when moving slowly / holding still")]
     [SerializeField] private float minSmoothSpeed = 12f;
 
-    [Tooltip("Smoothing speed when user moves the phone / book quickly (snappy, zero lag)")]
-    [SerializeField] private float maxSmoothSpeed = 30f;
+    [Tooltip("Position smoothing speed when user moves the phone / book quickly")]
+    [SerializeField] private float maxSmoothSpeed = 32f;
 
-    [Tooltip("Velocity threshold (m/s) where max smoothing speed is fully engaged")]
+    [Tooltip("Rotation smoothing speed when stationary")]
+    [SerializeField] private float minRotSmoothSpeed = 14f;
+
+    [Tooltip("Rotation smoothing speed during rapid tilt changes")]
+    [SerializeField] private float maxRotSmoothSpeed = 40f;
+
+    [Tooltip("Velocity threshold (m/s) where max position smoothing speed is fully engaged")]
     [SerializeField] private float fastMoveThreshold = 0.08f; // 8 cm/s
 
+    [Tooltip("Angular threshold (degrees) where max rotation smoothing is engaged")]
+    [SerializeField] private float fastRotThreshold = 5.0f; // 5 degrees
+
     [Header("Surface Alignment Offset")]
-    [Tooltip("Slight normal offset above paper surface to prevent z-fighting (meters)")]
-    [SerializeField] private float normalOffsetMeters = 0.001f; // 1 mm
+    [Tooltip("Ultra-thin normal offset above paper surface to eliminate z-fighting without parallax float (meters)")]
+    [SerializeField] private float normalOffsetMeters = 0.00035f; // 0.35 mm
 
     private ARTrackedImage currentTarget;
     private Vector3 lockedTargetPosition;
@@ -134,21 +143,34 @@ public class ARSpatialPoseFilter : MonoBehaviour
         }
 
         // ─── STAGE 3: Frame-Rate Independent Adaptive EMA Smoother ────────────
+        // 3a. Position Smoothing
         float distanceToTarget = Vector3.Distance(transform.position, lockedTargetPosition);
-        float speedFactor = Mathf.Clamp01(distanceToTarget / fastMoveThreshold);
-        float currentLerpSpeed = Mathf.Lerp(minSmoothSpeed, maxSmoothSpeed, speedFactor);
+        float posSpeedFactor = Mathf.Clamp01(distanceToTarget / fastMoveThreshold);
+        float currentPosLerpSpeed = Mathf.Lerp(minSmoothSpeed, maxSmoothSpeed, posSpeedFactor);
+        float alphaPos = 1.0f - Mathf.Exp(-currentPosLerpSpeed * Time.deltaTime);
 
-        // Frame-rate independent exponential decay smoothing: alpha = 1 - e^(-lambda * dt)
-        float alpha = 1.0f - Mathf.Exp(-currentLerpSpeed * Time.deltaTime);
+        // 3b. Rotation Smoothing with Angular-Error Acceleration Bias
+        float angleToTarget = Quaternion.Angle(transform.rotation, lockedTargetRotation);
+        float rotSpeedFactor = Mathf.Clamp01(angleToTarget / fastRotThreshold);
+        float currentRotLerpSpeed = Mathf.Lerp(minRotSmoothSpeed, maxRotSmoothSpeed, rotSpeedFactor);
 
-        transform.position = Vector3.Lerp(transform.position, lockedTargetPosition, alpha);
-        transform.rotation = Quaternion.Slerp(transform.rotation, lockedTargetRotation, alpha);
+        // If angular tilt error > 2.0°, accelerate rotation response so the quad sits flush with the page surface
+        if (angleToTarget > 2.0f)
+        {
+            float angularBoost = Mathf.Clamp01((angleToTarget - 2.0f) / 8.0f);
+            currentRotLerpSpeed = Mathf.Lerp(currentRotLerpSpeed, maxRotSmoothSpeed * 1.5f, angularBoost);
+        }
+
+        float alphaRot = 1.0f - Mathf.Exp(-currentRotLerpSpeed * Time.deltaTime);
+
+        transform.position = Vector3.Lerp(transform.position, lockedTargetPosition, alphaPos);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lockedTargetRotation, alphaRot);
     }
 
     private void ComputeRawTargetPose(out Vector3 rawPos, out Quaternion rawRot)
     {
         // ARTrackedImage local Y is the surface normal in AR Foundation (paper facing outward)
-        // Offset slightly along surface normal (+Z offset in quad space)
+        // Offset slightly along surface normal (flush 0.35mm offset to prevent z-fighting)
         rawPos = currentTarget.transform.position + (currentTarget.transform.up * normalOffsetMeters);
         rawRot = currentTarget.transform.rotation * Quaternion.Euler(90f, 0f, 0f);
     }
