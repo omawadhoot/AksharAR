@@ -25,6 +25,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     private Material quadMaterial;
     private VisualElement rootElement;
     private VisualElement textContainer;
+    private ARSpatialPoseFilter poseFilter;
 
     private void Awake()
     {
@@ -176,21 +177,22 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             renderer.material = quadMaterial;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
+
+            // Attach Three-Stage Spatial Pose Filter to decouple and stabilize 3D quad
+            poseFilter = worldQuadObj.GetComponent<ARSpatialPoseFilter>();
+            if (poseFilter == null)
+            {
+                poseFilter = worldQuadObj.AddComponent<ARSpatialPoseFilter>();
+            }
         }
 
-        Transform targetParent = parentTransform != null ? parentTransform : transform;
-        if (worldQuadObj.transform.parent != targetParent)
+        // Keep 3D Quad in world space (unparented from raw 60Hz ARCore transform hierarchy)
+        if (worldQuadObj.transform.parent != transform)
         {
-            worldQuadObj.transform.SetParent(targetParent, false);
+            worldQuadObj.transform.SetParent(transform, true);
         }
 
-        // Align Quad flat on paper surface (X/Z plane, Z = +0.001m offset)
-        worldQuadObj.transform.localPosition = new Vector3(0f, 0.001f, 0f);
-        worldQuadObj.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
         worldQuadObj.transform.localScale = new Vector3(pageSizeMeters.x, pageSizeMeters.y, 1f);
-
-        // Keep 3D quad inactive when not parented to a tracked image to prevent raycast blocking
-        worldQuadObj.SetActive(parentTransform != null);
 
         if (uiDocument != null && uiDocument.rootVisualElement != null && offscreenRenderTexture != null)
         {
@@ -217,8 +219,6 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         }
     }
 
-    // Tracks the last known parent so we can restore it after re-initialization
-    private Transform lastKnownParent;
     private ARTrackedImage currentTrackedImage;
     // Pending lines to display if textContainer isn't ready yet
     private List<DetectedTextLine> pendingLines;
@@ -231,34 +231,30 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         if (trackedImage.size.x > 0 && trackedImage.size.y > 0)
             pageSizeMeters = trackedImage.size;
 
-        lastKnownParent = trackedImage.transform;
-
-        // If already parented to this tracked target, avoid redundant re-parenting and re-initialization
-        if (worldQuadObj != null && currentTrackedImage == trackedImage && worldQuadObj.transform.parent == trackedImage.transform)
-        {
-            if (trackedImage.trackingState == TrackingState.Tracking && !worldQuadObj.activeSelf)
-                worldQuadObj.SetActive(true);
-            return;
-        }
-
         currentTrackedImage = trackedImage;
 
         if (worldQuadObj == null || uiDocument == null)
         {
-            InitializeWorldSpaceUIToolkit(trackedImage.transform);
-        }
-        else
-        {
-            // Smoothly parent to the new tracked image anchor
-            worldQuadObj.transform.SetParent(trackedImage.transform, false);
-            worldQuadObj.transform.localPosition = new Vector3(0f, 0.001f, 0f);
-            worldQuadObj.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            worldQuadObj.transform.localScale = new Vector3(pageSizeMeters.x, pageSizeMeters.y, 1f);
+            InitializeWorldSpaceUIToolkit();
         }
 
-        // Only show if actively tracking
+        // Route pose through Three-Stage Spatial State Filter
+        if (poseFilter == null && worldQuadObj != null)
+        {
+            poseFilter = worldQuadObj.GetComponent<ARSpatialPoseFilter>();
+            if (poseFilter == null)
+                poseFilter = worldQuadObj.AddComponent<ARSpatialPoseFilter>();
+        }
+
+        if (poseFilter != null)
+        {
+            poseFilter.SetTarget(trackedImage);
+        }
+
         if (worldQuadObj != null && trackedImage.trackingState == TrackingState.Tracking)
+        {
             worldQuadObj.SetActive(true);
+        }
     }
 
     public void DisplayDetectedLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize)
@@ -270,7 +266,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         // Instead, just make sure the quad is visible using the last known parent (or this transform).
         if (worldQuadObj == null)
         {
-            InitializeWorldSpaceUIToolkit(lastKnownParent);
+            InitializeWorldSpaceUIToolkit();
         }
 
         // Always show the quad once we have text — tracking attachment can come later
