@@ -95,7 +95,7 @@ public class CloudVisionService : MonoBehaviour
 
     /// <summary>
     /// Sends a Texture2D to your secure backend proxy for Hindi text detection.
-    /// Safely uncompresses any compressed texture format before encoding.
+    /// Safely clamps resolution (max 1280px) and uncompresses before encoding to lightweight JPG.
     /// </summary>
     public void DetectTextFromTexture(Texture2D inputTexture)
     {
@@ -111,21 +111,33 @@ public class CloudVisionService : MonoBehaviour
             return;
         }
 
-        Texture2D readableTexture = GetUncompressedTexture(inputTexture);
+        // Clamp resolution so JPG payload stays compact (~150-300KB) and avoids API timeouts / Code 14
+        int maxDim = 1280;
+        int targetWidth = inputTexture.width;
+        int targetHeight = inputTexture.height;
 
-        byte[] imageBytes = readableTexture.EncodeToJPG(85);
+        if (targetWidth > maxDim || targetHeight > maxDim)
+        {
+            float scale = Mathf.Min((float)maxDim / targetWidth, (float)maxDim / targetHeight);
+            targetWidth = Mathf.Max(1, Mathf.RoundToInt(targetWidth * scale));
+            targetHeight = Mathf.Max(1, Mathf.RoundToInt(targetHeight * scale));
+        }
+
+        Texture2D readableTexture = GetUncompressedResizedTexture(inputTexture, targetWidth, targetHeight);
+
+        byte[] imageBytes = readableTexture.EncodeToJPG(78);
         string base64Image = Convert.ToBase64String(imageBytes);
 
         Destroy(readableTexture);
 
-        StartCoroutine(SendProxyApiRequest(base64Image, inputTexture.width, inputTexture.height));
+        StartCoroutine(SendProxyApiRequest(base64Image, targetWidth, targetHeight));
     }
 
-    private Texture2D GetUncompressedTexture(Texture2D source)
+    private Texture2D GetUncompressedResizedTexture(Texture2D source, int targetWidth, int targetHeight)
     {
         RenderTexture rt = RenderTexture.GetTemporary(
-            source.width, 
-            source.height, 
+            targetWidth, 
+            targetHeight, 
             0, 
             RenderTextureFormat.Default, 
             RenderTextureReadWrite.Linear);
@@ -134,8 +146,8 @@ public class CloudVisionService : MonoBehaviour
         RenderTexture previous = RenderTexture.active;
         RenderTexture.active = rt;
 
-        Texture2D readableTexture = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false);
-        readableTexture.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        Texture2D readableTexture = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
+        readableTexture.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
         readableTexture.Apply();
 
         RenderTexture.active = previous;
@@ -160,17 +172,18 @@ public class CloudVisionService : MonoBehaviour
                 webRequest.SetRequestHeader("X-Proxy-Auth-Token", proxyAuthToken);
             }
 
-            Debug.Log($"[CloudVisionService] Sending request to Secure Backend Proxy: {proxyUrl} (Attempt {retryCount + 1})");
+            Debug.Log($"[CloudVisionService] Sending request ({bodyRaw.Length / 1024} KB) to Secure Backend Proxy: {proxyUrl} (Attempt {retryCount + 1}/4)");
             yield return webRequest.SendWebRequest();
 
             if (webRequest.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"[CloudVisionService] Proxy Error: {webRequest.error}\nResponse: {webRequest.downloadHandler.text}");
-                if (retryCount < 2)
+                if (retryCount < 3)
                 {
-                    Debug.LogWarning($"[CloudVisionService] Retrying API request in 0.6s (Retry {retryCount + 1}/2)...");
-                    yield return new WaitForSeconds(0.6f);
-                    yield return SendProxyApiRequest(base64Image, imageWidth, imageHeight, retryCount + 1);
+                    float delay = 1.0f * Mathf.Pow(1.5f, retryCount);
+                    Debug.LogWarning($"[CloudVisionService] Retrying API request in {delay:F1}s (Retry {retryCount + 1}/3)...");
+                    yield return new WaitForSeconds(delay);
+                    StartCoroutine(SendProxyApiRequest(base64Image, imageWidth, imageHeight, retryCount + 1));
                     yield break;
                 }
                 NotifyScanFailed();
@@ -193,12 +206,13 @@ public class CloudVisionService : MonoBehaviour
                 string errMsg = wrapper.responses[0].error.message;
                 Debug.LogError($"[CloudVisionService] Vision API Error Code {errCode}: {errMsg}");
 
-                // Code 14 is UNAVAILABLE / transient upstream load: retry automatically
-                if ((errCode == 14 || errCode == 4 || errCode == 8) && retryCount < 2)
+                // Code 14 is UNAVAILABLE / transient upstream load: retry automatically with backoff
+                if ((errCode == 14 || errCode == 4 || errCode == 8 || errCode == 13) && retryCount < 3)
                 {
-                    Debug.LogWarning($"[CloudVisionService] Error {errCode} is transient. Retrying in 0.8s (Retry {retryCount + 1}/2)...");
-                    yield return new WaitForSeconds(0.8f);
-                    yield return SendProxyApiRequest(base64Image, imageWidth, imageHeight, retryCount + 1);
+                    float delay = 1.0f * Mathf.Pow(1.5f, retryCount);
+                    Debug.LogWarning($"[CloudVisionService] Error {errCode} is transient. Retrying in {delay:F1}s (Retry {retryCount + 1}/3)...");
+                    yield return new WaitForSeconds(delay);
+                    StartCoroutine(SendProxyApiRequest(base64Image, imageWidth, imageHeight, retryCount + 1));
                     yield break;
                 }
 
@@ -206,7 +220,7 @@ public class CloudVisionService : MonoBehaviour
                 yield break;
             }
 
-            Debug.Log($"[CloudVisionService] SUCCESS Response Received from Backend Proxy.");
+            Debug.Log($"[CloudVisionService] SUCCESS Response Received from Backend Proxy ({responseJson.Length} bytes).");
             ProcessVisionResponse(responseJson, imageWidth, imageHeight);
         }
     }
