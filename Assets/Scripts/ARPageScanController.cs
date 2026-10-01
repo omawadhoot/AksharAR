@@ -287,7 +287,7 @@ public class ARPageScanController : MonoBehaviour
         if (liveFrameTexture != null)
         {
             Texture2D textureToSend = liveFrameTexture;
-            float physicalWidthMeters = 0.22f;
+            float physicalWidthMeters = 0.14f;
 
             // Crop texture to the 2D "Reading Window" viewport for high-density paragraph OCR
             if (readingWindowViewfinder != null)
@@ -296,7 +296,7 @@ public class ARPageScanController : MonoBehaviour
                 if (cropped != null)
                 {
                     textureToSend = cropped;
-                    physicalWidthMeters = 0.19f; // ~19cm physical paragraph width
+                    physicalWidthMeters = 0.14f; // ~14cm physical textbook column width
                     Destroy(liveFrameTexture);
                 }
             }
