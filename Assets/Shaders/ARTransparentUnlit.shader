@@ -5,6 +5,9 @@ Shader "AksharAR/TransparentUnlit"
         _MainTex ("Texture", 2D) = "white" {}
         _BaseMap ("Base Map", 2D) = "white" {}
         _Color ("Color", Color) = (1,1,1,1)
+        [Header(Depth Bias Controls)]
+        _OffsetFactor ("Depth Offset Factor", Float) = -1.0
+        _OffsetUnits ("Depth Offset Units", Float) = -1.0
     }
     SubShader
     {
@@ -12,7 +15,7 @@ Shader "AksharAR/TransparentUnlit"
         LOD 100
         ZWrite Off
         ZTest LEqual
-        Offset -1, -1
+        Offset [_OffsetFactor], [_OffsetUnits]
         Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
 
@@ -63,7 +66,7 @@ Shader "AksharAR/TransparentUnlit"
         LOD 100
         ZWrite Off
         ZTest LEqual
-        Offset -1, -1
+        Offset [_OffsetFactor], [_OffsetUnits]
         Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
 
