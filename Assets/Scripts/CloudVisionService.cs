@@ -144,7 +144,7 @@ public class CloudVisionService : MonoBehaviour
         return readableTexture;
     }
 
-    private IEnumerator SendProxyApiRequest(string base64Image, int imageWidth, int imageHeight)
+    private IEnumerator SendProxyApiRequest(string base64Image, int imageWidth, int imageHeight, int retryCount = 0)
     {
         string jsonPayload = $"{{\"image\":\"{base64Image}\"}}";
         byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonPayload);
@@ -160,20 +160,63 @@ public class CloudVisionService : MonoBehaviour
                 webRequest.SetRequestHeader("X-Proxy-Auth-Token", proxyAuthToken);
             }
 
-            Debug.Log($"[CloudVisionService] Sending request to Secure Backend Proxy: {proxyUrl}");
+            Debug.Log($"[CloudVisionService] Sending request to Secure Backend Proxy: {proxyUrl} (Attempt {retryCount + 1})");
             yield return webRequest.SendWebRequest();
 
             if (webRequest.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError($"[CloudVisionService] Proxy Error: {webRequest.error}\nResponse: {webRequest.downloadHandler.text}");
+                if (retryCount < 2)
+                {
+                    Debug.LogWarning($"[CloudVisionService] Retrying API request in 0.6s (Retry {retryCount + 1}/2)...");
+                    yield return new WaitForSeconds(0.6f);
+                    yield return SendProxyApiRequest(base64Image, imageWidth, imageHeight, retryCount + 1);
+                    yield break;
+                }
+                NotifyScanFailed();
                 yield break;
             }
 
             string responseJson = webRequest.downloadHandler.text;
-            Debug.Log($"[CloudVisionService] SUCCESS Response Received from Backend Proxy.");
 
+            // Check if response contains Google API error code 14 (Unavailable) or transient error
+            VisionResponseWrapper wrapper = null;
+            try
+            {
+                wrapper = JsonUtility.FromJson<VisionResponseWrapper>(responseJson);
+            }
+            catch { }
+
+            if (wrapper != null && wrapper.responses != null && wrapper.responses.Count > 0 && wrapper.responses[0].error != null && wrapper.responses[0].error.code != 0)
+            {
+                int errCode = wrapper.responses[0].error.code;
+                string errMsg = wrapper.responses[0].error.message;
+                Debug.LogError($"[CloudVisionService] Vision API Error Code {errCode}: {errMsg}");
+
+                // Code 14 is UNAVAILABLE / transient upstream load: retry automatically
+                if ((errCode == 14 || errCode == 4 || errCode == 8) && retryCount < 2)
+                {
+                    Debug.LogWarning($"[CloudVisionService] Error {errCode} is transient. Retrying in 0.8s (Retry {retryCount + 1}/2)...");
+                    yield return new WaitForSeconds(0.8f);
+                    yield return SendProxyApiRequest(base64Image, imageWidth, imageHeight, retryCount + 1);
+                    yield break;
+                }
+
+                NotifyScanFailed();
+                yield break;
+            }
+
+            Debug.Log($"[CloudVisionService] SUCCESS Response Received from Backend Proxy.");
             ProcessVisionResponse(responseJson, imageWidth, imageHeight);
         }
+    }
+
+    private void NotifyScanFailed()
+    {
+        if (overlayController == null)
+            overlayController = FindFirstObjectByType<ARLineOverlayController>();
+        if (overlayController != null)
+            overlayController.ResetScanButton();
     }
 
     private struct WordBox
