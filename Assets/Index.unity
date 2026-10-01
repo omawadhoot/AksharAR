@@ -1159,7 +1159,7 @@ MonoBehaviour:
   lineStyleSheet: {fileID: 0}
   rawFont: {fileID: 0}
   sdfFontAsset: {fileID: 0}
-  pageSizeMeters: {x: 0.22, y: 0.31128225}
+  pageSizeMeters: {x: 0.14, y: 0.1}
 --- !u!1 &1968248729
 GameObject:
   m_ObjectHideFlags: 0

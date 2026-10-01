@@ -245,19 +245,36 @@ public class CloudVisionService : MonoBehaviour
                 });
             }
 
-            // Cluster individual word boxes into cohesive horizontal lines using optimal vertical tolerance
+            // 1. Compute global median word height
+            var heights = rawWords.Select(w => w.height).OrderBy(h => h).ToList();
+            float medianHeight = heights.Count > 0 ? heights[heights.Count / 2] : 30f;
+            float lineTolerance = Mathf.Clamp(medianHeight * 0.38f, 10f, 22f);
+
+            // 2. Sort words top-to-bottom, then left-to-right
+            var sortedWordsList = rawWords.OrderBy(w => w.centerY).ThenBy(w => w.minX).ToList();
+
             List<LineCluster> lines = new List<LineCluster>();
-            float avgHeight = rawWords.Count > 0 ? rawWords.Average(w => w.height) : 38f;
-            float lineTolerance = Mathf.Clamp(avgHeight * 0.6f, 16f, 30f);
 
-            foreach (var word in rawWords)
+            foreach (var word in sortedWordsList)
             {
-                LineCluster matchingLine = lines.FirstOrDefault(l => Math.Abs(l.averageY - word.centerY) <= lineTolerance);
+                // Find line whose current averageY is closest to word.centerY within tight lineTolerance
+                LineCluster bestLine = null;
+                float minDeltaY = float.MaxValue;
 
-                if (matchingLine != null)
+                foreach (var line in lines)
                 {
-                    matchingLine.words.Add(word);
-                    matchingLine.averageY = matchingLine.words.Average(w => w.centerY);
+                    float deltaY = Math.Abs(line.averageY - word.centerY);
+                    if (deltaY <= lineTolerance && deltaY < minDeltaY)
+                    {
+                        minDeltaY = deltaY;
+                        bestLine = line;
+                    }
+                }
+
+                if (bestLine != null)
+                {
+                    bestLine.words.Add(word);
+                    bestLine.averageY = bestLine.words.Average(w => w.centerY);
                 }
                 else
                 {
@@ -267,24 +284,31 @@ public class CloudVisionService : MonoBehaviour
                 }
             }
 
-            // Sort lines top-to-bottom
+            // 3. Sort lines top-to-bottom
             lines = lines.OrderBy(l => l.averageY).ToList();
 
             List<DetectedTextLine> detectedLines = new List<DetectedTextLine>();
 
             foreach (var lineCluster in lines)
             {
-                // Sort words inside line left-to-right
+                if (lineCluster.words.Count == 0) continue;
+
+                // Sort words inside line strictly left-to-right
                 var sortedWords = lineCluster.words.OrderBy(w => w.minX).ToList();
 
                 string combinedLineText = string.Join(" ", sortedWords.Select(w => w.text));
                 float minX = sortedWords.Min(w => w.minX);
-                float minY = sortedWords.Min(w => w.minY);
                 float maxX = sortedWords.Max(w => w.maxX);
-                float maxY = sortedWords.Max(w => w.maxY);
 
-                float lineW = Math.Max(50f, maxX - minX);
-                float lineH = Math.Max(24f, maxY - minY);
+                // Compute robust line height using median word height in this specific line
+                var lineWordHeights = sortedWords.Select(w => w.height).OrderBy(h => h).ToList();
+                float lineMedianH = lineWordHeights[lineWordHeights.Count / 2];
+                float lineCenterY = sortedWords.Average(w => w.centerY);
+
+                // Add 15% breathing room for Devanagari ascenders/descenders
+                float lineH = Mathf.Clamp(lineMedianH * 1.15f, 20f, 120f);
+                float minY = lineCenterY - (lineH / 2f);
+                float lineW = Math.Max(40f, maxX - minX);
 
                 detectedLines.Add(new DetectedTextLine
                 {

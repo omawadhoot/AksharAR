@@ -17,8 +17,8 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     [SerializeField] private UnityEngine.TextCore.Text.FontAsset sdfFontAsset;
 
     [Header("Page Dimensions (Meters)")]
-    [Tooltip("Matches ReferenceImageLibrary.asset (0.22m x 0.311m)")]
-    [SerializeField] private Vector2 pageSizeMeters = new Vector2(0.22f, 0.31128225f);
+    [Tooltip("Standard physical textbook column width estimation in meters (0.14m = 14cm)")]
+    [SerializeField] private Vector2 pageSizeMeters = new Vector2(0.14f, 0.10f);
 
     private UIDocument uiDocument;
     private GameObject worldQuadObj;
@@ -336,7 +336,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         float activePanelHeight = visionImageSize.y * uniformScale;
 
         // 2. Compute physical world-space dimensions matching the cropped paragraph
-        float physicalWidth = pageSizeMeters.x > 0f ? pageSizeMeters.x : 0.19f;
+        float physicalWidth = pageSizeMeters.x > 0f ? pageSizeMeters.x : 0.14f;
         float physicalHeight = physicalWidth * (visionImageSize.y / visionImageSize.x);
 
         if (worldQuadObj != null)
@@ -363,7 +363,39 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
                     quadMaterial.SetTextureScale("_BaseMap", scale);
                     quadMaterial.SetTextureOffset("_BaseMap", offset);
                 }
+                if (quadMaterial.HasProperty("_Cull"))
+                {
+                    quadMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+                }
             }
+        }
+
+        if (rootElement != null)
+        {
+            rootElement.style.width = texWidth;
+            rootElement.style.height = activePanelHeight;
+            rootElement.style.marginLeft = 0f;
+            rootElement.style.marginRight = 0f;
+            rootElement.style.marginTop = 0f;
+            rootElement.style.marginBottom = 0f;
+            rootElement.style.paddingLeft = 0f;
+            rootElement.style.paddingRight = 0f;
+            rootElement.style.paddingTop = 0f;
+            rootElement.style.paddingBottom = 0f;
+        }
+
+        if (textContainer != null)
+        {
+            textContainer.style.width = texWidth;
+            textContainer.style.height = activePanelHeight;
+            textContainer.style.marginLeft = 0f;
+            textContainer.style.marginRight = 0f;
+            textContainer.style.marginTop = 0f;
+            textContainer.style.marginBottom = 0f;
+            textContainer.style.paddingLeft = 0f;
+            textContainer.style.paddingRight = 0f;
+            textContainer.style.paddingTop = 0f;
+            textContainer.style.paddingBottom = 0f;
         }
 
         Debug.Log($"[World-Space UI Toolkit] Rendering {detectedLines.Count} lines. ImageSize:{visionImageSize.x}x{visionImageSize.y} | Quad:{physicalWidth:F3}mx{physicalHeight:F3}m | ActivePixels:{texWidth}x{activePanelHeight:F0}");
@@ -389,29 +421,37 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             // Uniform pixel positioning (no non-uniform stretching)
             float scaledX = line.boundingBox.x * uniformScale;
             float scaledY = line.boundingBox.y * uniformScale;
-            float scaledW = Math.Max(60f, line.boundingBox.width * uniformScale);
-            float scaledH = Math.Max(30f, line.boundingBox.height * uniformScale);
+            float scaledW = Math.Max(40f, line.boundingBox.width * uniformScale);
+            float scaledH = Math.Max(20f, line.boundingBox.height * uniformScale);
 
-            // Font point size matches 92% of the physical detected line height
-            float fontSize = Mathf.Clamp(scaledH * 0.92f, 24f, 220f);
+            // Font point size matches 72% of the physical detected line height (Devanagari cap-height ratio)
+            float fontSize = Mathf.Clamp(scaledH * 0.72f, 16f, 130f);
 
             label.style.position = Position.Absolute;
             label.style.left = scaledX;
             label.style.top = scaledY;
-            label.style.width = scaledW;
+            label.style.width = scaledW + 16f;
             label.style.height = scaledH;
             label.style.fontSize = fontSize;
             label.style.unityTextAlign = line.text.Length < 15
                 ? new StyleEnum<TextAnchor>(TextAnchor.MiddleCenter)
                 : new StyleEnum<TextAnchor>(TextAnchor.MiddleLeft);
-            label.style.paddingLeft = 4f;
-            label.style.paddingRight = 4f;
+            label.style.marginLeft = 0f;
+            label.style.marginRight = 0f;
+            label.style.marginTop = 0f;
+            label.style.marginBottom = 0f;
+            label.style.paddingLeft = 6f;
+            label.style.paddingRight = 6f;
             label.style.paddingTop = 0f;
             label.style.paddingBottom = 0f;
+            label.style.borderLeftWidth = 0f;
+            label.style.borderRightWidth = 0f;
+            label.style.borderTopWidth = 0f;
+            label.style.borderBottomWidth = 0f;
             label.style.overflow = Overflow.Visible;
-            label.style.whiteSpace = WhiteSpace.Normal;
+            label.style.whiteSpace = WhiteSpace.NoWrap;
             label.style.color = new StyleColor(new Color(0.05f, 0.05f, 0.05f, 1.0f));
-            label.style.backgroundColor = new StyleColor(new Color(1.0f, 1.0f, 1.0f, 0.92f));
+            label.style.backgroundColor = new StyleColor(new Color(1.0f, 1.0f, 1.0f, 0.94f));
 
             textContainer.Add(label);
             Debug.Log($"[World-Space Line #{index++}] \"{line.text}\" | X:{scaledX:F0} Y:{scaledY:F0} W:{scaledW:F0} H:{scaledH:F0} Font:{fontSize:F0}px");
