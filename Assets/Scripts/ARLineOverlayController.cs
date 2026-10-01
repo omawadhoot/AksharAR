@@ -32,6 +32,7 @@ public class ARLineOverlayController : MonoBehaviour
     private UIToolkit.VisualElement rootElement;
 
     private float lastClickTimestamp = -1f;
+    private bool isReadingMode = false;
 
     private void Start()
     {
@@ -101,13 +102,31 @@ public class ARLineOverlayController : MonoBehaviour
 
     public void OnScanButtonClicked()
     {
-        if (Time.unscaledTime - lastClickTimestamp < 1.5f) return;
+        if (Time.unscaledTime - lastClickTimestamp < 0.6f) return;
         lastClickTimestamp = Time.unscaledTime;
 
+        // If currently in Reading Mode, tapping "🔄 Rescan" restores the viewfinder to frame a new paragraph:
+        if (isReadingMode)
+        {
+            isReadingMode = false;
+            var viewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
+            if (viewfinder != null)
+                viewfinder.SetVisibility(true);
+
+            SetScanButtonText("📷 Scan Page");
+            return;
+        }
+
+        // Otherwise, trigger the camera capture & OCR scan
         Debug.Log("[ARLineOverlayController] >>> CAPTURE / SCAN BUTTON CLICKED <<<");
 
         SetScanButtonText("⏳ Scanning...");
         SetScanButtonInteractable(false);
+
+        // Hide viewfinder while scanning so screen stays clean
+        var vf = FindFirstObjectByType<ReadingWindowViewfinder>();
+        if (vf != null)
+            vf.SetVisibility(false);
 
         if (pageScanController == null)
             pageScanController = FindAnyObjectByType<ARPageScanController>();
@@ -127,14 +146,27 @@ public class ARLineOverlayController : MonoBehaviour
 
     public void ResetScanButton()
     {
+        isReadingMode = false;
         SetScanButtonText("📷 Scan Page");
         SetScanButtonInteractable(true);
+
+        var viewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
+        if (viewfinder != null)
+            viewfinder.SetVisibility(true);
     }
 
     public void DisplayDetectedLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize)
     {
-        // OCR result received — re-enable the button
-        ResetScanButton();
+        // OCR text received & rendered onto AR Quad!
+        // 1. Completely hide the viewfinder so the reader enjoys an unobstructed view:
+        var viewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
+        if (viewfinder != null)
+            viewfinder.SetVisibility(false);
+
+        // 2. Transition button to "🔄 Rescan" mode:
+        isReadingMode = true;
+        SetScanButtonText("🔄 Rescan");
+        SetScanButtonInteractable(true);
     }
 
     public void SetUIVisibility(bool visible)
@@ -147,7 +179,11 @@ public class ARLineOverlayController : MonoBehaviour
 
         var viewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
         if (viewfinder != null)
-            viewfinder.SetVisibility(visible);
+        {
+            // Do not re-show viewfinder if in reading mode
+            if (!visible || !isReadingMode)
+                viewfinder.SetVisibility(visible);
+        }
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

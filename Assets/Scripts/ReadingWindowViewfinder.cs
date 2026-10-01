@@ -53,7 +53,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [Tooltip("Minimum distance from screen bottom (keeps box safely above scan button)")]
     [SerializeField] private float minBottomDistanceNormalized = 0.18f;
 
-    [Header("Active Level Gatekeeper")]
+    [Header("Active Level Gatekeeper & Window Tint")]
     [Tooltip("Maximum tilt angle away from tabletop perpendicular (degrees) considered 'level'")]
     [Range(3f, 15f)]
     [SerializeField] private float maxLevelTiltAngle = 7.0f;
@@ -61,8 +61,14 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [Tooltip("Reticle color when phone is held level (Emerald Green)")]
     [SerializeField] private Color levelReticleColor = new Color(0.0f, 0.90f, 0.46f, 0.95f); // #00E676
 
-    [Tooltip("Reticle color when phone is tilted (Amber Orange)")]
-    [SerializeField] private Color unlevelReticleColor = new Color(1.0f, 0.57f, 0.0f, 0.95f); // #FF9100
+    [Tooltip("Reticle color when phone is tilted (Vibrant Red)")]
+    [SerializeField] private Color unlevelReticleColor = new Color(1.0f, 0.22f, 0.22f, 0.95f); // #FF3B30 Red
+
+    [Tooltip("Subtle translucent window tint when level (Emerald Green wash)")]
+    [SerializeField] private Color levelWindowTintColor = new Color(0.0f, 0.90f, 0.46f, 0.12f);
+
+    [Tooltip("Subtle translucent window tint when tilted (Red wash)")]
+    [SerializeField] private Color unlevelWindowTintColor = new Color(1.0f, 0.20f, 0.20f, 0.14f);
 
     [Tooltip("Enables dynamic color shifting and level guidance prompt")]
     [SerializeField] private bool enableSoftGatekeeping = true;
@@ -104,6 +110,10 @@ public class ReadingWindowViewfinder : MonoBehaviour
     private RectTransform cornerDragHandleRect;
     private Image cornerDragHandleDotImage;
 
+    // Window interior tint
+    private Image windowInteriorTintImage;
+    private Color currentDynamicTintColor;
+
     private readonly List<Image> reticleBracketImages = new List<Image>();
     private Color currentDynamicColor;
 
@@ -115,6 +125,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
     private void Awake()
     {
         currentDynamicColor = cornerReticleColor;
+        currentDynamicTintColor = unlevelWindowTintColor;
         BuildViewfinderUIIfNeeded();
     }
 
@@ -178,9 +189,12 @@ public class ReadingWindowViewfinder : MonoBehaviour
         }
 
         Color targetColor = cornerReticleColor;
+        Color targetTintColor = Color.clear;
+
         if (enableSoftGatekeeping)
         {
             targetColor = IsDeviceLevel ? levelReticleColor : unlevelReticleColor;
+            targetTintColor = IsDeviceLevel ? levelWindowTintColor : unlevelWindowTintColor;
 
             if (hintTextComponent != null)
             {
@@ -192,18 +206,22 @@ public class ReadingWindowViewfinder : MonoBehaviour
                 else
                 {
                     hintTextComponent.text = $"⚠️ Tilt {CurrentTiltAngle:F0}° • Hold flat over page";
-                    hintTextComponent.color = new Color(1f, 0.92f, 0.70f, 0.98f);
+                    hintTextComponent.color = new Color(1f, 0.85f, 0.85f, 0.98f);
                 }
             }
         }
 
         currentDynamicColor = Color.Lerp(currentDynamicColor, targetColor, Time.deltaTime * 6f);
+        currentDynamicTintColor = Color.Lerp(currentDynamicTintColor, targetTintColor, Time.deltaTime * 6f);
 
         for (int i = 0; i < reticleBracketImages.Count; i++)
         {
             if (reticleBracketImages[i] != null)
                 reticleBracketImages[i].color = currentDynamicColor;
         }
+
+        if (windowInteriorTintImage != null)
+            windowInteriorTintImage.color = currentDynamicTintColor;
 
         if (bottomDragHandlePillImage != null && !isDraggingBottom)
             bottomDragHandlePillImage.color = currentDynamicColor;
@@ -241,6 +259,19 @@ public class ReadingWindowViewfinder : MonoBehaviour
         GameObject boxObj = new GameObject("ReadingWindow_CenterBox");
         boxObj.transform.SetParent(rootRect, false);
         windowBoxTransform = boxObj.AddComponent<RectTransform>();
+
+        // ── Interior Level Window Tint (subtle red wash when tilted, subtle green wash when level) ──
+        GameObject tintObj = new GameObject("ReadingWindow_InteriorTint");
+        tintObj.transform.SetParent(windowBoxTransform, false);
+        RectTransform tintRect = tintObj.AddComponent<RectTransform>();
+        tintRect.anchorMin = Vector2.zero;
+        tintRect.anchorMax = Vector2.one;
+        tintRect.sizeDelta = Vector2.zero;
+        tintRect.anchoredPosition = Vector2.zero;
+
+        windowInteriorTintImage = tintObj.AddComponent<Image>();
+        windowInteriorTintImage.color = unlevelWindowTintColor;
+        windowInteriorTintImage.raycastTarget = false;
 
         // Add 4 Corner Brackets
         reticleBracketImages.Clear();
