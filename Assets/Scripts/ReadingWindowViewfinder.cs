@@ -53,7 +53,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [Tooltip("Minimum distance from screen bottom (keeps box safely above scan button)")]
     [SerializeField] private float minBottomDistanceNormalized = 0.18f;
 
-    [Header("Active Level Gatekeeper & Frosted Glass")]
+    [Header("Active Level Gatekeeper & Frosted Glass Effect")]
     [Tooltip("Maximum tilt angle away from tabletop perpendicular (degrees) considered 'level'")]
     [Range(3f, 15f)]
     [SerializeField] private float maxLevelTiltAngle = 7.0f;
@@ -62,13 +62,13 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [SerializeField] private Color levelReticleColor = new Color(0.0f, 0.90f, 0.46f, 0.95f); // #00E676
 
     [Tooltip("Reticle color when phone is tilted (Soft Sky Blue)")]
-    [SerializeField] private Color unlevelReticleColor = new Color(0.20f, 0.60f, 1.0f, 0.90f); // Calming Sky Blue
+    [SerializeField] private Color unlevelReticleColor = new Color(0.20f, 0.60f, 1.0f, 0.90f); // #3399FF
 
-    [Tooltip("Window tint when level: 100% crystal clear glass")]
-    [SerializeField] private Color levelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.0f); // 100% Crystal Clear
+    [Tooltip("Crystal clear window tint when level (100% transparent)")]
+    [SerializeField] private Color levelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.0f); // Crystal Clear
 
-    [Tooltip("Window tint when tilted: frosted translucent glass")]
-    [SerializeField] private Color unlevelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.28f); // Frosted Glass Sheen
+    [Tooltip("Translucent frosted glass tint when tilted (Soft milky frosted veil)")]
+    [SerializeField] private Color unlevelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.35f); // Frosted Glass
 
     [Tooltip("Enables dynamic color shifting and level guidance prompt")]
     [SerializeField] private bool enableSoftGatekeeping = true;
@@ -200,19 +200,19 @@ public class ReadingWindowViewfinder : MonoBehaviour
             {
                 if (IsDeviceLevel)
                 {
-                    hintTextComponent.text = "✨ Crystal clear • Tap to scan";
+                    hintTextComponent.text = "✨ Crystal Clear • Tap to scan!";
                     hintTextComponent.color = new Color(0.85f, 1f, 0.90f, 0.98f);
                 }
                 else
                 {
-                    hintTextComponent.text = $"📖 Tilt flat to clear glass ({CurrentTiltAngle:F0}°)";
-                    hintTextComponent.color = new Color(0.90f, 0.95f, 1.0f, 0.95f);
+                    hintTextComponent.text = $"🔎 Tilt {CurrentTiltAngle:F0}° • Hold flat to clear glass";
+                    hintTextComponent.color = new Color(1f, 1f, 1f, 0.95f);
                 }
             }
         }
 
-        currentDynamicColor = Color.Lerp(currentDynamicColor, targetColor, Time.deltaTime * 6f);
-        currentDynamicTintColor = Color.Lerp(currentDynamicTintColor, targetTintColor, Time.deltaTime * 6f);
+        currentDynamicColor = Color.Lerp(currentDynamicColor, targetColor, Time.deltaTime * 7f);
+        currentDynamicTintColor = Color.Lerp(currentDynamicTintColor, targetTintColor, Time.deltaTime * 7f);
 
         for (int i = 0; i < reticleBracketImages.Count; i++)
         {
