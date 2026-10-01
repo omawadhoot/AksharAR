@@ -318,7 +318,8 @@ public class ARPageScanController : MonoBehaviour
                 if (cropped != null)
                 {
                     textureToSend = cropped;
-                    physicalWidthMeters = 0.14f; // ~14cm physical textbook column width
+                    float widthNorm = readingWindowViewfinder.WindowWidthNormalized;
+                    physicalWidthMeters = 0.14f * (widthNorm / 0.86f);
                     Destroy(liveFrameTexture);
                 }
             }
