@@ -53,7 +53,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [Tooltip("Minimum distance from screen bottom (keeps box safely above scan button)")]
     [SerializeField] private float minBottomDistanceNormalized = 0.18f;
 
-    [Header("Active Level Gatekeeper & Window Tint")]
+    [Header("Active Level Gatekeeper & Frosted Glass")]
     [Tooltip("Maximum tilt angle away from tabletop perpendicular (degrees) considered 'level'")]
     [Range(3f, 15f)]
     [SerializeField] private float maxLevelTiltAngle = 7.0f;
@@ -61,14 +61,14 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [Tooltip("Reticle color when phone is held level (Emerald Green)")]
     [SerializeField] private Color levelReticleColor = new Color(0.0f, 0.90f, 0.46f, 0.95f); // #00E676
 
-    [Tooltip("Reticle color when phone is tilted (Vibrant Red)")]
-    [SerializeField] private Color unlevelReticleColor = new Color(1.0f, 0.22f, 0.22f, 0.95f); // #FF3B30 Red
+    [Tooltip("Reticle color when phone is tilted (Soft Sky Blue)")]
+    [SerializeField] private Color unlevelReticleColor = new Color(0.20f, 0.60f, 1.0f, 0.90f); // Calming Sky Blue
 
-    [Tooltip("Subtle translucent window tint when level (Emerald Green wash)")]
-    [SerializeField] private Color levelWindowTintColor = new Color(0.0f, 0.90f, 0.46f, 0.12f);
+    [Tooltip("Window tint when level: 100% crystal clear glass")]
+    [SerializeField] private Color levelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.0f); // 100% Crystal Clear
 
-    [Tooltip("Subtle translucent window tint when tilted (Red wash)")]
-    [SerializeField] private Color unlevelWindowTintColor = new Color(1.0f, 0.20f, 0.20f, 0.14f);
+    [Tooltip("Window tint when tilted: frosted translucent glass")]
+    [SerializeField] private Color unlevelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.28f); // Frosted Glass Sheen
 
     [Tooltip("Enables dynamic color shifting and level guidance prompt")]
     [SerializeField] private bool enableSoftGatekeeping = true;
@@ -200,13 +200,13 @@ public class ReadingWindowViewfinder : MonoBehaviour
             {
                 if (IsDeviceLevel)
                 {
-                    hintTextComponent.text = "✓ Level • Align & tap scan";
+                    hintTextComponent.text = "✨ Crystal clear • Tap to scan";
                     hintTextComponent.color = new Color(0.85f, 1f, 0.90f, 0.98f);
                 }
                 else
                 {
-                    hintTextComponent.text = $"⚠️ Tilt {CurrentTiltAngle:F0}° • Hold flat over page";
-                    hintTextComponent.color = new Color(1f, 0.85f, 0.85f, 0.98f);
+                    hintTextComponent.text = $"📖 Tilt flat to clear glass ({CurrentTiltAngle:F0}°)";
+                    hintTextComponent.color = new Color(0.90f, 0.95f, 1.0f, 0.95f);
                 }
             }
         }
