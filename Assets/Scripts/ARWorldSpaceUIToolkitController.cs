@@ -6,6 +6,19 @@ using UnityEngine.UIElements;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
+[Serializable]
+public struct CameraCapturePose
+{
+    public Vector3 cameraPosition;
+    public Quaternion cameraRotation;
+    public float fieldOfView;
+    public float aspect;
+    public RectInt pixelCropRect;
+    public int screenWidth;
+    public int screenHeight;
+    public bool isValid;
+}
+
 public class ARWorldSpaceUIToolkitController : MonoBehaviour
 {
     [Header("UI Toolkit References")]
@@ -26,6 +39,12 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     private VisualElement rootElement;
     private VisualElement textContainer;
     private ARSpatialPoseFilter poseFilter;
+    private CameraCapturePose lastCapturePose;
+
+    public void SetCameraCapturePose(CameraCapturePose pose)
+    {
+        lastCapturePose = pose;
+    }
 
     private void Awake()
     {
@@ -400,6 +419,14 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
 
         Debug.Log($"[World-Space UI Toolkit] Rendering {detectedLines.Count} lines. ImageSize:{visionImageSize.x}x{visionImageSize.y} | Quad:{physicalWidth:F3}mx{physicalHeight:F3}m | ActivePixels:{texWidth}x{activePanelHeight:F0}");
 
+        bool useRaycastUnprojection = lastCapturePose.isValid && currentTrackedImage != null && worldQuadObj != null;
+        Plane paperPlane = default;
+        if (useRaycastUnprojection)
+        {
+            paperPlane = new Plane(currentTrackedImage.transform.up, currentTrackedImage.transform.position);
+            Debug.Log($"[World-Space UI Toolkit] Active 3D Raycast Plane Unprojection ENABLED. Paper Normal: {currentTrackedImage.transform.up:F3}");
+        }
+
         int index = 1;
         foreach (var line in detectedLines)
         {
@@ -418,11 +445,61 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
                 label.style.unityFontDefinition = new StyleFontDefinition(FontDefinition.FromSDFFont(sdfFontAsset));
             }
 
-            // Uniform pixel positioning (no non-uniform stretching)
+            // 1. Default Uniform 2D scale fallback
             float scaledX = line.boundingBox.x * uniformScale;
             float scaledY = line.boundingBox.y * uniformScale;
             float scaledW = Math.Max(40f, line.boundingBox.width * uniformScale);
             float scaledH = Math.Max(20f, line.boundingBox.height * uniformScale);
+
+            // 2. 3D Raycast Plane Unprojection: eliminates perspective keystoning / trapezoidal distortion
+            if (useRaycastUnprojection)
+            {
+                Rect bb = line.boundingBox;
+                float scaleX = (float)lastCapturePose.pixelCropRect.width / visionImageSize.x;
+                float scaleY = (float)lastCapturePose.pixelCropRect.height / visionImageSize.y;
+
+                float screenLeftX = lastCapturePose.pixelCropRect.x + bb.x * scaleX;
+                float screenRightX = lastCapturePose.pixelCropRect.x + (bb.x + bb.width) * scaleX;
+                float screenCenterX = lastCapturePose.pixelCropRect.x + (bb.x + bb.width * 0.5f) * scaleX;
+
+                // Invert Y: Cloud Vision (0 is top) -> Screen pixels (0 is bottom)
+                float screenCenterY = lastCapturePose.pixelCropRect.y + (visionImageSize.y - (bb.y + bb.height * 0.5f)) * scaleY;
+                float screenTopY = lastCapturePose.pixelCropRect.y + (visionImageSize.y - bb.y) * scaleY;
+                float screenBottomY = lastCapturePose.pixelCropRect.y + (visionImageSize.y - (bb.y + bb.height)) * scaleY;
+
+                Ray rayLeft = GetRayFromPose(lastCapturePose, new Vector2(screenLeftX, screenCenterY));
+                Ray rayRight = GetRayFromPose(lastCapturePose, new Vector2(screenRightX, screenCenterY));
+                Ray rayTop = GetRayFromPose(lastCapturePose, new Vector2(screenCenterX, screenTopY));
+                Ray rayBottom = GetRayFromPose(lastCapturePose, new Vector2(screenCenterX, screenBottomY));
+
+                if (paperPlane.Raycast(rayLeft, out float distL) &&
+                    paperPlane.Raycast(rayRight, out float distR) &&
+                    paperPlane.Raycast(rayTop, out float distT) &&
+                    paperPlane.Raycast(rayBottom, out float distB))
+                {
+                    Vector3 ptL = worldQuadObj.transform.InverseTransformPoint(rayLeft.GetPoint(distL));
+                    Vector3 ptR = worldQuadObj.transform.InverseTransformPoint(rayRight.GetPoint(distR));
+                    Vector3 ptT = worldQuadObj.transform.InverseTransformPoint(rayTop.GetPoint(distT));
+                    Vector3 ptB = worldQuadObj.transform.InverseTransformPoint(rayBottom.GetPoint(distB));
+
+                    // Quad mesh local space is [-0.5..+0.5] in X and Y
+                    // Normalize to [0..1] and scale to UI Toolkit panel dimensions
+                    float unprojectedX = (ptL.x + 0.5f) * texWidth;
+                    float unprojectedY = (0.5f - ptT.y) * activePanelHeight;
+                    float unprojectedW = Mathf.Max(40f, (ptR.x - ptL.x) * texWidth);
+                    float unprojectedH = Mathf.Max(20f, (ptT.y - ptB.y) * activePanelHeight);
+
+                    // Sanity check to protect against extreme grazing raycast angles (>75 degrees)
+                    if (unprojectedW > 10f && unprojectedW < texWidth * 1.5f &&
+                        unprojectedH > 10f && unprojectedH < activePanelHeight)
+                    {
+                        scaledX = unprojectedX;
+                        scaledY = unprojectedY;
+                        scaledW = unprojectedW;
+                        scaledH = unprojectedH;
+                    }
+                }
+            }
 
             // Font point size matches 72% of the physical detected line height (Devanagari cap-height ratio)
             float fontSize = Mathf.Clamp(scaledH * 0.72f, 16f, 130f);
@@ -463,6 +540,18 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         {
             uiDocument.rootVisualElement.MarkDirtyRepaint();
         }
+    }
+
+    public static Ray GetRayFromPose(CameraCapturePose pose, Vector2 screenPoint)
+    {
+        float ndcX = (screenPoint.x / (float)pose.screenWidth) * 2f - 1f;
+        float ndcY = (screenPoint.y / (float)pose.screenHeight) * 2f - 1f;
+
+        float tanHalfFov = Mathf.Tan(pose.fieldOfView * 0.5f * Mathf.Deg2Rad);
+        Vector3 dirCam = new Vector3(ndcX * tanHalfFov * pose.aspect, ndcY * tanHalfFov, 1f).normalized;
+        Vector3 dirWorld = (pose.cameraRotation * dirCam).normalized;
+
+        return new Ray(pose.cameraPosition, dirWorld);
     }
 
     public void ClearOverlays()

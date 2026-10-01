@@ -264,6 +264,7 @@ public class ARPageScanController : MonoBehaviour
         }
 
         Texture2D liveFrameTexture = null;
+        CameraCapturePose capturePose = default;
 
         if (useDirectCameraManager)
         {
@@ -277,6 +278,27 @@ public class ARPageScanController : MonoBehaviour
 
             // Wait for end of frame to capture clean camera background in 100% upright orientation
             yield return new WaitForEndOfFrame();
+
+            // Snapshot camera 6-DoF pose and viewport metrics at exact capture timestamp
+            Camera arCam = Camera.main;
+            if (arCam != null)
+            {
+                RectInt crop = readingWindowViewfinder != null 
+                    ? readingWindowViewfinder.GetPixelCropRect(Screen.width, Screen.height)
+                    : new RectInt(0, 0, Screen.width, Screen.height);
+
+                capturePose = new CameraCapturePose
+                {
+                    cameraPosition = arCam.transform.position,
+                    cameraRotation = arCam.transform.rotation,
+                    fieldOfView = arCam.fieldOfView,
+                    aspect = arCam.aspect,
+                    pixelCropRect = crop,
+                    screenWidth = Screen.width,
+                    screenHeight = Screen.height,
+                    isValid = true
+                };
+            }
 
             liveFrameTexture = ScreenCapture.CaptureScreenshotAsTexture();
 
@@ -299,6 +321,13 @@ public class ARPageScanController : MonoBehaviour
                     physicalWidthMeters = 0.14f; // ~14cm physical textbook column width
                     Destroy(liveFrameTexture);
                 }
+            }
+
+            // Forward camera capture pose to UI Toolkit controller for 3D Raycast Plane Unprojection
+            ARWorldSpaceUIToolkitController worldSpaceUIToolkit = FindFirstObjectByType<ARWorldSpaceUIToolkitController>();
+            if (worldSpaceUIToolkit != null)
+            {
+                worldSpaceUIToolkit.SetCameraCapturePose(capturePose);
             }
 
             Debug.Log($"[ARPageScanController] Sending Reading Window Frame ({textureToSend.width}x{textureToSend.height}) to CloudVisionService...");

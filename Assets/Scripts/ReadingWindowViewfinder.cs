@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -6,7 +7,8 @@ using UnityEngine.EventSystems;
 /// Renders a stylized 2D "Reading Window" viewfinder overlay on the screen HUD.
 /// Guides the user to frame a textbook paragraph and crops the camera image 
 /// for high-resolution OCR and targeted AR tracking.
-/// Features a touch-interactive bottom drag handle to resize the reading box vertically.
+/// Features a touch-interactive bottom drag handle to resize the reading box vertically,
+/// and an Active Level Gatekeeper that shifts the reticle to Emerald Green when level.
 /// </summary>
 public class ReadingWindowViewfinder : MonoBehaviour
 {
@@ -33,8 +35,22 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [Tooltip("Minimum distance from screen bottom (keeps box safely above scan button)")]
     [SerializeField] private float minBottomDistanceNormalized = 0.18f;
 
+    [Header("Active Level Gatekeeper")]
+    [Tooltip("Maximum tilt angle away from tabletop perpendicular (degrees) considered 'level'")]
+    [Range(3f, 15f)]
+    [SerializeField] private float maxLevelTiltAngle = 7.0f;
+
+    [Tooltip("Reticle color when phone is held level (Emerald Green)")]
+    [SerializeField] private Color levelReticleColor = new Color(0.0f, 0.90f, 0.46f, 0.95f); // #00E676
+
+    [Tooltip("Reticle color when phone is tilted (Amber Orange)")]
+    [SerializeField] private Color unlevelReticleColor = new Color(1.0f, 0.57f, 0.0f, 0.95f); // #FF9100
+
+    [Tooltip("Enables dynamic color shifting and level guidance prompt")]
+    [SerializeField] private bool enableSoftGatekeeping = true;
+
     [Header("Visual Styling")]
-    [SerializeField] private Color cornerReticleColor = new Color(0.12f, 0.53f, 0.96f, 0.95f); // Neon Blue
+    [SerializeField] private Color cornerReticleColor = new Color(0.12f, 0.53f, 0.96f, 0.95f); // Neon Blue default
     [SerializeField] private Color handleHighlightColor = new Color(0.40f, 0.85f, 1.0f, 1.0f); // Bright Cyan
     [SerializeField] private Color maskShadeColor = new Color(0f, 0f, 0f, 0.40f); // Darkened vignette
     [SerializeField] private float cornerThickness = 4f;
@@ -44,22 +60,85 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [SerializeField] private RectTransform windowBoxTransform;
     [SerializeField] private GameObject visualRoot;
 
+    // Public properties for external gatekeeper queries
+    public bool IsDeviceLevel { get; private set; } = true;
+    public float CurrentTiltAngle { get; private set; } = 0f;
+
     // Internal references for real-time layout updates
     private RectTransform topMaskRect;
     private RectTransform bottomMaskRect;
     private RectTransform leftMaskRect;
     private RectTransform rightMaskRect;
     private RectTransform hintRect;
+    private Text hintTextComponent;
     private RectTransform dragHandleRect;
     private Image dragHandlePillImage;
     private Transform dragHandlePillTransform;
+
+    private readonly List<Image> reticleBracketImages = new List<Image>();
+    private Color currentDynamicColor;
 
     private float initialTopEdge = 0.73f;
     private bool isDraggingHandle = false;
 
     private void Awake()
     {
+        currentDynamicColor = cornerReticleColor;
         BuildViewfinderUIIfNeeded();
+    }
+
+    private void Update()
+    {
+        UpdateDeviceTiltAndReticleColor();
+    }
+
+    private void UpdateDeviceTiltAndReticleColor()
+    {
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            // For tabletop reading, camera looks downward toward floor/table:
+            CurrentTiltAngle = Vector3.Angle(cam.transform.forward, Vector3.down);
+            IsDeviceLevel = CurrentTiltAngle <= maxLevelTiltAngle;
+        }
+        else
+        {
+            IsDeviceLevel = true;
+            CurrentTiltAngle = 0f;
+        }
+
+        Color targetColor = cornerReticleColor;
+        if (enableSoftGatekeeping)
+        {
+            targetColor = IsDeviceLevel ? levelReticleColor : unlevelReticleColor;
+
+            if (hintTextComponent != null)
+            {
+                if (IsDeviceLevel)
+                {
+                    hintTextComponent.text = "✓ Level • Align & tap scan";
+                    hintTextComponent.color = new Color(0.85f, 1f, 0.90f, 0.98f);
+                }
+                else
+                {
+                    hintTextComponent.text = $"⚠️ Tilt {CurrentTiltAngle:F0}° • Hold flat over page";
+                    hintTextComponent.color = new Color(1f, 0.92f, 0.70f, 0.98f);
+                }
+            }
+        }
+
+        currentDynamicColor = Color.Lerp(currentDynamicColor, targetColor, Time.deltaTime * 6f);
+
+        for (int i = 0; i < reticleBracketImages.Count; i++)
+        {
+            if (reticleBracketImages[i] != null)
+                reticleBracketImages[i].color = currentDynamicColor;
+        }
+
+        if (dragHandlePillImage != null && !isDraggingHandle)
+        {
+            dragHandlePillImage.color = currentDynamicColor;
+        }
     }
 
     private void BuildViewfinderUIIfNeeded()
@@ -91,6 +170,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         windowBoxTransform = boxObj.AddComponent<RectTransform>();
 
         // Add 4 Corner Brackets
+        reticleBracketImages.Clear();
         CreateCornerReticle(windowBoxTransform, "TL", new Vector2(0f, 1f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
         CreateCornerReticle(windowBoxTransform, "TR", new Vector2(1f, 1f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
         CreateCornerReticle(windowBoxTransform, "BL", new Vector2(0f, 0f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
@@ -103,14 +183,14 @@ public class ReadingWindowViewfinder : MonoBehaviour
         hintRect.sizeDelta = new Vector2(0f, 36f);
         hintRect.anchoredPosition = new Vector2(0f, 22f);
 
-        Text hintText = hintObj.AddComponent<Text>();
-        hintText.text = "📖 Align paragraph inside box";
-        hintText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (hintText.font == null) hintText.font = Font.CreateDynamicFontFromOSFont("Arial", 16);
-        hintText.fontSize = 17;
-        hintText.alignment = TextAnchor.MiddleCenter;
-        hintText.color = new Color(1f, 1f, 1f, 0.95f);
-        hintText.raycastTarget = false;
+        hintTextComponent = hintObj.AddComponent<Text>();
+        hintTextComponent.text = "📖 Align paragraph inside box";
+        hintTextComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (hintTextComponent.font == null) hintTextComponent.font = Font.CreateDynamicFontFromOSFont("Arial", 16);
+        hintTextComponent.fontSize = 17;
+        hintTextComponent.alignment = TextAnchor.MiddleCenter;
+        hintTextComponent.color = new Color(1f, 1f, 1f, 0.95f);
+        hintTextComponent.raycastTarget = false;
 
         Outline outline = hintObj.AddComponent<Outline>();
         outline.effectColor = new Color(0f, 0f, 0f, 0.75f);
@@ -206,7 +286,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         isDraggingHandle = false;
 
         if (dragHandlePillImage != null)
-            dragHandlePillImage.color = cornerReticleColor;
+            dragHandlePillImage.color = currentDynamicColor;
 
         if (dragHandlePillTransform != null)
             dragHandlePillTransform.localScale = Vector3.one;
@@ -309,6 +389,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         Image hImg = hLine.AddComponent<Image>();
         hImg.color = cornerReticleColor;
         hImg.raycastTarget = false;
+        reticleBracketImages.Add(hImg);
 
         // Vertical line
         GameObject vLine = new GameObject("V_Line");
@@ -320,6 +401,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         Image vImg = vLine.AddComponent<Image>();
         vImg.color = cornerReticleColor;
         vImg.raycastTarget = false;
+        reticleBracketImages.Add(vImg);
     }
 
     /// <summary>
