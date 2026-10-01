@@ -300,14 +300,17 @@ public class CloudVisionService : MonoBehaviour
                 float minX = sortedWords.Min(w => w.minX);
                 float maxX = sortedWords.Max(w => w.maxX);
 
+                // Absolute ink bounds directly from Cloud Vision OCR (prevents cumulative drift!)
+                float rawMinY = sortedWords.Min(w => w.minY);
+                float rawMaxY = sortedWords.Max(w => w.maxY);
+
                 // Compute robust line height using median word height in this specific line
                 var lineWordHeights = sortedWords.Select(w => w.height).OrderBy(h => h).ToList();
                 float lineMedianH = lineWordHeights[lineWordHeights.Count / 2];
-                float lineCenterY = sortedWords.Average(w => w.centerY);
 
-                // Add 15% breathing room for Devanagari ascenders/descenders
-                float lineH = Mathf.Clamp(lineMedianH * 1.15f, 20f, 120f);
-                float minY = lineCenterY - (lineH / 2f);
+                // Bound line height cleanly around median word height so matras fit without ballooning
+                float lineH = Mathf.Clamp(rawMaxY - rawMinY, lineMedianH, lineMedianH * 1.30f);
+                float minY = rawMinY; // STRICT ABSOLUTE Y-MIN BINDING (eliminates cumulative pitch drift)
                 float lineW = Math.Max(40f, maxX - minX);
 
                 detectedLines.Add(new DetectedTextLine

@@ -8,9 +8,11 @@ Shader "AksharAR/TransparentUnlit"
     }
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" "IgnoreProjector"="True" }
+        Tags { "Queue"="Transparent+50" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" "IgnoreProjector"="True" }
         LOD 100
         ZWrite Off
+        ZTest LEqual
+        Offset -1, -1
         Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
 
@@ -57,9 +59,11 @@ Shader "AksharAR/TransparentUnlit"
     }
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
+        Tags { "Queue"="Transparent+50" "RenderType"="Transparent" "IgnoreProjector"="True" }
         LOD 100
         ZWrite Off
+        ZTest LEqual
+        Offset -1, -1
         Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
 

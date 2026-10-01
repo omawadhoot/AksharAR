@@ -43,8 +43,8 @@ public class ARSpatialPoseFilter : MonoBehaviour
     [SerializeField] private float fastRotThreshold = 8.0f; // 8 degrees
 
     [Header("Surface Alignment Offset")]
-    [Tooltip("Ultra-thin normal offset above paper surface to eliminate z-fighting without parallax float (meters)")]
-    [SerializeField] private float normalOffsetMeters = 0.00035f; // 0.35 mm
+    [Tooltip("Normal offset above paper surface to eliminate z-fighting without parallax float (meters)")]
+    [SerializeField] private float normalOffsetMeters = 0.0008f; // 0.8 mm
 
     private ARTrackedImage currentTarget;
     private Vector3 lockedTargetPosition;
