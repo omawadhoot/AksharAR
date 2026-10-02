@@ -11,13 +11,14 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(UIDocument))]
 public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
 {
-    [Tooltip("Distance in meters in front of the AR Camera lens")]
-    [SerializeField] private float distanceFromCamera = 0.45f;
+    [Tooltip("Distance in meters in front of the AR Camera lens (must be > camera near clip 0.10m, but < reading distance 0.30m)")]
+    [SerializeField] private float distanceFromCamera = 0.18f;
 
     private UIDocument uiDocument;
     private Camera targetCamera;
     private int lastWidth = -1;
     private int lastHeight = -1;
+    private Matrix4x4 lastProjectionMatrix = Matrix4x4.zero;
 
     private void Awake()
     {
@@ -37,9 +38,11 @@ public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
         if (targetCamera == null)
         {
             AttachToCamera();
+            return;
         }
 
-        if (Screen.width != lastWidth || Screen.height != lastHeight)
+        Matrix4x4 currentProj = targetCamera.projectionMatrix;
+        if (Screen.width != lastWidth || Screen.height != lastHeight || currentProj != lastProjectionMatrix)
         {
             UpdateFrustumFit();
         }
@@ -75,9 +78,6 @@ public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
         EnsurePhysicsRaycaster();
 
         transform.SetParent(targetCamera.transform, false);
-        transform.localPosition = new Vector3(0f, 0f, distanceFromCamera);
-        transform.localRotation = Quaternion.identity;
-
         EnsureBoxCollider();
         UpdateFrustumFit();
     }
@@ -101,39 +101,58 @@ public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
 
         lastWidth = Screen.width;
         lastHeight = Screen.height;
+        lastProjectionMatrix = targetCamera.projectionMatrix;
 
-        // Frustum height & width in meters at distanceFromCamera
-        float fovRad = targetCamera.fieldOfView * Mathf.Deg2Rad;
-        float frustumHeight = 2.0f * distanceFromCamera * Mathf.Tan(fovRad * 0.5f);
-        float aspect = (float)Screen.width / Mathf.Max(1, Screen.height);
-        float frustumWidth = frustumHeight * aspect;
+        // 1. Determine target UI resolution matching screen aspect ratio
+        float targetWidth = Screen.width > 0 ? Screen.width : 1080f;
+        float targetHeight = Screen.height > 0 ? Screen.height : 2400f;
 
-        // Native UI Document dimensions from PanelSettings reference resolution
-        Vector2 refRes = (uiDocument.panelSettings != null)
-            ? (Vector2)uiDocument.panelSettings.referenceResolution
-            : new Vector2(1080f, 2400f);
+        // Synchronize UIDocument's World Space dimensions with screen aspect
+        uiDocument.worldSpaceSize = new Vector2(targetWidth, targetHeight);
 
-        float docWidth = refRes.x > 0 ? refRes.x : 1080f;
-        float docHeight = refRes.y > 0 ? refRes.y : 2400f;
+        // 2. Measure actual camera frustum in world space at distanceFromCamera using ViewportToWorldPoint.
+        // This accurately takes ARCore's Android device-calibrated projection matrix into account.
+        Vector3 centerWorld = targetCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, distanceFromCamera));
+        Vector3 leftWorld   = targetCamera.ViewportToWorldPoint(new Vector3(0.0f, 0.5f, distanceFromCamera));
+        Vector3 rightWorld  = targetCamera.ViewportToWorldPoint(new Vector3(1.0f, 0.5f, distanceFromCamera));
+        Vector3 bottomWorld = targetCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.0f, distanceFromCamera));
+        Vector3 topWorld    = targetCamera.ViewportToWorldPoint(new Vector3(0.5f, 1.0f, distanceFromCamera));
 
+        float frustumWidth = Vector3.Distance(leftWorld, rightWorld);
+        float frustumHeight = Vector3.Distance(bottomWorld, topWorld);
+
+        // Position & align with target camera in local space
+        if (transform.parent == targetCamera.transform)
+        {
+            transform.localPosition = targetCamera.transform.InverseTransformPoint(centerWorld);
+            transform.localRotation = Quaternion.identity;
+        }
+        else
+        {
+            transform.position = centerWorld;
+            transform.rotation = targetCamera.transform.rotation;
+        }
+
+        // 3. Scale mesh so the UIDocument fills the camera view frustum edge-to-edge
         float ppu = (uiDocument.panelSettings != null && uiDocument.panelSettings.referenceSpritePixelsPerUnit > 0)
             ? uiDocument.panelSettings.referenceSpritePixelsPerUnit
             : 100f;
 
-        float nativeWidthMeters = docWidth / ppu;
-        float nativeHeightMeters = docHeight / ppu;
+        float meshWidthMeters = targetWidth / ppu;
+        float meshHeightMeters = targetHeight / ppu;
 
-        if (nativeWidthMeters > 0.001f && nativeHeightMeters > 0.001f)
+        if (meshWidthMeters > 0.001f && meshHeightMeters > 0.001f)
         {
-            float scaleX = frustumWidth / nativeWidthMeters;
-            float scaleY = frustumHeight / nativeHeightMeters;
+            float scaleX = frustumWidth / meshWidthMeters;
+            float scaleY = frustumHeight / meshHeightMeters;
             transform.localScale = new Vector3(scaleX, scaleY, 1.0f);
         }
 
+        // 4. Update BoxCollider to match the UI mesh bounding dimensions
         BoxCollider boxCol = GetComponent<BoxCollider>();
         if (boxCol != null)
         {
-            boxCol.size = new Vector3(nativeWidthMeters, nativeHeightMeters, 0.02f);
+            boxCol.size = new Vector3(meshWidthMeters, meshHeightMeters, 0.01f);
             boxCol.center = Vector3.zero;
         }
     }
