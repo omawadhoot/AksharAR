@@ -164,6 +164,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         currentDynamicTintColor = unlevelWindowTintColor;
         lastScreenWidth = Screen.width;
         lastScreenHeight = Screen.height;
+
+        ApplyOrientationForMode(activeReadingMode);
         SynchronizeCanvasScalerOrientation();
         ApplyModePreset(activeReadingMode);
         BuildViewfinderUIIfNeeded();
@@ -205,15 +207,37 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     /// <summary>
     /// Explicitly switches between Poem Mode and Chapter Mode via the UI.
-    /// Adjusts viewfinder framing dimensions and updates HUD visuals.
+    /// In Chapter Mode, rotates the entire application and photo capture to Landscape.
+    /// In Poem Mode, rotates the application back to Portrait.
     /// </summary>
     public void SetReadingMode(ReadingMode mode)
     {
         activeReadingMode = mode;
+        ApplyOrientationForMode(activeReadingMode);
         ApplyModePreset(activeReadingMode);
         UpdateModeSelectorVisuals();
         UpdateDeviceTiltAndReticleColor();
-        Debug.Log($"[ReadingWindowViewfinder] UI switched Reading Mode to {activeReadingMode}");
+        Debug.Log($"[ReadingWindowViewfinder] UI switched Reading Mode to {activeReadingMode} | Orientation: {Screen.orientation}");
+    }
+
+    private void ApplyOrientationForMode(ReadingMode mode)
+    {
+        if (mode == ReadingMode.Chapter)
+        {
+            Screen.autorotateToPortrait = false;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = true;
+            Screen.autorotateToLandscapeRight = true;
+            Screen.orientation = ScreenOrientation.LandscapeLeft;
+        }
+        else
+        {
+            Screen.autorotateToLandscapeLeft = false;
+            Screen.autorotateToLandscapeRight = false;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToPortrait = true;
+            Screen.orientation = ScreenOrientation.Portrait;
+        }
     }
 
     public void ApplyModePreset(ReadingMode mode)
@@ -306,7 +330,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
             {
                 if (IsDeviceLevel)
                 {
-                    string modeTag = (activeReadingMode == ReadingMode.Chapter) ? "📖 Chapter Mode" : "📜 Poem Mode";
+                    string modeTag = (activeReadingMode == ReadingMode.Chapter) ? "📖 Chapter Mode (Landscape)" : "📜 Poem Mode (Portrait)";
                     hintTextComponent.text = $"✨ {modeTag} • Crystal Clear • Tap to scan!";
                     hintTextComponent.color = new Color(0.85f, 1f, 0.90f, 0.98f);
                 }

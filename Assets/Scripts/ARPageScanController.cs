@@ -331,7 +331,9 @@ public class ARPageScanController : MonoBehaviour
                 worldSpaceUIToolkit.SetCameraCapturePose(capturePose);
             }
 
-            Debug.Log($"[ARPageScanController] Sending Reading Window Frame ({textureToSend.width}x{textureToSend.height}) to CloudVisionService...");
+            string modeTag = readingWindowViewfinder != null ? readingWindowViewfinder.ActiveReadingMode.ToString() : "Default";
+            bool isLandscapePhoto = textureToSend.width > textureToSend.height;
+            Debug.Log($"[ARPageScanController] Captured {(isLandscapePhoto ? "LANDSCAPE" : "PORTRAIT")} Reading Window Photo ({textureToSend.width}x{textureToSend.height}) in {modeTag} Mode. Sending to CloudVisionService...");
 
             if (visionService != null)
             {
