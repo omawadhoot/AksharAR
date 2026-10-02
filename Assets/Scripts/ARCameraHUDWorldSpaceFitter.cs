@@ -111,10 +111,10 @@ public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
         // Native UI Document dimensions from PanelSettings reference resolution
         Vector2 refRes = (uiDocument.panelSettings != null)
             ? (Vector2)uiDocument.panelSettings.referenceResolution
-            : new Vector2(1080f, 1920f);
+            : new Vector2(1080f, 2400f);
 
         float docWidth = refRes.x > 0 ? refRes.x : 1080f;
-        float docHeight = refRes.y > 0 ? refRes.y : 1920f;
+        float docHeight = refRes.y > 0 ? refRes.y : 2400f;
 
         float ppu = (uiDocument.panelSettings != null && uiDocument.panelSettings.referenceSpritePixelsPerUnit > 0)
             ? uiDocument.panelSettings.referenceSpritePixelsPerUnit

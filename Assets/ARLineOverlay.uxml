@@ -1,6 +1,6 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/ARLineOverlay.uss?fileID=7433441132597879392&amp;guid=ea9a53b44882d6d45aec87ea626c1e73&amp;type=3#ARLineOverlay"/>
-    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay">
+    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; width: 100%; height: 100%;">
         <ui:VisualElement name="LevelPill" picking-mode="Ignore" class="level-pill level-pill--tilted">
             <ui:Label name="LevelPillText" text="📐 TILT 0°" picking-mode="Ignore" class="level-pill-text"/>
         </ui:VisualElement>
