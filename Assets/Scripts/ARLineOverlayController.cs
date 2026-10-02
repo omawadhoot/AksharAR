@@ -65,6 +65,23 @@ public class ARLineOverlayController : MonoBehaviour
             return;
         }
 
+        RectTransform btnRect = scanButton.GetComponent<RectTransform>();
+        if (btnRect != null)
+        {
+            btnRect.sizeDelta = new Vector2(Mathf.Max(btnRect.sizeDelta.x, 280f), Mathf.Max(btnRect.sizeDelta.y, 76f));
+        }
+
+        var tmp = scanButton.GetComponentInChildren<TMPro.TMP_Text>();
+        if (tmp != null)
+        {
+            tmp.fontSize = Mathf.Max(tmp.fontSize, 26f);
+        }
+        var legacyText = scanButton.GetComponentInChildren<Text>();
+        if (legacyText != null)
+        {
+            legacyText.fontSize = Mathf.Max(legacyText.fontSize, 24);
+        }
+
         scanButton.onClick.RemoveAllListeners();
         scanButton.onClick.AddListener(OnScanButtonClicked);
         Debug.Log("[ARLineOverlayController] uGUI ScanButton bound via onClick.");

@@ -101,8 +101,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [SerializeField] private Color cornerReticleColor = new Color(0.12f, 0.53f, 0.96f, 0.95f); // Neon Blue default
     [SerializeField] private Color handleHighlightColor = new Color(0.40f, 0.85f, 1.0f, 1.0f); // Bright Cyan
     [SerializeField] private Color maskShadeColor = new Color(0f, 0f, 0f, 0.40f); // Darkened vignette
-    [SerializeField] private float cornerThickness = 4f;
-    [SerializeField] private float cornerLength = 32f;
+    [SerializeField] private float cornerThickness = 7f;
+    [SerializeField] private float cornerLength = 48f;
 
     [Header("References")]
     [SerializeField] private RectTransform windowBoxTransform;
@@ -164,6 +164,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         currentDynamicTintColor = unlevelWindowTintColor;
         lastScreenWidth = Screen.width;
         lastScreenHeight = Screen.height;
+        SynchronizeCanvasScalerOrientation();
         ApplyModePreset(activeReadingMode);
         BuildViewfinderUIIfNeeded();
     }
@@ -181,7 +182,24 @@ public class ReadingWindowViewfinder : MonoBehaviour
         {
             lastScreenWidth = Screen.width;
             lastScreenHeight = Screen.height;
+            SynchronizeCanvasScalerOrientation();
             UpdateLayout();
+        }
+    }
+
+    private void SynchronizeCanvasScalerOrientation()
+    {
+        CanvasScaler scaler = GetComponentInParent<CanvasScaler>();
+        if (scaler != null && scaler.uiScaleMode == CanvasScaler.ScaleMode.ScaleWithScreenSize)
+        {
+            if (Screen.width > Screen.height)
+            {
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+            }
+            else
+            {
+                scaler.referenceResolution = new Vector2(1080f, 1920f);
+            }
         }
     }
 
@@ -373,21 +391,21 @@ public class ReadingWindowViewfinder : MonoBehaviour
         GameObject hintObj = new GameObject("ReadingWindow_HintText");
         hintObj.transform.SetParent(rootRect, false);
         hintRect = hintObj.AddComponent<RectTransform>();
-        hintRect.sizeDelta = new Vector2(0f, 36f);
-        hintRect.anchoredPosition = new Vector2(0f, 22f);
+        hintRect.sizeDelta = new Vector2(0f, 52f);
+        hintRect.anchoredPosition = new Vector2(0f, 28f);
 
         hintTextComponent = hintObj.AddComponent<Text>();
         hintTextComponent.text = "📖 Align paragraph inside box";
         hintTextComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (hintTextComponent.font == null) hintTextComponent.font = Font.CreateDynamicFontFromOSFont("Arial", 16);
-        hintTextComponent.fontSize = 17;
+        if (hintTextComponent.font == null) hintTextComponent.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+        hintTextComponent.fontSize = 24;
         hintTextComponent.alignment = TextAnchor.MiddleCenter;
         hintTextComponent.color = new Color(1f, 1f, 1f, 0.95f);
         hintTextComponent.raycastTarget = false;
 
         Outline outline = hintObj.AddComponent<Outline>();
         outline.effectColor = new Color(0f, 0f, 0f, 0.75f);
-        outline.effectDistance = new Vector2(1f, -1f);
+        outline.effectDistance = new Vector2(1.5f, -1.5f);
 
         // ── 4. Interactive Drag Handles ──
         BuildBottomDragHandle(rootRect);
@@ -409,16 +427,16 @@ public class ReadingWindowViewfinder : MonoBehaviour
         modeSelectorRootRect.anchorMin = new Vector2(0.5f, 1f);
         modeSelectorRootRect.anchorMax = new Vector2(0.5f, 1f);
         modeSelectorRootRect.pivot = new Vector2(0.5f, 1f);
-        modeSelectorRootRect.anchoredPosition = new Vector2(0f, -22f);
-        modeSelectorRootRect.sizeDelta = new Vector2(340f, 44f);
+        modeSelectorRootRect.anchoredPosition = new Vector2(0f, -24f);
+        modeSelectorRootRect.sizeDelta = new Vector2(490f, 64f);
 
         Image containerBg = selectorObj.AddComponent<Image>();
-        containerBg.color = new Color(0.05f, 0.08f, 0.16f, 0.88f);
+        containerBg.color = new Color(0.05f, 0.08f, 0.16f, 0.90f);
         containerBg.raycastTarget = false;
 
         Outline outline = selectorObj.AddComponent<Outline>();
-        outline.effectColor = new Color(0.25f, 0.55f, 0.95f, 0.50f);
-        outline.effectDistance = new Vector2(1.5f, -1.5f);
+        outline.effectColor = new Color(0.25f, 0.55f, 0.95f, 0.60f);
+        outline.effectDistance = new Vector2(2f, -2f);
 
         // ── Poem Mode Button (Left) ──
         GameObject poemBtnObj = new GameObject("Btn_PoemMode");
@@ -427,8 +445,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         poemBtnRect.anchorMin = new Vector2(0f, 0.5f);
         poemBtnRect.anchorMax = new Vector2(0f, 0.5f);
         poemBtnRect.pivot = new Vector2(0f, 0.5f);
-        poemBtnRect.anchoredPosition = new Vector2(6f, 0f);
-        poemBtnRect.sizeDelta = new Vector2(160f, 34f);
+        poemBtnRect.anchoredPosition = new Vector2(8f, 0f);
+        poemBtnRect.sizeDelta = new Vector2(232f, 50f);
 
         poemModeBtnBg = poemBtnObj.AddComponent<Image>();
         poemModeBtnBg.raycastTarget = true;
@@ -448,8 +466,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         poemModeBtnText = poemTextObj.AddComponent<Text>();
         poemModeBtnText.text = "📜 Poem Mode";
         poemModeBtnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (poemModeBtnText.font == null) poemModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 13);
-        poemModeBtnText.fontSize = 13;
+        if (poemModeBtnText.font == null) poemModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
+        poemModeBtnText.fontSize = 22;
         poemModeBtnText.alignment = TextAnchor.MiddleCenter;
         poemModeBtnText.raycastTarget = false;
 
@@ -460,8 +478,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         chapterBtnRect.anchorMin = new Vector2(1f, 0.5f);
         chapterBtnRect.anchorMax = new Vector2(1f, 0.5f);
         chapterBtnRect.pivot = new Vector2(1f, 0.5f);
-        chapterBtnRect.anchoredPosition = new Vector2(-6f, 0f);
-        chapterBtnRect.sizeDelta = new Vector2(160f, 34f);
+        chapterBtnRect.anchoredPosition = new Vector2(-8f, 0f);
+        chapterBtnRect.sizeDelta = new Vector2(232f, 50f);
 
         chapterModeBtnBg = chapterBtnObj.AddComponent<Image>();
         chapterModeBtnBg.raycastTarget = true;
@@ -481,8 +499,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         chapterModeBtnText = chapterTextObj.AddComponent<Text>();
         chapterModeBtnText.text = "📖 Chapter Mode";
         chapterModeBtnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (chapterModeBtnText.font == null) chapterModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 13);
-        chapterModeBtnText.fontSize = 13;
+        if (chapterModeBtnText.font == null) chapterModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
+        chapterModeBtnText.fontSize = 22;
         chapterModeBtnText.alignment = TextAnchor.MiddleCenter;
         chapterModeBtnText.raycastTarget = false;
 
@@ -520,7 +538,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         GameObject handleObj = new GameObject("ReadingWindow_BottomHandle");
         handleObj.transform.SetParent(parent, false);
         bottomDragHandleRect = handleObj.AddComponent<RectTransform>();
-        bottomDragHandleRect.sizeDelta = new Vector2(180f, 54f); // Touch hit-box
+        bottomDragHandleRect.sizeDelta = new Vector2(260f, 75f); // Generous touch hit-box
 
         Image hitImage = handleObj.AddComponent<Image>();
         hitImage.color = new Color(0f, 0f, 0f, 0.001f);
@@ -531,8 +549,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         RectTransform pillRect = pillObj.AddComponent<RectTransform>();
         pillRect.anchorMin = new Vector2(0.5f, 0.5f);
         pillRect.anchorMax = new Vector2(0.5f, 0.5f);
-        pillRect.anchoredPosition = new Vector2(0f, 6f);
-        pillRect.sizeDelta = new Vector2(64f, 6f);
+        pillRect.anchoredPosition = new Vector2(0f, 10f);
+        pillRect.sizeDelta = new Vector2(110f, 10f);
 
         bottomDragHandlePillImage = pillObj.AddComponent<Image>();
         bottomDragHandlePillImage.color = cornerReticleColor;
@@ -544,16 +562,16 @@ public class ReadingWindowViewfinder : MonoBehaviour
         RectTransform labelRect = labelObj.AddComponent<RectTransform>();
         labelRect.anchorMin = new Vector2(0.5f, 0.5f);
         labelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        labelRect.anchoredPosition = new Vector2(0f, -8f);
-        labelRect.sizeDelta = new Vector2(140f, 20f);
+        labelRect.anchoredPosition = new Vector2(0f, -10f);
+        labelRect.sizeDelta = new Vector2(180f, 26f);
 
         Text labelText = labelObj.AddComponent<Text>();
         labelText.text = "═  ↕  ═";
         labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (labelText.font == null) labelText.font = Font.CreateDynamicFontFromOSFont("Arial", 12);
-        labelText.fontSize = 12;
+        if (labelText.font == null) labelText.font = Font.CreateDynamicFontFromOSFont("Arial", 18);
+        labelText.fontSize = 18;
         labelText.alignment = TextAnchor.MiddleCenter;
-        labelText.color = new Color(1f, 1f, 1f, 0.70f);
+        labelText.color = new Color(1f, 1f, 1f, 0.85f);
         labelText.raycastTarget = false;
 
         ViewfinderDragHandle dragHandle = handleObj.AddComponent<ViewfinderDragHandle>();
@@ -565,7 +583,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         GameObject handleObj = new GameObject("ReadingWindow_RightHandle");
         handleObj.transform.SetParent(parent, false);
         rightDragHandleRect = handleObj.AddComponent<RectTransform>();
-        rightDragHandleRect.sizeDelta = new Vector2(54f, 160f); // Vertical touch hit-box
+        rightDragHandleRect.sizeDelta = new Vector2(75f, 220f); // Vertical touch hit-box
 
         Image hitImage = handleObj.AddComponent<Image>();
         hitImage.color = new Color(0f, 0f, 0f, 0.001f);
@@ -576,8 +594,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         RectTransform pillRect = pillObj.AddComponent<RectTransform>();
         pillRect.anchorMin = new Vector2(0.5f, 0.5f);
         pillRect.anchorMax = new Vector2(0.5f, 0.5f);
-        pillRect.anchoredPosition = new Vector2(-6f, 0f);
-        pillRect.sizeDelta = new Vector2(6f, 64f);
+        pillRect.anchoredPosition = new Vector2(-8f, 0f);
+        pillRect.sizeDelta = new Vector2(10f, 110f);
 
         rightDragHandlePillImage = pillObj.AddComponent<Image>();
         rightDragHandlePillImage.color = cornerReticleColor;
@@ -589,16 +607,16 @@ public class ReadingWindowViewfinder : MonoBehaviour
         RectTransform labelRect = labelObj.AddComponent<RectTransform>();
         labelRect.anchorMin = new Vector2(0.5f, 0.5f);
         labelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        labelRect.anchoredPosition = new Vector2(10f, 0f);
-        labelRect.sizeDelta = new Vector2(24f, 60f);
+        labelRect.anchoredPosition = new Vector2(14f, 0f);
+        labelRect.sizeDelta = new Vector2(30f, 75f);
 
         Text labelText = labelObj.AddComponent<Text>();
         labelText.text = "║\n↔\n║";
         labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (labelText.font == null) labelText.font = Font.CreateDynamicFontFromOSFont("Arial", 11);
-        labelText.fontSize = 11;
+        if (labelText.font == null) labelText.font = Font.CreateDynamicFontFromOSFont("Arial", 16);
+        labelText.fontSize = 16;
         labelText.alignment = TextAnchor.MiddleCenter;
-        labelText.color = new Color(1f, 1f, 1f, 0.70f);
+        labelText.color = new Color(1f, 1f, 1f, 0.85f);
         labelText.raycastTarget = false;
 
         ViewfinderDragHandle dragHandle = handleObj.AddComponent<ViewfinderDragHandle>();
@@ -610,7 +628,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         GameObject handleObj = new GameObject("ReadingWindow_CornerBRHandle");
         handleObj.transform.SetParent(parent, false);
         cornerDragHandleRect = handleObj.AddComponent<RectTransform>();
-        cornerDragHandleRect.sizeDelta = new Vector2(60f, 60f); // Corner touch zone
+        cornerDragHandleRect.sizeDelta = new Vector2(85f, 85f); // Corner touch zone
 
         Image hitImage = handleObj.AddComponent<Image>();
         hitImage.color = new Color(0f, 0f, 0f, 0.001f);
@@ -621,8 +639,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
         RectTransform dotRect = dotObj.AddComponent<RectTransform>();
         dotRect.anchorMin = new Vector2(0.5f, 0.5f);
         dotRect.anchorMax = new Vector2(0.5f, 0.5f);
-        dotRect.anchoredPosition = new Vector2(-4f, 4f);
-        dotRect.sizeDelta = new Vector2(10f, 10f);
+        dotRect.anchoredPosition = new Vector2(-6f, 6f);
+        dotRect.sizeDelta = new Vector2(20f, 20f);
 
         cornerDragHandleDotImage = dotObj.AddComponent<Image>();
         cornerDragHandleDotImage.color = cornerReticleColor;
