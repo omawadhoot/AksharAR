@@ -28,7 +28,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="BottomBar" picking-mode="Position" class="camera-bottom-bar">
+        <ui:VisualElement name="BottomBar" picking-mode="Ignore" class="camera-bottom-bar">
             <ui:VisualElement name="ModeCarousel" picking-mode="Ignore" class="mode-carousel">
                 <ui:Button name="TabPoem" picking-mode="Position" class="mode-tab mode-tab--active">
                     <ui:Label text="POEM" picking-mode="Ignore" class="mode-tab-text"/>

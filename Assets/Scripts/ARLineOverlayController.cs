@@ -37,6 +37,11 @@ public class ARLineOverlayController : MonoBehaviour
     private float lastClickTimestamp = -1f;
     private bool isReadingMode = false;
 
+    private EventCallback<PointerDownEvent> shutterPointerDownCallback;
+    private EventCallback<PointerDownEvent> quickRescanPointerDownCallback;
+    private EventCallback<PointerDownEvent> tabPoemPointerDownCallback;
+    private EventCallback<PointerDownEvent> tabChapterPointerDownCallback;
+
     private void Awake()
     {
         DisableLegacyCanvasIfPresent();
@@ -134,25 +139,71 @@ public class ARLineOverlayController : MonoBehaviour
     private void BindCallbacks()
     {
         if (shutterButton != null)
+        {
+            shutterPointerDownCallback = evt =>
+            {
+                OnScanButtonClicked();
+                evt.StopPropagation();
+            };
+            shutterButton.RegisterCallback(shutterPointerDownCallback);
             shutterButton.clicked += OnScanButtonClicked;
+        }
 
         if (quickRescanBtn != null)
+        {
+            quickRescanPointerDownCallback = evt =>
+            {
+                OnScanButtonClicked();
+                evt.StopPropagation();
+            };
+            quickRescanBtn.RegisterCallback(quickRescanPointerDownCallback);
             quickRescanBtn.clicked += OnScanButtonClicked;
+        }
 
         if (tabPoem != null)
+        {
+            tabPoemPointerDownCallback = evt =>
+            {
+                SwitchReadingMode(ReadingMode.Poem);
+                evt.StopPropagation();
+            };
+            tabPoem.RegisterCallback(tabPoemPointerDownCallback);
             tabPoem.clicked += () => SwitchReadingMode(ReadingMode.Poem);
+        }
 
         if (tabChapter != null)
+        {
+            tabChapterPointerDownCallback = evt =>
+            {
+                SwitchReadingMode(ReadingMode.Chapter);
+                evt.StopPropagation();
+            };
+            tabChapter.RegisterCallback(tabChapterPointerDownCallback);
             tabChapter.clicked += () => SwitchReadingMode(ReadingMode.Chapter);
+        }
     }
 
     private void UnbindCallbacks()
     {
         if (shutterButton != null)
+        {
+            if (shutterPointerDownCallback != null)
+                shutterButton.UnregisterCallback(shutterPointerDownCallback);
             shutterButton.clicked -= OnScanButtonClicked;
+        }
 
         if (quickRescanBtn != null)
+        {
+            if (quickRescanPointerDownCallback != null)
+                quickRescanBtn.UnregisterCallback(quickRescanPointerDownCallback);
             quickRescanBtn.clicked -= OnScanButtonClicked;
+        }
+
+        if (tabPoem != null && tabPoemPointerDownCallback != null)
+            tabPoem.UnregisterCallback(tabPoemPointerDownCallback);
+
+        if (tabChapter != null && tabChapterPointerDownCallback != null)
+            tabChapter.UnregisterCallback(tabChapterPointerDownCallback);
     }
 
     private void SwitchReadingMode(ReadingMode mode)
