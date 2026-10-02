@@ -6,7 +6,8 @@ using UnityEngine.EventSystems;
 /// Attaches a UI Toolkit UIDocument to the AR Main Camera in World Space.
 /// Automatically matches the camera view frustum so the UI acts as an edge-to-edge
 /// HUD overlay, bypassing the ARCore Android camera background overlay bug in Unity 6.
-/// Ensures PhysicsRaycaster is attached to Main Camera for 3D touch interaction.
+/// Ensures WorldDocumentRaycaster and PanelInputConfiguration are active for input routing,
+/// and eliminates conflicting PhysicsRaycasters.
 /// </summary>
 [RequireComponent(typeof(UIDocument))]
 public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
@@ -24,7 +25,6 @@ public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
     {
         uiDocument = GetComponent<UIDocument>();
         EnsureWorldSpacePanelSettings();
-        EnsurePhysicsRaycaster();
         AttachToCamera();
     }
 
@@ -56,17 +56,38 @@ public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
         }
     }
 
-    private void EnsurePhysicsRaycaster()
+    private void EnsureWorldSpaceInput(Camera cam)
     {
-        Camera cam = targetCamera != null ? targetCamera : Camera.main;
-        if (cam != null)
+        if (cam == null) return;
+
+        // 1. Remove legacy/conflicting PhysicsRaycaster from Camera if present
+        PhysicsRaycaster physRaycaster = cam.GetComponent<PhysicsRaycaster>();
+        if (physRaycaster != null)
         {
-            PhysicsRaycaster raycaster = cam.GetComponent<PhysicsRaycaster>();
-            if (raycaster == null)
+            Destroy(physRaycaster);
+            Debug.Log("[ARCameraHUDWorldSpaceFitter] Removed conflicting PhysicsRaycaster from Main Camera.");
+        }
+
+        // 2. Ensure PanelInputConfiguration exists on EventSystem with World Space input enabled
+        var es = Object.FindFirstObjectByType<EventSystem>();
+        if (es != null)
+        {
+            var pic = es.GetComponent<PanelInputConfiguration>();
+            if (pic == null)
             {
-                raycaster = cam.gameObject.AddComponent<PhysicsRaycaster>();
-                Debug.Log("[ARCameraHUDWorldSpaceFitter] Added PhysicsRaycaster to Main Camera for World Space UI Toolkit touch interactions.");
+                pic = es.gameObject.AddComponent<PanelInputConfiguration>();
             }
+            pic.processWorldSpaceInput = true;
+            pic.defaultEventCameraIsMainCamera = true;
+            pic.autoCreatePanelComponents = true;
+        }
+
+        // 3. Ensure WorldDocumentRaycaster is attached to Camera for UI Toolkit World Space input routing
+        var wr = cam.GetComponent<WorldDocumentRaycaster>();
+        if (wr == null)
+        {
+            wr = cam.gameObject.AddComponent<WorldDocumentRaycaster>();
+            Debug.Log("[ARCameraHUDWorldSpaceFitter] Added WorldDocumentRaycaster to AR Camera for UI Toolkit touch interaction.");
         }
     }
 
@@ -75,7 +96,7 @@ public class ARCameraHUDWorldSpaceFitter : MonoBehaviour
         targetCamera = Camera.main;
         if (targetCamera == null) return;
 
-        EnsurePhysicsRaycaster();
+        EnsureWorldSpaceInput(targetCamera);
 
         transform.SetParent(targetCamera.transform, false);
         EnsureBoxCollider();

@@ -271,6 +271,7 @@ GameObject:
   - component: {fileID: 860424870}
   - component: {fileID: 860424869}
   - component: {fileID: 860424874}
+  - component: {fileID: 860424875}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -530,6 +531,19 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &860424875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 860424867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c727e4c005e5114fb3348a38c4cebbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UIElements.WorldDocumentRaycaster
+  m_EventCamera: {fileID: 0}
 --- !u!1 &1275683958
 GameObject:
   m_ObjectHideFlags: 0
@@ -646,15 +660,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3655fd1bf74ec644c96a49ac6d03e5b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ReadingWindowViewfinder
+  uiDocument: {fileID: 0}
+  activeReadingMode: 0
+  poemModeDimensions: {x: 0.86, y: 0.38}
+  poemModeCenterY: 0.54
+  chapterModeDimensions: {x: 0.8, y: 0.6}
+  chapterModeCenterY: 0.52
   windowWidthNormalized: 0.86
   windowHeightNormalized: 0.38
   windowCenterYNormalized: 0.54
-  cornerReticleColor: {r: 0.12, g: 0.53, b: 0.96, a: 0.95}
-  maskShadeColor: {r: 0, g: 0, b: 0, a: 0.4}
-  cornerThickness: 4
-  cornerLength: 32
-  windowBoxTransform: {fileID: 0}
-  visualRoot: {fileID: 0}
+  minWidthNormalized: 0.28
+  maxWidthNormalized: 0.96
+  minHeightNormalized: 0.12
+  maxHeightNormalized: 0.6
+  minBottomDistanceNormalized: 0.18
+  maxLevelTiltAngle: 7
+  enableSoftGatekeeping: 1
 --- !u!1 &1509708880
 GameObject:
   m_ObjectHideFlags: 0
@@ -1101,7 +1122,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18adcb313e16a594e8cad11a9e33e8c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ARLineOverlayController
-  scanButton: {fileID: 1632249245}
   uiDocument: {fileID: 1509708881}
   pageScanController: {fileID: 1887132524}
 --- !u!114 &1887132523
@@ -1203,6 +1223,7 @@ GameObject:
   - component: {fileID: 2079043759}
   - component: {fileID: 2079043758}
   - component: {fileID: 2079043757}
+  - component: {fileID: 2079043760}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -1271,6 +1292,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2079043760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079043756}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 19106, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.PanelInputConfiguration
+  m_Settings:
+    m_ProcessWorldSpaceInput: 1
+    m_InteractionLayers:
+      serializedVersion: 2
+      m_Bits: 4294967291
+    m_MaxInteractionDistance: Infinity
+    m_DefaultEventCameraIsMainCamera: 1
+    m_EventCameras: []
+    m_PanelInputRedirection: 0
+    m_AutoCreatePanelComponents: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
