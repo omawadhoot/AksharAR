@@ -121,15 +121,11 @@ public class ReadingWindowViewfinder : MonoBehaviour
     private RectTransform bottomMaskRect;
     private RectTransform leftMaskRect;
     private RectTransform rightMaskRect;
-    private RectTransform hintRect;
-    private Text hintTextComponent;
 
-    // Mode Selector UI Elements
-    private RectTransform modeSelectorRootRect;
-    private Image poemModeBtnBg;
-    private Text poemModeBtnText;
-    private Image chapterModeBtnBg;
-    private Text chapterModeBtnText;
+    // Camera Horizon Level Pill (top bar indicator)
+    private RectTransform levelPillRect;
+    private Text levelPillText;
+    private Image levelPillBg;
 
     // Drag Handles
     private RectTransform bottomDragHandleRect;
@@ -215,9 +211,16 @@ public class ReadingWindowViewfinder : MonoBehaviour
         activeReadingMode = mode;
         ApplyOrientationForMode(activeReadingMode);
         ApplyModePreset(activeReadingMode);
-        UpdateModeSelectorVisuals();
         UpdateDeviceTiltAndReticleColor();
-        Debug.Log($"[ReadingWindowViewfinder] UI switched Reading Mode to {activeReadingMode} | Orientation: {Screen.orientation}");
+
+        // Notify bottom camera bar carousel
+        ARLineOverlayController overlayCtrl = FindFirstObjectByType<ARLineOverlayController>();
+        if (overlayCtrl != null)
+        {
+            overlayCtrl.SyncModeCarousel(mode);
+        }
+
+        Debug.Log($"[ReadingWindowViewfinder] Switched Reading Mode to {activeReadingMode} | Orientation: {Screen.orientation}");
     }
 
     private void ApplyOrientationForMode(ReadingMode mode)
@@ -326,18 +329,17 @@ public class ReadingWindowViewfinder : MonoBehaviour
             targetColor = IsDeviceLevel ? levelReticleColor : unlevelReticleColor;
             targetTintColor = IsDeviceLevel ? levelWindowTintColor : unlevelWindowTintColor;
 
-            if (hintTextComponent != null)
+            if (levelPillText != null)
             {
                 if (IsDeviceLevel)
                 {
-                    string modeTag = (activeReadingMode == ReadingMode.Chapter) ? "📖 Chapter Mode (Landscape)" : "📜 Poem Mode (Portrait)";
-                    hintTextComponent.text = $"✨ {modeTag} • Crystal Clear • Tap to scan!";
-                    hintTextComponent.color = new Color(0.85f, 1f, 0.90f, 0.98f);
+                    levelPillText.text = "✨ LEVEL";
+                    levelPillText.color = levelReticleColor;
                 }
                 else
                 {
-                    hintTextComponent.text = $"🔎 Tilt {CurrentTiltAngle:F0}° • Hold flat to clear glass";
-                    hintTextComponent.color = new Color(1f, 1f, 1f, 0.95f);
+                    levelPillText.text = $"📐 TILT {CurrentTiltAngle:F0}°";
+                    levelPillText.color = unlevelReticleColor;
                 }
             }
         }
@@ -411,150 +413,53 @@ public class ReadingWindowViewfinder : MonoBehaviour
         CreateCornerReticle(windowBoxTransform, "BL", new Vector2(0f, 0f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
         CreateCornerReticle(windowBoxTransform, "BR", new Vector2(1f, 0f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
 
-        // ── 3. Helper Prompt Text ──
-        GameObject hintObj = new GameObject("ReadingWindow_HintText");
-        hintObj.transform.SetParent(rootRect, false);
-        hintRect = hintObj.AddComponent<RectTransform>();
-        hintRect.sizeDelta = new Vector2(0f, 52f);
-        hintRect.anchoredPosition = new Vector2(0f, 28f);
-
-        hintTextComponent = hintObj.AddComponent<Text>();
-        hintTextComponent.text = "📖 Align paragraph inside box";
-        hintTextComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (hintTextComponent.font == null) hintTextComponent.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
-        hintTextComponent.fontSize = 24;
-        hintTextComponent.alignment = TextAnchor.MiddleCenter;
-        hintTextComponent.color = new Color(1f, 1f, 1f, 0.95f);
-        hintTextComponent.raycastTarget = false;
-
-        Outline outline = hintObj.AddComponent<Outline>();
-        outline.effectColor = new Color(0f, 0f, 0f, 0.75f);
-        outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-        // ── 4. Interactive Drag Handles ──
+        // ── 3. Interactive Drag Handles ──
         BuildBottomDragHandle(rootRect);
         BuildRightDragHandle(rootRect);
         BuildCornerDragHandle(rootRect);
 
-        // ── 5. Child-Friendly Mode Selector UI (Poem vs Chapter) ──
-        BuildModeSelectorUI(rootRect);
+        // ── 4. Camera Horizon Level Pill (Top Bar) ──
+        BuildCameraLevelPill(rootRect);
 
         // Initial Layout
         UpdateLayout();
     }
 
-    private void BuildModeSelectorUI(RectTransform parent)
+    private void BuildCameraLevelPill(RectTransform parent)
     {
-        GameObject selectorObj = new GameObject("ReadingWindow_ModeSelector");
-        selectorObj.transform.SetParent(parent, false);
-        modeSelectorRootRect = selectorObj.AddComponent<RectTransform>();
-        modeSelectorRootRect.anchorMin = new Vector2(0.5f, 1f);
-        modeSelectorRootRect.anchorMax = new Vector2(0.5f, 1f);
-        modeSelectorRootRect.pivot = new Vector2(0.5f, 1f);
-        modeSelectorRootRect.anchoredPosition = new Vector2(0f, -24f);
-        modeSelectorRootRect.sizeDelta = new Vector2(490f, 64f);
+        GameObject pillObj = new GameObject("Camera_LevelPill");
+        pillObj.transform.SetParent(parent, false);
+        levelPillRect = pillObj.AddComponent<RectTransform>();
+        levelPillRect.anchorMin = new Vector2(0.5f, 1f);
+        levelPillRect.anchorMax = new Vector2(0.5f, 1f);
+        levelPillRect.pivot = new Vector2(0.5f, 1f);
+        levelPillRect.anchoredPosition = new Vector2(0f, -22f);
+        levelPillRect.sizeDelta = new Vector2(190f, 36f);
 
-        Image containerBg = selectorObj.AddComponent<Image>();
-        containerBg.color = new Color(0.05f, 0.08f, 0.16f, 0.90f);
-        containerBg.raycastTarget = false;
+        levelPillBg = pillObj.AddComponent<Image>();
+        levelPillBg.color = new Color(0.02f, 0.04f, 0.08f, 0.78f);
+        levelPillBg.raycastTarget = false;
 
-        Outline outline = selectorObj.AddComponent<Outline>();
-        outline.effectColor = new Color(0.25f, 0.55f, 0.95f, 0.60f);
-        outline.effectDistance = new Vector2(2f, -2f);
+        Outline outline = pillObj.AddComponent<Outline>();
+        outline.effectColor = new Color(1f, 1f, 1f, 0.22f);
+        outline.effectDistance = new Vector2(1.5f, -1.5f);
 
-        // ── Poem Mode Button (Left) ──
-        GameObject poemBtnObj = new GameObject("Btn_PoemMode");
-        poemBtnObj.transform.SetParent(selectorObj.transform, false);
-        RectTransform poemBtnRect = poemBtnObj.AddComponent<RectTransform>();
-        poemBtnRect.anchorMin = new Vector2(0f, 0.5f);
-        poemBtnRect.anchorMax = new Vector2(0f, 0.5f);
-        poemBtnRect.pivot = new Vector2(0f, 0.5f);
-        poemBtnRect.anchoredPosition = new Vector2(8f, 0f);
-        poemBtnRect.sizeDelta = new Vector2(232f, 50f);
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(pillObj.transform, false);
+        RectTransform textRect = textObj.AddComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.sizeDelta = Vector2.zero;
+        textRect.anchoredPosition = Vector2.zero;
 
-        poemModeBtnBg = poemBtnObj.AddComponent<Image>();
-        poemModeBtnBg.raycastTarget = true;
-
-        Button poemBtn = poemBtnObj.AddComponent<Button>();
-        poemBtn.targetGraphic = poemModeBtnBg;
-        poemBtn.onClick.AddListener(() => SetReadingMode(ReadingMode.Poem));
-
-        GameObject poemTextObj = new GameObject("Text");
-        poemTextObj.transform.SetParent(poemBtnObj.transform, false);
-        RectTransform poemTextRect = poemTextObj.AddComponent<RectTransform>();
-        poemTextRect.anchorMin = Vector2.zero;
-        poemTextRect.anchorMax = Vector2.one;
-        poemTextRect.sizeDelta = Vector2.zero;
-        poemTextRect.anchoredPosition = Vector2.zero;
-
-        poemModeBtnText = poemTextObj.AddComponent<Text>();
-        poemModeBtnText.text = "📜 Poem Mode";
-        poemModeBtnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (poemModeBtnText.font == null) poemModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
-        poemModeBtnText.fontSize = 22;
-        poemModeBtnText.alignment = TextAnchor.MiddleCenter;
-        poemModeBtnText.raycastTarget = false;
-
-        // ── Chapter Mode Button (Right) ──
-        GameObject chapterBtnObj = new GameObject("Btn_ChapterMode");
-        chapterBtnObj.transform.SetParent(selectorObj.transform, false);
-        RectTransform chapterBtnRect = chapterBtnObj.AddComponent<RectTransform>();
-        chapterBtnRect.anchorMin = new Vector2(1f, 0.5f);
-        chapterBtnRect.anchorMax = new Vector2(1f, 0.5f);
-        chapterBtnRect.pivot = new Vector2(1f, 0.5f);
-        chapterBtnRect.anchoredPosition = new Vector2(-8f, 0f);
-        chapterBtnRect.sizeDelta = new Vector2(232f, 50f);
-
-        chapterModeBtnBg = chapterBtnObj.AddComponent<Image>();
-        chapterModeBtnBg.raycastTarget = true;
-
-        Button chapterBtn = chapterBtnObj.AddComponent<Button>();
-        chapterBtn.targetGraphic = chapterModeBtnBg;
-        chapterBtn.onClick.AddListener(() => SetReadingMode(ReadingMode.Chapter));
-
-        GameObject chapterTextObj = new GameObject("Text");
-        chapterTextObj.transform.SetParent(chapterBtnObj.transform, false);
-        RectTransform chapterTextRect = chapterTextObj.AddComponent<RectTransform>();
-        chapterTextRect.anchorMin = Vector2.zero;
-        chapterTextRect.anchorMax = Vector2.one;
-        chapterTextRect.sizeDelta = Vector2.zero;
-        chapterTextRect.anchoredPosition = Vector2.zero;
-
-        chapterModeBtnText = chapterTextObj.AddComponent<Text>();
-        chapterModeBtnText.text = "📖 Chapter Mode";
-        chapterModeBtnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (chapterModeBtnText.font == null) chapterModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 22);
-        chapterModeBtnText.fontSize = 22;
-        chapterModeBtnText.alignment = TextAnchor.MiddleCenter;
-        chapterModeBtnText.raycastTarget = false;
-
-        UpdateModeSelectorVisuals();
-    }
-
-    private void UpdateModeSelectorVisuals()
-    {
-        Color activeBg = new Color(0.10f, 0.52f, 0.98f, 0.95f);
-        Color inactiveBg = new Color(1f, 1f, 1f, 0.08f);
-        Color activeText = Color.white;
-        Color inactiveText = new Color(0.80f, 0.85f, 0.95f, 0.65f);
-
-        if (poemModeBtnBg != null)
-            poemModeBtnBg.color = (activeReadingMode == ReadingMode.Poem) ? activeBg : inactiveBg;
-
-        if (poemModeBtnText != null)
-        {
-            poemModeBtnText.color = (activeReadingMode == ReadingMode.Poem) ? activeText : inactiveText;
-            poemModeBtnText.fontStyle = (activeReadingMode == ReadingMode.Poem) ? FontStyle.Bold : FontStyle.Normal;
-        }
-
-        if (chapterModeBtnBg != null)
-            chapterModeBtnBg.color = (activeReadingMode == ReadingMode.Chapter) ? activeBg : inactiveBg;
-
-        if (chapterModeBtnText != null)
-        {
-            chapterModeBtnText.color = (activeReadingMode == ReadingMode.Chapter) ? activeText : inactiveText;
-            chapterModeBtnText.fontStyle = (activeReadingMode == ReadingMode.Chapter) ? FontStyle.Bold : FontStyle.Normal;
-        }
+        levelPillText = textObj.AddComponent<Text>();
+        levelPillText.text = "📐 TILT 0°";
+        levelPillText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (levelPillText.font == null) levelPillText.font = Font.CreateDynamicFontFromOSFont("Arial", 16);
+        levelPillText.fontSize = 16;
+        levelPillText.fontStyle = FontStyle.Bold;
+        levelPillText.alignment = TextAnchor.MiddleCenter;
+        levelPillText.raycastTarget = false;
     }
 
     private void BuildBottomDragHandle(RectTransform parent)
@@ -806,11 +711,6 @@ public class ReadingWindowViewfinder : MonoBehaviour
             windowBoxTransform.anchoredPosition = Vector2.zero;
         }
 
-        if (hintRect != null)
-        {
-            hintRect.anchorMin = new Vector2(0.1f, 1f - topNorm);
-            hintRect.anchorMax = new Vector2(0.9f, 1f - topNorm);
-        }
 
         if (bottomDragHandleRect != null)
         {
