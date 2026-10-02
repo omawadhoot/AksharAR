@@ -29,12 +29,21 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [SerializeField] private float windowWidthNormalized = 0.86f;
 
     [Tooltip("Normalized vertical size (0.0 to 1.0) of the reading box")]
-    [Range(0.12f, 0.65f)]
+    [Range(0.12f, 0.75f)]
     [SerializeField] private float windowHeightNormalized = 0.38f;
 
     [Tooltip("Normalized vertical center position (0.0 = bottom, 1.0 = top)")]
     [Range(0.2f, 0.8f)]
     [SerializeField] private float windowCenterYNormalized = 0.54f;
+
+    [Header("Orientation Presets")]
+    [Tooltip("Default normalized dimensions in Portrait Mode (optimized for poems/stanzas)")]
+    [SerializeField] private Vector2 portraitDefaultDimensions = new Vector2(0.86f, 0.38f);
+    [SerializeField] private float portraitCenterY = 0.54f;
+
+    [Tooltip("Default normalized dimensions in Landscape Mode (optimized for dense chapter prose)")]
+    [SerializeField] private Vector2 landscapeDefaultDimensions = new Vector2(0.80f, 0.60f);
+    [SerializeField] private float landscapeCenterY = 0.52f;
 
     [Header("Horizontal Resizing Bounds (Normalized 0.0 - 1.0)")]
     [Tooltip("Minimum normalized width of the reading box")]
@@ -89,6 +98,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
     public float WindowHeightNormalized => windowHeightNormalized;
     public bool IsDeviceLevel { get; private set; } = true;
     public float CurrentTiltAngle { get; private set; } = 0f;
+    public bool IsLandscapeMode => isLandscape;
 
     // Internal references for real-time layout updates
     private RectTransform topMaskRect;
@@ -122,17 +132,72 @@ public class ReadingWindowViewfinder : MonoBehaviour
     private bool isDraggingRight = false;
     private bool isDraggingCorner = false;
 
+    private int lastScreenWidth = -1;
+    private int lastScreenHeight = -1;
+    private bool isLandscape = false;
+
     private void Awake()
     {
         currentDynamicColor = cornerReticleColor;
         currentDynamicTintColor = unlevelWindowTintColor;
+        lastScreenWidth = Screen.width;
+        lastScreenHeight = Screen.height;
+        isLandscape = Screen.width > Screen.height;
+        ApplyOrientationPreset(isLandscape, force: true);
         BuildViewfinderUIIfNeeded();
     }
 
     private void Update()
     {
+        CheckScreenOrientationChange();
         UpdateDeviceTiltAndReticleColor();
         HandleTwoFingerPinch();
+    }
+
+    private void CheckScreenOrientationChange()
+    {
+        if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
+        {
+            lastScreenWidth = Screen.width;
+            lastScreenHeight = Screen.height;
+            bool newIsLandscape = Screen.width > Screen.height;
+
+            if (newIsLandscape != isLandscape)
+            {
+                isLandscape = newIsLandscape;
+                ApplyOrientationPreset(isLandscape, force: false);
+            }
+            else
+            {
+                UpdateLayout();
+            }
+        }
+    }
+
+    public void ApplyOrientationPreset(bool landscape, bool force = false)
+    {
+        if (landscape)
+        {
+            windowWidthNormalized = landscapeDefaultDimensions.x;
+            windowHeightNormalized = landscapeDefaultDimensions.y;
+            windowCenterYNormalized = landscapeCenterY;
+            maxHeightNormalized = 0.72f;
+            minBottomDistanceNormalized = 0.14f;
+        }
+        else
+        {
+            windowWidthNormalized = portraitDefaultDimensions.x;
+            windowHeightNormalized = portraitDefaultDimensions.y;
+            windowCenterYNormalized = portraitCenterY;
+            maxHeightNormalized = 0.60f;
+            minBottomDistanceNormalized = 0.18f;
+        }
+
+        if (visualRoot != null)
+        {
+            UpdateLayout();
+        }
+        Debug.Log($"[ReadingWindowViewfinder] Active orientation: {(landscape ? "LANDSCAPE (Dense Chapter Paragraphs)" : "PORTRAIT (Poems / Verse)")} | W:{windowWidthNormalized:F2} H:{windowHeightNormalized:F2}");
     }
 
     private void HandleTwoFingerPinch()
@@ -200,7 +265,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
             {
                 if (IsDeviceLevel)
                 {
-                    hintTextComponent.text = "✨ Crystal Clear • Tap to scan!";
+                    string modeTag = isLandscape ? "📖 Chapter Mode" : "📜 Poem Mode";
+                    hintTextComponent.text = $"✨ {modeTag} • Crystal Clear • Tap to scan!";
                     hintTextComponent.color = new Color(0.85f, 1f, 0.90f, 0.98f);
                 }
                 else
