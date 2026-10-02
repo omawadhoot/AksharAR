@@ -40,6 +40,16 @@ public class ARLineOverlayController : MonoBehaviour
     private void Awake()
     {
         DisableLegacyCanvasIfPresent();
+        EnsureWorldSpaceHUD();
+    }
+
+    private void EnsureWorldSpaceHUD()
+    {
+        var docObj = GameObject.Find("ARLineOverlayDocument");
+        if (docObj != null && docObj.GetComponent<ARCameraHUDWorldSpaceFitter>() == null)
+        {
+            docObj.AddComponent<ARCameraHUDWorldSpaceFitter>();
+        }
     }
 
     private void Start()
