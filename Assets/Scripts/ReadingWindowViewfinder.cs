@@ -14,15 +14,39 @@ public enum DragHandleType
 }
 
 /// <summary>
+/// Active textbook framing mode.
+/// Poem: compact, centered lines for verses and stanzas.
+/// Chapter: wide, multi-line prose framing for dense chapter paragraphs.
+/// </summary>
+public enum ReadingMode
+{
+    Poem,
+    Chapter
+}
+
+/// <summary>
 /// Renders a stylized 2D "Reading Window" viewfinder overlay on the screen HUD.
 /// Guides the user to frame a textbook paragraph and crops the camera image 
 /// for high-resolution OCR and targeted AR tracking.
 /// Features touch-interactive bottom, right, and corner drag handles to resize 
 /// both horizontally (up to 96% screen width) and vertically, plus pinch-to-resize.
 /// Includes an Active Level Gatekeeper that shifts the reticle to Emerald Green when level.
+/// Features a child-friendly UI Mode Selector to toggle between Poem Mode and Chapter Mode.
 /// </summary>
 public class ReadingWindowViewfinder : MonoBehaviour
 {
+    [Header("Reading Modes & Presets (Managed via UI)")]
+    [Tooltip("Currently selected reading mode")]
+    [SerializeField] private ReadingMode activeReadingMode = ReadingMode.Poem;
+
+    [Tooltip("Default dimensions in Poem Mode (short lines / stanzas)")]
+    [SerializeField] private Vector2 poemModeDimensions = new Vector2(0.86f, 0.38f);
+    [SerializeField] private float poemModeCenterY = 0.54f;
+
+    [Tooltip("Default dimensions in Chapter Mode (dense chapter paragraphs)")]
+    [SerializeField] private Vector2 chapterModeDimensions = new Vector2(0.80f, 0.60f);
+    [SerializeField] private float chapterModeCenterY = 0.52f;
+
     [Header("Viewfinder Dimensions (Normalized Screen 0.0 - 1.0)")]
     [Tooltip("Normalized horizontal size (0.0 to 1.0) of the reading box")]
     [Range(0.28f, 0.98f)]
@@ -35,15 +59,6 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [Tooltip("Normalized vertical center position (0.0 = bottom, 1.0 = top)")]
     [Range(0.2f, 0.8f)]
     [SerializeField] private float windowCenterYNormalized = 0.54f;
-
-    [Header("Orientation Presets")]
-    [Tooltip("Default normalized dimensions in Portrait Mode (optimized for poems/stanzas)")]
-    [SerializeField] private Vector2 portraitDefaultDimensions = new Vector2(0.86f, 0.38f);
-    [SerializeField] private float portraitCenterY = 0.54f;
-
-    [Tooltip("Default normalized dimensions in Landscape Mode (optimized for dense chapter prose)")]
-    [SerializeField] private Vector2 landscapeDefaultDimensions = new Vector2(0.80f, 0.60f);
-    [SerializeField] private float landscapeCenterY = 0.52f;
 
     [Header("Horizontal Resizing Bounds (Normalized 0.0 - 1.0)")]
     [Tooltip("Minimum normalized width of the reading box")]
@@ -98,7 +113,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
     public float WindowHeightNormalized => windowHeightNormalized;
     public bool IsDeviceLevel { get; private set; } = true;
     public float CurrentTiltAngle { get; private set; } = 0f;
-    public bool IsLandscapeMode => isLandscape;
+    public bool IsLandscapeMode => Screen.width > Screen.height;
+    public ReadingMode ActiveReadingMode => activeReadingMode;
 
     // Internal references for real-time layout updates
     private RectTransform topMaskRect;
@@ -107,6 +123,13 @@ public class ReadingWindowViewfinder : MonoBehaviour
     private RectTransform rightMaskRect;
     private RectTransform hintRect;
     private Text hintTextComponent;
+
+    // Mode Selector UI Elements
+    private RectTransform modeSelectorRootRect;
+    private Image poemModeBtnBg;
+    private Text poemModeBtnText;
+    private Image chapterModeBtnBg;
+    private Text chapterModeBtnText;
 
     // Drag Handles
     private RectTransform bottomDragHandleRect;
@@ -134,7 +157,6 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     private int lastScreenWidth = -1;
     private int lastScreenHeight = -1;
-    private bool isLandscape = false;
 
     private void Awake()
     {
@@ -142,53 +164,55 @@ public class ReadingWindowViewfinder : MonoBehaviour
         currentDynamicTintColor = unlevelWindowTintColor;
         lastScreenWidth = Screen.width;
         lastScreenHeight = Screen.height;
-        isLandscape = Screen.width > Screen.height;
-        ApplyOrientationPreset(isLandscape, force: true);
+        ApplyModePreset(activeReadingMode);
         BuildViewfinderUIIfNeeded();
     }
 
     private void Update()
     {
-        CheckScreenOrientationChange();
+        CheckScreenSizeChange();
         UpdateDeviceTiltAndReticleColor();
         HandleTwoFingerPinch();
     }
 
-    private void CheckScreenOrientationChange()
+    private void CheckScreenSizeChange()
     {
         if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
         {
             lastScreenWidth = Screen.width;
             lastScreenHeight = Screen.height;
-            bool newIsLandscape = Screen.width > Screen.height;
-
-            if (newIsLandscape != isLandscape)
-            {
-                isLandscape = newIsLandscape;
-                ApplyOrientationPreset(isLandscape, force: false);
-            }
-            else
-            {
-                UpdateLayout();
-            }
+            UpdateLayout();
         }
     }
 
-    public void ApplyOrientationPreset(bool landscape, bool force = false)
+    /// <summary>
+    /// Explicitly switches between Poem Mode and Chapter Mode via the UI.
+    /// Adjusts viewfinder framing dimensions and updates HUD visuals.
+    /// </summary>
+    public void SetReadingMode(ReadingMode mode)
     {
-        if (landscape)
+        activeReadingMode = mode;
+        ApplyModePreset(activeReadingMode);
+        UpdateModeSelectorVisuals();
+        UpdateDeviceTiltAndReticleColor();
+        Debug.Log($"[ReadingWindowViewfinder] UI switched Reading Mode to {activeReadingMode}");
+    }
+
+    public void ApplyModePreset(ReadingMode mode)
+    {
+        if (mode == ReadingMode.Chapter)
         {
-            windowWidthNormalized = landscapeDefaultDimensions.x;
-            windowHeightNormalized = landscapeDefaultDimensions.y;
-            windowCenterYNormalized = landscapeCenterY;
+            windowWidthNormalized = chapterModeDimensions.x;
+            windowHeightNormalized = chapterModeDimensions.y;
+            windowCenterYNormalized = chapterModeCenterY;
             maxHeightNormalized = 0.72f;
             minBottomDistanceNormalized = 0.14f;
         }
         else
         {
-            windowWidthNormalized = portraitDefaultDimensions.x;
-            windowHeightNormalized = portraitDefaultDimensions.y;
-            windowCenterYNormalized = portraitCenterY;
+            windowWidthNormalized = poemModeDimensions.x;
+            windowHeightNormalized = poemModeDimensions.y;
+            windowCenterYNormalized = poemModeCenterY;
             maxHeightNormalized = 0.60f;
             minBottomDistanceNormalized = 0.18f;
         }
@@ -197,7 +221,6 @@ public class ReadingWindowViewfinder : MonoBehaviour
         {
             UpdateLayout();
         }
-        Debug.Log($"[ReadingWindowViewfinder] Active orientation: {(landscape ? "LANDSCAPE (Dense Chapter Paragraphs)" : "PORTRAIT (Poems / Verse)")} | W:{windowWidthNormalized:F2} H:{windowHeightNormalized:F2}");
     }
 
     private void HandleTwoFingerPinch()
@@ -265,7 +288,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
             {
                 if (IsDeviceLevel)
                 {
-                    string modeTag = isLandscape ? "📖 Chapter Mode" : "📜 Poem Mode";
+                    string modeTag = (activeReadingMode == ReadingMode.Chapter) ? "📖 Chapter Mode" : "📜 Poem Mode";
                     hintTextComponent.text = $"✨ {modeTag} • Crystal Clear • Tap to scan!";
                     hintTextComponent.color = new Color(0.85f, 1f, 0.90f, 0.98f);
                 }
@@ -371,8 +394,125 @@ public class ReadingWindowViewfinder : MonoBehaviour
         BuildRightDragHandle(rootRect);
         BuildCornerDragHandle(rootRect);
 
+        // ── 5. Child-Friendly Mode Selector UI (Poem vs Chapter) ──
+        BuildModeSelectorUI(rootRect);
+
         // Initial Layout
         UpdateLayout();
+    }
+
+    private void BuildModeSelectorUI(RectTransform parent)
+    {
+        GameObject selectorObj = new GameObject("ReadingWindow_ModeSelector");
+        selectorObj.transform.SetParent(parent, false);
+        modeSelectorRootRect = selectorObj.AddComponent<RectTransform>();
+        modeSelectorRootRect.anchorMin = new Vector2(0.5f, 1f);
+        modeSelectorRootRect.anchorMax = new Vector2(0.5f, 1f);
+        modeSelectorRootRect.pivot = new Vector2(0.5f, 1f);
+        modeSelectorRootRect.anchoredPosition = new Vector2(0f, -22f);
+        modeSelectorRootRect.sizeDelta = new Vector2(340f, 44f);
+
+        Image containerBg = selectorObj.AddComponent<Image>();
+        containerBg.color = new Color(0.05f, 0.08f, 0.16f, 0.88f);
+        containerBg.raycastTarget = false;
+
+        Outline outline = selectorObj.AddComponent<Outline>();
+        outline.effectColor = new Color(0.25f, 0.55f, 0.95f, 0.50f);
+        outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+        // ── Poem Mode Button (Left) ──
+        GameObject poemBtnObj = new GameObject("Btn_PoemMode");
+        poemBtnObj.transform.SetParent(selectorObj.transform, false);
+        RectTransform poemBtnRect = poemBtnObj.AddComponent<RectTransform>();
+        poemBtnRect.anchorMin = new Vector2(0f, 0.5f);
+        poemBtnRect.anchorMax = new Vector2(0f, 0.5f);
+        poemBtnRect.pivot = new Vector2(0f, 0.5f);
+        poemBtnRect.anchoredPosition = new Vector2(6f, 0f);
+        poemBtnRect.sizeDelta = new Vector2(160f, 34f);
+
+        poemModeBtnBg = poemBtnObj.AddComponent<Image>();
+        poemModeBtnBg.raycastTarget = true;
+
+        Button poemBtn = poemBtnObj.AddComponent<Button>();
+        poemBtn.targetGraphic = poemModeBtnBg;
+        poemBtn.onClick.AddListener(() => SetReadingMode(ReadingMode.Poem));
+
+        GameObject poemTextObj = new GameObject("Text");
+        poemTextObj.transform.SetParent(poemBtnObj.transform, false);
+        RectTransform poemTextRect = poemTextObj.AddComponent<RectTransform>();
+        poemTextRect.anchorMin = Vector2.zero;
+        poemTextRect.anchorMax = Vector2.one;
+        poemTextRect.sizeDelta = Vector2.zero;
+        poemTextRect.anchoredPosition = Vector2.zero;
+
+        poemModeBtnText = poemTextObj.AddComponent<Text>();
+        poemModeBtnText.text = "📜 Poem Mode";
+        poemModeBtnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (poemModeBtnText.font == null) poemModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 13);
+        poemModeBtnText.fontSize = 13;
+        poemModeBtnText.alignment = TextAnchor.MiddleCenter;
+        poemModeBtnText.raycastTarget = false;
+
+        // ── Chapter Mode Button (Right) ──
+        GameObject chapterBtnObj = new GameObject("Btn_ChapterMode");
+        chapterBtnObj.transform.SetParent(selectorObj.transform, false);
+        RectTransform chapterBtnRect = chapterBtnObj.AddComponent<RectTransform>();
+        chapterBtnRect.anchorMin = new Vector2(1f, 0.5f);
+        chapterBtnRect.anchorMax = new Vector2(1f, 0.5f);
+        chapterBtnRect.pivot = new Vector2(1f, 0.5f);
+        chapterBtnRect.anchoredPosition = new Vector2(-6f, 0f);
+        chapterBtnRect.sizeDelta = new Vector2(160f, 34f);
+
+        chapterModeBtnBg = chapterBtnObj.AddComponent<Image>();
+        chapterModeBtnBg.raycastTarget = true;
+
+        Button chapterBtn = chapterBtnObj.AddComponent<Button>();
+        chapterBtn.targetGraphic = chapterModeBtnBg;
+        chapterBtn.onClick.AddListener(() => SetReadingMode(ReadingMode.Chapter));
+
+        GameObject chapterTextObj = new GameObject("Text");
+        chapterTextObj.transform.SetParent(chapterBtnObj.transform, false);
+        RectTransform chapterTextRect = chapterTextObj.AddComponent<RectTransform>();
+        chapterTextRect.anchorMin = Vector2.zero;
+        chapterTextRect.anchorMax = Vector2.one;
+        chapterTextRect.sizeDelta = Vector2.zero;
+        chapterTextRect.anchoredPosition = Vector2.zero;
+
+        chapterModeBtnText = chapterTextObj.AddComponent<Text>();
+        chapterModeBtnText.text = "📖 Chapter Mode";
+        chapterModeBtnText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (chapterModeBtnText.font == null) chapterModeBtnText.font = Font.CreateDynamicFontFromOSFont("Arial", 13);
+        chapterModeBtnText.fontSize = 13;
+        chapterModeBtnText.alignment = TextAnchor.MiddleCenter;
+        chapterModeBtnText.raycastTarget = false;
+
+        UpdateModeSelectorVisuals();
+    }
+
+    private void UpdateModeSelectorVisuals()
+    {
+        Color activeBg = new Color(0.10f, 0.52f, 0.98f, 0.95f);
+        Color inactiveBg = new Color(1f, 1f, 1f, 0.08f);
+        Color activeText = Color.white;
+        Color inactiveText = new Color(0.80f, 0.85f, 0.95f, 0.65f);
+
+        if (poemModeBtnBg != null)
+            poemModeBtnBg.color = (activeReadingMode == ReadingMode.Poem) ? activeBg : inactiveBg;
+
+        if (poemModeBtnText != null)
+        {
+            poemModeBtnText.color = (activeReadingMode == ReadingMode.Poem) ? activeText : inactiveText;
+            poemModeBtnText.fontStyle = (activeReadingMode == ReadingMode.Poem) ? FontStyle.Bold : FontStyle.Normal;
+        }
+
+        if (chapterModeBtnBg != null)
+            chapterModeBtnBg.color = (activeReadingMode == ReadingMode.Chapter) ? activeBg : inactiveBg;
+
+        if (chapterModeBtnText != null)
+        {
+            chapterModeBtnText.color = (activeReadingMode == ReadingMode.Chapter) ? activeText : inactiveText;
+            chapterModeBtnText.fontStyle = (activeReadingMode == ReadingMode.Chapter) ? FontStyle.Bold : FontStyle.Normal;
+        }
     }
 
     private void BuildBottomDragHandle(RectTransform parent)
