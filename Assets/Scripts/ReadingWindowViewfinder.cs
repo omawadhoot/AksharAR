@@ -1,22 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
-
-/// <summary>
-/// Type of drag handle for interactive viewfinder resizing.
-/// </summary>
-public enum DragHandleType
-{
-    Bottom,   // Vertical height adjustment (top-anchored)
-    Right,    // Horizontal width adjustment (symmetric)
-    CornerBR  // Simultaneous 2-axis width and height adjustment
-}
+using UnityEngine.UIElements;
 
 /// <summary>
 /// Active textbook framing mode.
-/// Poem: compact, centered lines for verses and stanzas.
-/// Chapter: wide, multi-line prose framing for dense chapter paragraphs.
+/// Poem: compact, centered lines for verses and stanzas (Portrait).
+/// Chapter: wide, multi-line prose framing for dense chapter paragraphs (Landscape).
 /// </summary>
 public enum ReadingMode
 {
@@ -25,17 +14,17 @@ public enum ReadingMode
 }
 
 /// <summary>
-/// Renders a stylized 2D "Reading Window" viewfinder overlay on the screen HUD.
-/// Guides the user to frame a textbook paragraph and crops the camera image 
-/// for high-resolution OCR and targeted AR tracking.
-/// Features touch-interactive bottom, right, and corner drag handles to resize 
-/// both horizontally (up to 96% screen width) and vertically, plus pinch-to-resize.
-/// Includes an Active Level Gatekeeper that shifts the reticle to Emerald Green when level.
-/// Features a child-friendly UI Mode Selector to toggle between Poem Mode and Chapter Mode.
+/// Manages the 2D Reading Window Viewfinder entirely via UI Toolkit.
+/// Controls the letterbox masks, frosted glass interior, corner brackets,
+/// top horizon level pill, and interactive touch drag handles (Bottom, Right, Corner).
+/// Crops camera images for high-resolution OCR and targeted AR tracking.
 /// </summary>
 public class ReadingWindowViewfinder : MonoBehaviour
 {
-    [Header("Reading Modes & Presets (Managed via UI)")]
+    [Header("UI Toolkit Document")]
+    [SerializeField] private UIDocument uiDocument;
+
+    [Header("Reading Modes & Presets")]
     [Tooltip("Currently selected reading mode")]
     [SerializeField] private ReadingMode activeReadingMode = ReadingMode.Poem;
 
@@ -48,67 +37,28 @@ public class ReadingWindowViewfinder : MonoBehaviour
     [SerializeField] private float chapterModeCenterY = 0.52f;
 
     [Header("Viewfinder Dimensions (Normalized Screen 0.0 - 1.0)")]
-    [Tooltip("Normalized horizontal size (0.0 to 1.0) of the reading box")]
     [Range(0.28f, 0.98f)]
     [SerializeField] private float windowWidthNormalized = 0.86f;
 
-    [Tooltip("Normalized vertical size (0.0 to 1.0) of the reading box")]
     [Range(0.12f, 0.75f)]
     [SerializeField] private float windowHeightNormalized = 0.38f;
 
-    [Tooltip("Normalized vertical center position (0.0 = bottom, 1.0 = top)")]
     [Range(0.2f, 0.8f)]
     [SerializeField] private float windowCenterYNormalized = 0.54f;
 
-    [Header("Horizontal Resizing Bounds (Normalized 0.0 - 1.0)")]
-    [Tooltip("Minimum normalized width of the reading box")]
+    [Header("Resizing Bounds (Normalized 0.0 - 1.0)")]
     [SerializeField] private float minWidthNormalized = 0.28f;
-
-    [Tooltip("Maximum normalized width of the reading box (almost full screen width)")]
     [SerializeField] private float maxWidthNormalized = 0.96f;
-
-    [Header("Vertical Resizing Bounds (Normalized 0.0 - 1.0)")]
-    [Tooltip("Minimum normalized height of the reading box (~2 lines)")]
     [SerializeField] private float minHeightNormalized = 0.12f;
-
-    [Tooltip("Maximum normalized height of the reading box (~10-12 lines)")]
     [SerializeField] private float maxHeightNormalized = 0.60f;
-
-    [Tooltip("Minimum distance from screen bottom (keeps box safely above scan button)")]
     [SerializeField] private float minBottomDistanceNormalized = 0.18f;
 
-    [Header("Active Level Gatekeeper & Frosted Glass Effect")]
-    [Tooltip("Maximum tilt angle away from tabletop perpendicular (degrees) considered 'level'")]
+    [Header("Active Level Gatekeeper")]
     [Range(3f, 15f)]
     [SerializeField] private float maxLevelTiltAngle = 7.0f;
-
-    [Tooltip("Reticle color when phone is held level (Emerald Green)")]
-    [SerializeField] private Color levelReticleColor = new Color(0.0f, 0.90f, 0.46f, 0.95f); // #00E676
-
-    [Tooltip("Reticle color when phone is tilted (Soft Sky Blue)")]
-    [SerializeField] private Color unlevelReticleColor = new Color(0.20f, 0.60f, 1.0f, 0.90f); // #3399FF
-
-    [Tooltip("Crystal clear window tint when level (100% transparent)")]
-    [SerializeField] private Color levelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.0f); // Crystal Clear
-
-    [Tooltip("Translucent frosted glass tint when tilted (Soft milky frosted veil)")]
-    [SerializeField] private Color unlevelWindowTintColor = new Color(1.0f, 1.0f, 1.0f, 0.35f); // Frosted Glass
-
-    [Tooltip("Enables dynamic color shifting and level guidance prompt")]
     [SerializeField] private bool enableSoftGatekeeping = true;
 
-    [Header("Visual Styling")]
-    [SerializeField] private Color cornerReticleColor = new Color(0.12f, 0.53f, 0.96f, 0.95f); // Neon Blue default
-    [SerializeField] private Color handleHighlightColor = new Color(0.40f, 0.85f, 1.0f, 1.0f); // Bright Cyan
-    [SerializeField] private Color maskShadeColor = new Color(0f, 0f, 0f, 0.40f); // Darkened vignette
-    [SerializeField] private float cornerThickness = 7f;
-    [SerializeField] private float cornerLength = 48f;
-
-    [Header("References")]
-    [SerializeField] private RectTransform windowBoxTransform;
-    [SerializeField] private GameObject visualRoot;
-
-    // Public properties for external queries
+    // Public properties for external queries (used by ARPageScanController)
     public float WindowWidthNormalized => windowWidthNormalized;
     public float WindowHeightNormalized => windowHeightNormalized;
     public bool IsDeviceLevel { get; private set; } = true;
@@ -116,35 +66,22 @@ public class ReadingWindowViewfinder : MonoBehaviour
     public bool IsLandscapeMode => Screen.width > Screen.height;
     public ReadingMode ActiveReadingMode => activeReadingMode;
 
-    // Internal references for real-time layout updates
-    private RectTransform topMaskRect;
-    private RectTransform bottomMaskRect;
-    private RectTransform leftMaskRect;
-    private RectTransform rightMaskRect;
+    // UI Toolkit Visual Elements
+    private VisualElement rootElement;
+    private VisualElement viewfinderRoot;
+    private VisualElement readingBox;
+    private VisualElement readingTint;
+    private VisualElement topMask;
+    private VisualElement bottomMask;
+    private VisualElement leftMask;
+    private VisualElement rightMask;
 
-    // Camera Horizon Level Pill (top bar indicator)
-    private RectTransform levelPillRect;
-    private Text levelPillText;
-    private Image levelPillBg;
+    private VisualElement levelPill;
+    private Label levelPillText;
 
-    // Drag Handles
-    private RectTransform bottomDragHandleRect;
-    private Image bottomDragHandlePillImage;
-    private Transform bottomDragHandlePillTransform;
-
-    private RectTransform rightDragHandleRect;
-    private Image rightDragHandlePillImage;
-    private Transform rightDragHandlePillTransform;
-
-    private RectTransform cornerDragHandleRect;
-    private Image cornerDragHandleDotImage;
-
-    // Window interior tint
-    private Image windowInteriorTintImage;
-    private Color currentDynamicTintColor;
-
-    private readonly List<Image> reticleBracketImages = new List<Image>();
-    private Color currentDynamicColor;
+    private VisualElement bottomHandle;
+    private VisualElement rightHandle;
+    private VisualElement cornerHandle;
 
     private float initialTopEdge = 0.73f;
     private bool isDraggingBottom = false;
@@ -156,15 +93,16 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     private void Awake()
     {
-        currentDynamicColor = cornerReticleColor;
-        currentDynamicTintColor = unlevelWindowTintColor;
         lastScreenWidth = Screen.width;
         lastScreenHeight = Screen.height;
 
         ApplyOrientationForMode(activeReadingMode);
-        SynchronizeCanvasScalerOrientation();
         ApplyModePreset(activeReadingMode);
-        BuildViewfinderUIIfNeeded();
+    }
+
+    private void Start()
+    {
+        InitializeUIToolkit();
     }
 
     private void Update()
@@ -174,38 +112,191 @@ public class ReadingWindowViewfinder : MonoBehaviour
         HandleTwoFingerPinch();
     }
 
+    private void InitializeUIToolkit()
+    {
+        if (uiDocument == null)
+            uiDocument = GetComponent<UIDocument>();
+
+        if (uiDocument == null)
+        {
+            var docObj = GameObject.Find("ARLineOverlayDocument");
+            if (docObj != null)
+                uiDocument = docObj.GetComponent<UIDocument>();
+        }
+
+        if (uiDocument == null)
+            uiDocument = FindFirstObjectByType<UIDocument>();
+
+        if (uiDocument == null)
+        {
+            Debug.LogError("[ReadingWindowViewfinder] UIDocument not found!");
+            return;
+        }
+
+        rootElement = uiDocument.rootVisualElement;
+        if (rootElement == null) return;
+
+        viewfinderRoot = rootElement.Q<VisualElement>("ViewfinderRoot");
+        readingBox = rootElement.Q<VisualElement>("ReadingBox");
+        readingTint = rootElement.Q<VisualElement>("ReadingTint");
+        topMask = rootElement.Q<VisualElement>("TopMask");
+        bottomMask = rootElement.Q<VisualElement>("BottomMask");
+        leftMask = rootElement.Q<VisualElement>("LeftMask");
+        rightMask = rootElement.Q<VisualElement>("RightMask");
+
+        levelPill = rootElement.Q<VisualElement>("LevelPill");
+        levelPillText = rootElement.Q<Label>("LevelPillText");
+
+        bottomHandle = rootElement.Q<VisualElement>("BottomHandle");
+        rightHandle = rootElement.Q<VisualElement>("RightHandle");
+        cornerHandle = rootElement.Q<VisualElement>("CornerHandle");
+
+        BindHandleCallbacks();
+        UpdateLayout();
+        Debug.Log("[ReadingWindowViewfinder] UI Toolkit Viewfinder initialized successfully.");
+    }
+
+    private void BindHandleCallbacks()
+    {
+        // ── Bottom Drag Handle (Vertical resize) ──
+        if (bottomHandle != null)
+        {
+            bottomHandle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                initialTopEdge = windowCenterYNormalized + (windowHeightNormalized / 2f);
+                isDraggingBottom = true;
+                bottomHandle.CapturePointer(evt.pointerId);
+                evt.StopPropagation();
+            });
+            bottomHandle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (isDraggingBottom && bottomHandle.HasPointerCapture(evt.pointerId))
+                {
+                    float panelHeight = GetPanelHeight();
+                    float pointerYNorm = 1f - (evt.position.y / panelHeight);
+                    ResizeVertical(pointerYNorm);
+                    UpdateLayout();
+                    evt.StopPropagation();
+                }
+            });
+            bottomHandle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (bottomHandle.HasPointerCapture(evt.pointerId))
+                    bottomHandle.ReleasePointer(evt.pointerId);
+                isDraggingBottom = false;
+                evt.StopPropagation();
+            });
+            bottomHandle.RegisterCallback<PointerCaptureOutEvent>(evt => isDraggingBottom = false);
+        }
+
+        // ── Right Drag Handle (Horizontal resize) ──
+        if (rightHandle != null)
+        {
+            rightHandle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                isDraggingRight = true;
+                rightHandle.CapturePointer(evt.pointerId);
+                evt.StopPropagation();
+            });
+            rightHandle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (isDraggingRight && rightHandle.HasPointerCapture(evt.pointerId))
+                {
+                    float panelWidth = GetPanelWidth();
+                    float pointerXNorm = evt.position.x / panelWidth;
+                    ResizeHorizontal(pointerXNorm);
+                    UpdateLayout();
+                    evt.StopPropagation();
+                }
+            });
+            rightHandle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (rightHandle.HasPointerCapture(evt.pointerId))
+                    rightHandle.ReleasePointer(evt.pointerId);
+                isDraggingRight = false;
+                evt.StopPropagation();
+            });
+            rightHandle.RegisterCallback<PointerCaptureOutEvent>(evt => isDraggingRight = false);
+        }
+
+        // ── Corner BR Drag Handle (2-axis resize) ──
+        if (cornerHandle != null)
+        {
+            cornerHandle.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                initialTopEdge = windowCenterYNormalized + (windowHeightNormalized / 2f);
+                isDraggingCorner = true;
+                cornerHandle.CapturePointer(evt.pointerId);
+                evt.StopPropagation();
+            });
+            cornerHandle.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (isDraggingCorner && cornerHandle.HasPointerCapture(evt.pointerId))
+                {
+                    float panelWidth = GetPanelWidth();
+                    float panelHeight = GetPanelHeight();
+                    float pointerXNorm = evt.position.x / panelWidth;
+                    float pointerYNorm = 1f - (evt.position.y / panelHeight);
+
+                    ResizeHorizontal(pointerXNorm);
+                    ResizeVertical(pointerYNorm);
+                    UpdateLayout();
+                    evt.StopPropagation();
+                }
+            });
+            cornerHandle.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (cornerHandle.HasPointerCapture(evt.pointerId))
+                    cornerHandle.ReleasePointer(evt.pointerId);
+                isDraggingCorner = false;
+                evt.StopPropagation();
+            });
+            cornerHandle.RegisterCallback<PointerCaptureOutEvent>(evt => isDraggingCorner = false);
+        }
+    }
+
+    private float GetPanelWidth()
+    {
+        if (viewfinderRoot != null && viewfinderRoot.layout.width > 10f)
+            return viewfinderRoot.layout.width;
+        return Screen.width > 0 ? Screen.width : 1080f;
+    }
+
+    private float GetPanelHeight()
+    {
+        if (viewfinderRoot != null && viewfinderRoot.layout.height > 10f)
+            return viewfinderRoot.layout.height;
+        return Screen.height > 0 ? Screen.height : 1920f;
+    }
+
+    private void ResizeVertical(float pointerYNorm)
+    {
+        float minBottom = Mathf.Max(minBottomDistanceNormalized, initialTopEdge - maxHeightNormalized);
+        float maxBottom = initialTopEdge - minHeightNormalized;
+        float newBottomNorm = Mathf.Clamp(pointerYNorm, minBottom, maxBottom);
+
+        float newHeight = initialTopEdge - newBottomNorm;
+        windowHeightNormalized = newHeight;
+        windowCenterYNormalized = initialTopEdge - (newHeight / 2f);
+    }
+
+    private void ResizeHorizontal(float pointerXNorm)
+    {
+        // Symmetrical expansion from horizontal center (0.5)
+        float halfWidth = Mathf.Clamp(Mathf.Abs(pointerXNorm - 0.5f), minWidthNormalized * 0.5f, maxWidthNormalized * 0.5f);
+        windowWidthNormalized = halfWidth * 2f;
+    }
+
     private void CheckScreenSizeChange()
     {
         if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
         {
             lastScreenWidth = Screen.width;
             lastScreenHeight = Screen.height;
-            SynchronizeCanvasScalerOrientation();
             UpdateLayout();
         }
     }
 
-    private void SynchronizeCanvasScalerOrientation()
-    {
-        CanvasScaler scaler = GetComponentInParent<CanvasScaler>();
-        if (scaler != null && scaler.uiScaleMode == CanvasScaler.ScaleMode.ScaleWithScreenSize)
-        {
-            if (Screen.width > Screen.height)
-            {
-                scaler.referenceResolution = new Vector2(1920f, 1080f);
-            }
-            else
-            {
-                scaler.referenceResolution = new Vector2(1080f, 1920f);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Explicitly switches between Poem Mode and Chapter Mode via the UI.
-    /// In Chapter Mode, rotates the entire application and photo capture to Landscape.
-    /// In Poem Mode, rotates the application back to Portrait.
-    /// </summary>
     public void SetReadingMode(ReadingMode mode)
     {
         activeReadingMode = mode;
@@ -213,14 +304,13 @@ public class ReadingWindowViewfinder : MonoBehaviour
         ApplyModePreset(activeReadingMode);
         UpdateDeviceTiltAndReticleColor();
 
-        // Notify bottom camera bar carousel
         ARLineOverlayController overlayCtrl = FindFirstObjectByType<ARLineOverlayController>();
         if (overlayCtrl != null)
         {
             overlayCtrl.SyncModeCarousel(mode);
         }
 
-        Debug.Log($"[ReadingWindowViewfinder] Switched Reading Mode to {activeReadingMode} | Orientation: {Screen.orientation}");
+        Debug.Log($"[ReadingWindowViewfinder] UI switched Reading Mode to {activeReadingMode} | Orientation: {Screen.orientation}");
     }
 
     private void ApplyOrientationForMode(ReadingMode mode)
@@ -262,10 +352,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
             minBottomDistanceNormalized = 0.18f;
         }
 
-        if (visualRoot != null)
-        {
-            UpdateLayout();
-        }
+        UpdateLayout();
     }
 
     private void HandleTwoFingerPinch()
@@ -321,468 +408,57 @@ public class ReadingWindowViewfinder : MonoBehaviour
             CurrentTiltAngle = 0f;
         }
 
-        Color targetColor = cornerReticleColor;
-        Color targetTintColor = Color.clear;
-
         if (enableSoftGatekeeping)
         {
-            targetColor = IsDeviceLevel ? levelReticleColor : unlevelReticleColor;
-            targetTintColor = IsDeviceLevel ? levelWindowTintColor : unlevelWindowTintColor;
-
-            if (levelPillText != null)
+            if (levelPill != null && levelPillText != null)
             {
-                if (IsDeviceLevel)
-                {
-                    levelPillText.text = "✨ LEVEL";
-                    levelPillText.color = levelReticleColor;
-                }
-                else
-                {
-                    levelPillText.text = $"📐 TILT {CurrentTiltAngle:F0}°";
-                    levelPillText.color = unlevelReticleColor;
-                }
+                levelPill.EnableInClassList("level-pill--level", IsDeviceLevel);
+                levelPill.EnableInClassList("level-pill--tilted", !IsDeviceLevel);
+                levelPillText.text = IsDeviceLevel ? "✨ LEVEL" : $"📐 TILT {CurrentTiltAngle:F0}°";
             }
-        }
 
-        currentDynamicColor = Color.Lerp(currentDynamicColor, targetColor, Time.deltaTime * 7f);
-        currentDynamicTintColor = Color.Lerp(currentDynamicTintColor, targetTintColor, Time.deltaTime * 7f);
+            if (readingBox != null)
+                readingBox.EnableInClassList("reading-box--level", IsDeviceLevel);
 
-        for (int i = 0; i < reticleBracketImages.Count; i++)
-        {
-            if (reticleBracketImages[i] != null)
-                reticleBracketImages[i].color = currentDynamicColor;
-        }
-
-        if (windowInteriorTintImage != null)
-            windowInteriorTintImage.color = currentDynamicTintColor;
-
-        if (bottomDragHandlePillImage != null && !isDraggingBottom)
-            bottomDragHandlePillImage.color = currentDynamicColor;
-
-        if (rightDragHandlePillImage != null && !isDraggingRight)
-            rightDragHandlePillImage.color = currentDynamicColor;
-
-        if (cornerDragHandleDotImage != null && !isDraggingCorner)
-            cornerDragHandleDotImage.color = currentDynamicColor;
-    }
-
-    private void BuildViewfinderUIIfNeeded()
-    {
-        if (visualRoot != null && windowBoxTransform != null) return;
-
-        Canvas canvas = GetComponentInParent<Canvas>();
-        if (canvas == null) return;
-
-        visualRoot = new GameObject("ReadingWindow_VisualRoot");
-        visualRoot.transform.SetParent(transform, false);
-
-        RectTransform rootRect = visualRoot.AddComponent<RectTransform>();
-        rootRect.anchorMin = Vector2.zero;
-        rootRect.anchorMax = Vector2.one;
-        rootRect.sizeDelta = Vector2.zero;
-        rootRect.anchoredPosition = Vector2.zero;
-
-        // ── 1. Semi-transparent Letterbox Masks ──
-        topMaskRect = CreateMaskPanel(rootRect, "TopMask", maskShadeColor);
-        bottomMaskRect = CreateMaskPanel(rootRect, "BottomMask", maskShadeColor);
-        leftMaskRect = CreateMaskPanel(rootRect, "LeftMask", maskShadeColor);
-        rightMaskRect = CreateMaskPanel(rootRect, "RightMask", maskShadeColor);
-
-        // ── 2. Reading Window Center Box & Corners ──
-        GameObject boxObj = new GameObject("ReadingWindow_CenterBox");
-        boxObj.transform.SetParent(rootRect, false);
-        windowBoxTransform = boxObj.AddComponent<RectTransform>();
-
-        // ── Interior Level Window Tint (subtle red wash when tilted, subtle green wash when level) ──
-        GameObject tintObj = new GameObject("ReadingWindow_InteriorTint");
-        tintObj.transform.SetParent(windowBoxTransform, false);
-        RectTransform tintRect = tintObj.AddComponent<RectTransform>();
-        tintRect.anchorMin = Vector2.zero;
-        tintRect.anchorMax = Vector2.one;
-        tintRect.sizeDelta = Vector2.zero;
-        tintRect.anchoredPosition = Vector2.zero;
-
-        windowInteriorTintImage = tintObj.AddComponent<Image>();
-        windowInteriorTintImage.color = unlevelWindowTintColor;
-        windowInteriorTintImage.raycastTarget = false;
-
-        // Add 4 Corner Brackets
-        reticleBracketImages.Clear();
-        CreateCornerReticle(windowBoxTransform, "TL", new Vector2(0f, 1f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
-        CreateCornerReticle(windowBoxTransform, "TR", new Vector2(1f, 1f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
-        CreateCornerReticle(windowBoxTransform, "BL", new Vector2(0f, 0f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
-        CreateCornerReticle(windowBoxTransform, "BR", new Vector2(1f, 0f), new Vector2(cornerLength, cornerThickness), new Vector2(cornerThickness, cornerLength));
-
-        // ── 3. Interactive Drag Handles ──
-        BuildBottomDragHandle(rootRect);
-        BuildRightDragHandle(rootRect);
-        BuildCornerDragHandle(rootRect);
-
-        // ── 4. Camera Horizon Level Pill (Top Bar) ──
-        BuildCameraLevelPill(rootRect);
-
-        // Initial Layout
-        UpdateLayout();
-    }
-
-    private void BuildCameraLevelPill(RectTransform parent)
-    {
-        GameObject pillObj = new GameObject("Camera_LevelPill");
-        pillObj.transform.SetParent(parent, false);
-        levelPillRect = pillObj.AddComponent<RectTransform>();
-        levelPillRect.anchorMin = new Vector2(0.5f, 1f);
-        levelPillRect.anchorMax = new Vector2(0.5f, 1f);
-        levelPillRect.pivot = new Vector2(0.5f, 1f);
-        levelPillRect.anchoredPosition = new Vector2(0f, -22f);
-        levelPillRect.sizeDelta = new Vector2(190f, 36f);
-
-        levelPillBg = pillObj.AddComponent<Image>();
-        levelPillBg.color = new Color(0.02f, 0.04f, 0.08f, 0.78f);
-        levelPillBg.raycastTarget = false;
-
-        Outline outline = pillObj.AddComponent<Outline>();
-        outline.effectColor = new Color(1f, 1f, 1f, 0.22f);
-        outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-        GameObject textObj = new GameObject("Text");
-        textObj.transform.SetParent(pillObj.transform, false);
-        RectTransform textRect = textObj.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.sizeDelta = Vector2.zero;
-        textRect.anchoredPosition = Vector2.zero;
-
-        levelPillText = textObj.AddComponent<Text>();
-        levelPillText.text = "📐 TILT 0°";
-        levelPillText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (levelPillText.font == null) levelPillText.font = Font.CreateDynamicFontFromOSFont("Arial", 16);
-        levelPillText.fontSize = 16;
-        levelPillText.fontStyle = FontStyle.Bold;
-        levelPillText.alignment = TextAnchor.MiddleCenter;
-        levelPillText.raycastTarget = false;
-    }
-
-    private void BuildBottomDragHandle(RectTransform parent)
-    {
-        GameObject handleObj = new GameObject("ReadingWindow_BottomHandle");
-        handleObj.transform.SetParent(parent, false);
-        bottomDragHandleRect = handleObj.AddComponent<RectTransform>();
-        bottomDragHandleRect.sizeDelta = new Vector2(260f, 75f); // Generous touch hit-box
-
-        Image hitImage = handleObj.AddComponent<Image>();
-        hitImage.color = new Color(0f, 0f, 0f, 0.001f);
-        hitImage.raycastTarget = true;
-
-        GameObject pillObj = new GameObject("Handle_Pill");
-        pillObj.transform.SetParent(handleObj.transform, false);
-        RectTransform pillRect = pillObj.AddComponent<RectTransform>();
-        pillRect.anchorMin = new Vector2(0.5f, 0.5f);
-        pillRect.anchorMax = new Vector2(0.5f, 0.5f);
-        pillRect.anchoredPosition = new Vector2(0f, 10f);
-        pillRect.sizeDelta = new Vector2(110f, 10f);
-
-        bottomDragHandlePillImage = pillObj.AddComponent<Image>();
-        bottomDragHandlePillImage.color = cornerReticleColor;
-        bottomDragHandlePillImage.raycastTarget = false;
-        bottomDragHandlePillTransform = pillObj.transform;
-
-        GameObject labelObj = new GameObject("Handle_Label");
-        labelObj.transform.SetParent(handleObj.transform, false);
-        RectTransform labelRect = labelObj.AddComponent<RectTransform>();
-        labelRect.anchorMin = new Vector2(0.5f, 0.5f);
-        labelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        labelRect.anchoredPosition = new Vector2(0f, -10f);
-        labelRect.sizeDelta = new Vector2(180f, 26f);
-
-        Text labelText = labelObj.AddComponent<Text>();
-        labelText.text = "═  ↕  ═";
-        labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (labelText.font == null) labelText.font = Font.CreateDynamicFontFromOSFont("Arial", 18);
-        labelText.fontSize = 18;
-        labelText.alignment = TextAnchor.MiddleCenter;
-        labelText.color = new Color(1f, 1f, 1f, 0.85f);
-        labelText.raycastTarget = false;
-
-        ViewfinderDragHandle dragHandle = handleObj.AddComponent<ViewfinderDragHandle>();
-        dragHandle.Initialize(this, DragHandleType.Bottom);
-    }
-
-    private void BuildRightDragHandle(RectTransform parent)
-    {
-        GameObject handleObj = new GameObject("ReadingWindow_RightHandle");
-        handleObj.transform.SetParent(parent, false);
-        rightDragHandleRect = handleObj.AddComponent<RectTransform>();
-        rightDragHandleRect.sizeDelta = new Vector2(75f, 220f); // Vertical touch hit-box
-
-        Image hitImage = handleObj.AddComponent<Image>();
-        hitImage.color = new Color(0f, 0f, 0f, 0.001f);
-        hitImage.raycastTarget = true;
-
-        GameObject pillObj = new GameObject("RightHandle_Pill");
-        pillObj.transform.SetParent(handleObj.transform, false);
-        RectTransform pillRect = pillObj.AddComponent<RectTransform>();
-        pillRect.anchorMin = new Vector2(0.5f, 0.5f);
-        pillRect.anchorMax = new Vector2(0.5f, 0.5f);
-        pillRect.anchoredPosition = new Vector2(-8f, 0f);
-        pillRect.sizeDelta = new Vector2(10f, 110f);
-
-        rightDragHandlePillImage = pillObj.AddComponent<Image>();
-        rightDragHandlePillImage.color = cornerReticleColor;
-        rightDragHandlePillImage.raycastTarget = false;
-        rightDragHandlePillTransform = pillObj.transform;
-
-        GameObject labelObj = new GameObject("RightHandle_Label");
-        labelObj.transform.SetParent(handleObj.transform, false);
-        RectTransform labelRect = labelObj.AddComponent<RectTransform>();
-        labelRect.anchorMin = new Vector2(0.5f, 0.5f);
-        labelRect.anchorMax = new Vector2(0.5f, 0.5f);
-        labelRect.anchoredPosition = new Vector2(14f, 0f);
-        labelRect.sizeDelta = new Vector2(30f, 75f);
-
-        Text labelText = labelObj.AddComponent<Text>();
-        labelText.text = "║\n↔\n║";
-        labelText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        if (labelText.font == null) labelText.font = Font.CreateDynamicFontFromOSFont("Arial", 16);
-        labelText.fontSize = 16;
-        labelText.alignment = TextAnchor.MiddleCenter;
-        labelText.color = new Color(1f, 1f, 1f, 0.85f);
-        labelText.raycastTarget = false;
-
-        ViewfinderDragHandle dragHandle = handleObj.AddComponent<ViewfinderDragHandle>();
-        dragHandle.Initialize(this, DragHandleType.Right);
-    }
-
-    private void BuildCornerDragHandle(RectTransform parent)
-    {
-        GameObject handleObj = new GameObject("ReadingWindow_CornerBRHandle");
-        handleObj.transform.SetParent(parent, false);
-        cornerDragHandleRect = handleObj.AddComponent<RectTransform>();
-        cornerDragHandleRect.sizeDelta = new Vector2(85f, 85f); // Corner touch zone
-
-        Image hitImage = handleObj.AddComponent<Image>();
-        hitImage.color = new Color(0f, 0f, 0f, 0.001f);
-        hitImage.raycastTarget = true;
-
-        GameObject dotObj = new GameObject("Corner_Dot");
-        dotObj.transform.SetParent(handleObj.transform, false);
-        RectTransform dotRect = dotObj.AddComponent<RectTransform>();
-        dotRect.anchorMin = new Vector2(0.5f, 0.5f);
-        dotRect.anchorMax = new Vector2(0.5f, 0.5f);
-        dotRect.anchoredPosition = new Vector2(-6f, 6f);
-        dotRect.sizeDelta = new Vector2(20f, 20f);
-
-        cornerDragHandleDotImage = dotObj.AddComponent<Image>();
-        cornerDragHandleDotImage.color = cornerReticleColor;
-        cornerDragHandleDotImage.raycastTarget = false;
-
-        ViewfinderDragHandle dragHandle = handleObj.AddComponent<ViewfinderDragHandle>();
-        dragHandle.Initialize(this, DragHandleType.CornerBR);
-    }
-
-    public void OnHandlePointerDown(PointerEventData eventData, DragHandleType type)
-    {
-        initialTopEdge = windowCenterYNormalized + (windowHeightNormalized / 2f);
-
-        switch (type)
-        {
-            case DragHandleType.Bottom:
-                isDraggingBottom = true;
-                if (bottomDragHandlePillImage != null) bottomDragHandlePillImage.color = handleHighlightColor;
-                if (bottomDragHandlePillTransform != null) bottomDragHandlePillTransform.localScale = new Vector3(1.15f, 1.25f, 1f);
-                break;
-            case DragHandleType.Right:
-                isDraggingRight = true;
-                if (rightDragHandlePillImage != null) rightDragHandlePillImage.color = handleHighlightColor;
-                if (rightDragHandlePillTransform != null) rightDragHandlePillTransform.localScale = new Vector3(1.25f, 1.15f, 1f);
-                break;
-            case DragHandleType.CornerBR:
-                isDraggingCorner = true;
-                if (cornerDragHandleDotImage != null) cornerDragHandleDotImage.color = handleHighlightColor;
-                break;
-        }
-    }
-
-    public void OnHandleDrag(PointerEventData eventData, DragHandleType type)
-    {
-        switch (type)
-        {
-            case DragHandleType.Bottom:
-                ResizeVertical(eventData.position.y);
-                break;
-
-            case DragHandleType.Right:
-                ResizeHorizontal(eventData.position.x);
-                break;
-
-            case DragHandleType.CornerBR:
-                ResizeVertical(eventData.position.y);
-                ResizeHorizontal(eventData.position.x);
-                break;
-        }
-
-        UpdateLayout();
-    }
-
-    private void ResizeVertical(float pointerScreenY)
-    {
-        float pointerYNorm = Mathf.Clamp01(pointerScreenY / (float)Screen.height);
-        float minBottom = Mathf.Max(minBottomDistanceNormalized, initialTopEdge - maxHeightNormalized);
-        float maxBottom = initialTopEdge - minHeightNormalized;
-        float newBottomNorm = Mathf.Clamp(pointerYNorm, minBottom, maxBottom);
-
-        float newHeight = initialTopEdge - newBottomNorm;
-        windowHeightNormalized = newHeight;
-        windowCenterYNormalized = initialTopEdge - (newHeight / 2f);
-    }
-
-    private void ResizeHorizontal(float pointerScreenX)
-    {
-        float pointerXNorm = Mathf.Clamp01(pointerScreenX / (float)Screen.width);
-        // Symmetrical expansion from horizontal center (0.5)
-        float halfWidth = Mathf.Clamp(Mathf.Abs(pointerXNorm - 0.5f), minWidthNormalized * 0.5f, maxWidthNormalized * 0.5f);
-        windowWidthNormalized = halfWidth * 2f;
-    }
-
-    public void OnHandlePointerUp(PointerEventData eventData, DragHandleType type)
-    {
-        switch (type)
-        {
-            case DragHandleType.Bottom:
-                isDraggingBottom = false;
-                if (bottomDragHandlePillImage != null) bottomDragHandlePillImage.color = currentDynamicColor;
-                if (bottomDragHandlePillTransform != null) bottomDragHandlePillTransform.localScale = Vector3.one;
-                break;
-            case DragHandleType.Right:
-                isDraggingRight = false;
-                if (rightDragHandlePillImage != null) rightDragHandlePillImage.color = currentDynamicColor;
-                if (rightDragHandlePillTransform != null) rightDragHandlePillTransform.localScale = Vector3.one;
-                break;
-            case DragHandleType.CornerBR:
-                isDraggingCorner = false;
-                if (cornerDragHandleDotImage != null) cornerDragHandleDotImage.color = currentDynamicColor;
-                break;
+            if (readingTint != null)
+                readingTint.EnableInClassList("reading-tint--clear", IsDeviceLevel);
         }
     }
 
     private void UpdateLayout()
     {
-        float leftNorm = (1f - windowWidthNormalized) / 2f;
-        float rightNorm = leftNorm;
-        float bottomNorm = windowCenterYNormalized - (windowHeightNormalized / 2f);
-        float topNorm = 1f - (windowCenterYNormalized + (windowHeightNormalized / 2f));
+        float leftPercent = ((1f - windowWidthNormalized) / 2f) * 100f;
+        float rightPercent = leftPercent;
+        float bottomPercent = (windowCenterYNormalized - (windowHeightNormalized / 2f)) * 100f;
+        float topPercent = (1f - (windowCenterYNormalized + (windowHeightNormalized / 2f))) * 100f;
 
-        if (topMaskRect != null)
+        if (readingBox != null)
         {
-            topMaskRect.anchorMin = new Vector2(0f, 1f - topNorm);
-            topMaskRect.anchorMax = new Vector2(1f, 1f);
-            topMaskRect.sizeDelta = Vector2.zero;
-            topMaskRect.anchoredPosition = Vector2.zero;
+            readingBox.style.left = Length.Percent(leftPercent);
+            readingBox.style.top = Length.Percent(topPercent);
+            readingBox.style.width = Length.Percent(windowWidthNormalized * 100f);
+            readingBox.style.height = Length.Percent(windowHeightNormalized * 100f);
         }
 
-        if (bottomMaskRect != null)
+        if (topMask != null)
+            topMask.style.height = Length.Percent(topPercent);
+
+        if (bottomMask != null)
+            bottomMask.style.height = Length.Percent(bottomPercent);
+
+        if (leftMask != null)
         {
-            bottomMaskRect.anchorMin = new Vector2(0f, 0f);
-            bottomMaskRect.anchorMax = new Vector2(1f, bottomNorm);
-            bottomMaskRect.sizeDelta = Vector2.zero;
-            bottomMaskRect.anchoredPosition = Vector2.zero;
+            leftMask.style.top = Length.Percent(topPercent);
+            leftMask.style.bottom = Length.Percent(bottomPercent);
+            leftMask.style.width = Length.Percent(leftPercent);
         }
 
-        if (leftMaskRect != null)
+        if (rightMask != null)
         {
-            leftMaskRect.anchorMin = new Vector2(0f, bottomNorm);
-            leftMaskRect.anchorMax = new Vector2(leftNorm, 1f - topNorm);
-            leftMaskRect.sizeDelta = Vector2.zero;
-            leftMaskRect.anchoredPosition = Vector2.zero;
+            rightMask.style.top = Length.Percent(topPercent);
+            rightMask.style.bottom = Length.Percent(bottomPercent);
+            rightMask.style.width = Length.Percent(rightPercent);
         }
-
-        if (rightMaskRect != null)
-        {
-            rightMaskRect.anchorMin = new Vector2(1f - rightNorm, bottomNorm);
-            rightMaskRect.anchorMax = new Vector2(1f, 1f - topNorm);
-            rightMaskRect.sizeDelta = Vector2.zero;
-            rightMaskRect.anchoredPosition = Vector2.zero;
-        }
-
-        if (windowBoxTransform != null)
-        {
-            windowBoxTransform.anchorMin = new Vector2(leftNorm, bottomNorm);
-            windowBoxTransform.anchorMax = new Vector2(1f - rightNorm, 1f - topNorm);
-            windowBoxTransform.sizeDelta = Vector2.zero;
-            windowBoxTransform.anchoredPosition = Vector2.zero;
-        }
-
-
-        if (bottomDragHandleRect != null)
-        {
-            bottomDragHandleRect.anchorMin = new Vector2(0.5f, bottomNorm);
-            bottomDragHandleRect.anchorMax = new Vector2(0.5f, bottomNorm);
-            bottomDragHandleRect.anchoredPosition = new Vector2(0f, 0f);
-        }
-
-        if (rightDragHandleRect != null)
-        {
-            rightDragHandleRect.anchorMin = new Vector2(1f - rightNorm, windowCenterYNormalized);
-            rightDragHandleRect.anchorMax = new Vector2(1f - rightNorm, windowCenterYNormalized);
-            rightDragHandleRect.anchoredPosition = new Vector2(0f, 0f);
-        }
-
-        if (cornerDragHandleRect != null)
-        {
-            cornerDragHandleRect.anchorMin = new Vector2(1f - rightNorm, bottomNorm);
-            cornerDragHandleRect.anchorMax = new Vector2(1f - rightNorm, bottomNorm);
-            cornerDragHandleRect.anchoredPosition = new Vector2(0f, 0f);
-        }
-    }
-
-    private RectTransform CreateMaskPanel(RectTransform parent, string name, Color color)
-    {
-        GameObject panelObj = new GameObject(name);
-        panelObj.transform.SetParent(parent, false);
-        RectTransform rt = panelObj.AddComponent<RectTransform>();
-        rt.sizeDelta = Vector2.zero;
-        rt.anchoredPosition = Vector2.zero;
-
-        Image img = panelObj.AddComponent<Image>();
-        img.color = color;
-        img.raycastTarget = false;
-        return rt;
-    }
-
-    private void CreateCornerReticle(RectTransform parent, string name, Vector2 anchor, Vector2 horizSize, Vector2 vertSize)
-    {
-        GameObject cornerObj = new GameObject("Corner_" + name);
-        cornerObj.transform.SetParent(parent, false);
-        RectTransform cornerRect = cornerObj.AddComponent<RectTransform>();
-        cornerRect.anchorMin = anchor;
-        cornerRect.anchorMax = anchor;
-        cornerRect.anchoredPosition = Vector2.zero;
-        cornerRect.sizeDelta = Vector2.zero;
-
-        Vector2 pivot = anchor; // (0,1) for TL, (1,1) for TR, etc.
-
-        // Horizontal line
-        GameObject hLine = new GameObject("H_Line");
-        hLine.transform.SetParent(cornerRect, false);
-        RectTransform hRt = hLine.AddComponent<RectTransform>();
-        hRt.pivot = pivot;
-        hRt.sizeDelta = horizSize;
-        hRt.anchoredPosition = Vector2.zero;
-        Image hImg = hLine.AddComponent<Image>();
-        hImg.color = cornerReticleColor;
-        hImg.raycastTarget = false;
-        reticleBracketImages.Add(hImg);
-
-        // Vertical line
-        GameObject vLine = new GameObject("V_Line");
-        vLine.transform.SetParent(cornerRect, false);
-        RectTransform vRt = vLine.AddComponent<RectTransform>();
-        vRt.pivot = pivot;
-        vRt.sizeDelta = vertSize;
-        vRt.anchoredPosition = Vector2.zero;
-        Image vImg = vLine.AddComponent<Image>();
-        vImg.color = cornerReticleColor;
-        vImg.raycastTarget = false;
-        reticleBracketImages.Add(vImg);
     }
 
     /// <summary>
@@ -817,7 +493,6 @@ public class ReadingWindowViewfinder : MonoBehaviour
         if (source == null) return null;
 
         RectInt cropRect = GetPixelCropRect(source.width, source.height);
-
         Color[] pixels = source.GetPixels(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
         Texture2D cropped = new Texture2D(cropRect.width, cropRect.height, TextureFormat.RGBA32, false);
         cropped.SetPixels(pixels);
@@ -828,43 +503,9 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     public void SetVisibility(bool visible)
     {
-        if (visualRoot != null)
+        if (viewfinderRoot != null)
         {
-            visualRoot.SetActive(visible);
+            viewfinderRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
-    }
-}
-
-/// <summary>
-/// Helper drag receiver attached to the viewfinder handles.
-/// Forwards pointer events to ReadingWindowViewfinder for fluid 60fps resizing.
-/// </summary>
-public class ViewfinderDragHandle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
-{
-    private ReadingWindowViewfinder viewfinder;
-    private DragHandleType handleType;
-
-    public void Initialize(ReadingWindowViewfinder parent, DragHandleType type)
-    {
-        viewfinder = parent;
-        handleType = type;
-    }
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        if (viewfinder != null)
-            viewfinder.OnHandlePointerDown(eventData, handleType);
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        if (viewfinder != null)
-            viewfinder.OnHandleDrag(eventData, handleType);
-    }
-
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        if (viewfinder != null)
-            viewfinder.OnHandlePointerUp(eventData, handleType);
     }
 }

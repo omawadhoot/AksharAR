@@ -1,5 +1,86 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <!-- Fullscreen visual-only overlay. picking-mode=Ignore on everything — no UI Toolkit elements intercept touch. -->
-    <!-- The Scan Button is now a uGUI Button on a separate Screen Space Overlay Canvas. -->
-    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" style="flex-grow: 1; width: 100%; height: 100%;" />
+    <Style src="project://database/Assets/ARLineOverlay.uss" />
+
+    <!-- Fullscreen HUD Root (pass-through for AR Foundation touches) -->
+    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay">
+
+        <!-- 1. Top Horizon Level Pill -->
+        <ui:VisualElement name="LevelPill" picking-mode="Ignore" class="level-pill level-pill--tilted">
+            <ui:Label name="LevelPillText" text="📐 TILT 0°" picking-mode="Ignore" class="level-pill-text" />
+        </ui:VisualElement>
+
+        <!-- 2. Viewfinder & Letterbox Masks Container -->
+        <ui:VisualElement name="ViewfinderRoot" picking-mode="Ignore" class="viewfinder-root">
+            <!-- 4 Letterbox Masks -->
+            <ui:VisualElement name="TopMask" picking-mode="Ignore" class="viewfinder-mask top-mask" />
+            <ui:VisualElement name="BottomMask" picking-mode="Ignore" class="viewfinder-mask bottom-mask" />
+            <ui:VisualElement name="LeftMask" picking-mode="Ignore" class="viewfinder-mask left-mask" />
+            <ui:VisualElement name="RightMask" picking-mode="Ignore" class="viewfinder-mask right-mask" />
+
+            <!-- Center Reading Window Box -->
+            <ui:VisualElement name="ReadingBox" picking-mode="Ignore" class="reading-box">
+                <!-- Interior Tint (Frosted Glass when unlevel, clear when level) -->
+                <ui:VisualElement name="ReadingTint" picking-mode="Ignore" class="reading-tint" />
+
+                <!-- 4 L-shaped Corner Brackets -->
+                <ui:VisualElement name="CornerTL" picking-mode="Ignore" class="corner-bracket corner-tl" />
+                <ui:VisualElement name="CornerTR" picking-mode="Ignore" class="corner-bracket corner-tr" />
+                <ui:VisualElement name="CornerBL" picking-mode="Ignore" class="corner-bracket corner-bl" />
+                <ui:VisualElement name="CornerBR" picking-mode="Ignore" class="corner-bracket corner-br" />
+
+                <!-- Drag Handle: Bottom (Vertical resize) -->
+                <ui:VisualElement name="BottomHandle" picking-mode="Position" class="drag-handle-bottom">
+                    <ui:VisualElement name="BottomHandlePill" picking-mode="Ignore" class="handle-pill-h" />
+                    <ui:Label text="═  ↕  ═" picking-mode="Ignore" class="handle-label-h" />
+                </ui:VisualElement>
+
+                <!-- Drag Handle: Right (Horizontal resize) -->
+                <ui:VisualElement name="RightHandle" picking-mode="Position" class="drag-handle-right">
+                    <ui:VisualElement name="RightHandlePill" picking-mode="Ignore" class="handle-pill-v" />
+                    <ui:Label text="║&#10;↔&#10;║" picking-mode="Ignore" class="handle-label-v" />
+                </ui:VisualElement>
+
+                <!-- Drag Handle: Corner BR (Simultaneous 2-axis resize) -->
+                <ui:VisualElement name="CornerHandle" picking-mode="Position" class="drag-handle-corner">
+                    <ui:VisualElement name="CornerDot" picking-mode="Ignore" class="handle-dot" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 3. Camera Bottom Bar -->
+        <ui:VisualElement name="BottomBar" picking-mode="Position" class="camera-bottom-bar">
+            <!-- Mode Carousel (POEM | CHAPTER) -->
+            <ui:VisualElement name="ModeCarousel" picking-mode="Ignore" class="mode-carousel">
+                <ui:Button name="TabPoem" picking-mode="Position" class="mode-tab mode-tab--active">
+                    <ui:Label text="POEM" picking-mode="Ignore" class="mode-tab-text" />
+                    <ui:VisualElement name="PoemDot" picking-mode="Ignore" class="mode-dot" />
+                </ui:Button>
+                <ui:Button name="TabChapter" picking-mode="Position" class="mode-tab">
+                    <ui:Label text="CHAPTER" picking-mode="Ignore" class="mode-tab-text" />
+                    <ui:VisualElement name="ChapterDot" picking-mode="Ignore" class="mode-dot mode-dot--hidden" />
+                </ui:Button>
+            </ui:VisualElement>
+
+            <!-- Camera Controls Row (Shutter + Quick Rescan) -->
+            <ui:VisualElement name="CameraControlsRow" picking-mode="Ignore" class="camera-controls-row">
+                <!-- Left balance spacer -->
+                <ui:VisualElement class="control-side-slot" picking-mode="Ignore" />
+
+                <!-- Center Shutter Button -->
+                <ui:VisualElement name="ShutterBezel" picking-mode="Ignore" class="shutter-bezel">
+                    <ui:Button name="ShutterButton" picking-mode="Position" class="shutter-core">
+                        <ui:Label name="ShutterIcon" picking-mode="Ignore" class="shutter-icon" text="" />
+                    </ui:Button>
+                </ui:VisualElement>
+
+                <!-- Right Quick Rescan / Flip Button -->
+                <ui:VisualElement class="control-side-slot" picking-mode="Ignore">
+                    <ui:Button name="QuickRescanButton" picking-mode="Position" class="quick-rescan-btn">
+                        <ui:Label text="🔄" picking-mode="Ignore" class="quick-rescan-icon" />
+                    </ui:Button>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
 </ui:UXML>
