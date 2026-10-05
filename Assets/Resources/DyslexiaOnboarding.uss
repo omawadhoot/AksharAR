@@ -49,9 +49,9 @@
 }
 
 .wizard-step-accessible-label {
-    font-size: 32px;
+    font-size: 34px;
     -unity-font-style: bold;
-    color: rgb(148, 163, 184);
+    color: rgb(226, 232, 240);
     margin-left: 28px;
     flex-shrink: 0;
 }
@@ -275,19 +275,24 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .wizard-card-title {
     font-size: 38px;
     -unity-font-style: bold;
-    color: rgb(148, 163, 184);
+    color: rgb(226, 232, 240);
 }
 
 .wizard-card-check {
-    font-size: 36px;
+    font-size: 30px;
     -unity-font-style: bold;
-    color: rgb(56, 189, 248);
+    color: rgb(15, 23, 42);
+    background-color: rgb(56, 189, 248);
+    width: 52px;
+    height: 52px;
+    border-radius: 26px;
+    -unity-text-align: middle-center;
     display: none;
 }
 
@@ -296,14 +301,15 @@
 }
 
 .wizard-card-preview {
-    font-size: 52px;
+    font-size: 50px;
     color: rgb(248, 250, 252);
     white-space: normal;
 }
 
 .wizard-card-preview--expanded {
-    font-size: 46px;
+    font-size: 42px;
     white-space: normal;
+    letter-spacing: 1px;
 }
 
 /* ── Step 2: 3D Paper Color Cards ── */
@@ -325,16 +331,17 @@
 }
 
 .wizard-palette-card .wizard-card-title {
-    color: rgb(71, 85, 105);
+    color: rgb(30, 41, 59);
     font-size: 34px;
 }
 
 .wizard-palette-card .wizard-card-check {
-    color: rgb(2, 132, 199);
+    color: rgb(255, 255, 255);
+    background-color: rgb(2, 132, 199);
 }
 
 .wizard-palette-sample {
-    font-size: 52px;
+    font-size: 50px;
     margin: 0;
     padding: 0;
     white-space: normal;
@@ -374,8 +381,13 @@
 }
 
 .wizard-tint-check {
-    color: rgb(2, 132, 199);
-    font-size: 44px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(2, 132, 199);
+    font-size: 32px;
+    width: 52px;
+    height: 52px;
+    border-radius: 26px;
+    -unity-text-align: middle-center;
 }
 
 /* ── Step 4: Compact Review Rows with बदला Affordance ── */
