@@ -10,14 +10,22 @@
 .wizard-step-purpose,
 .wizard-card-title,
 .wizard-card-preview,
+.wizard-card-check,
 .wizard-palette-sample,
 .wizard-tint-benefit,
 .wizard-preview-line,
 .wizard-preview-summary,
+.wizard-review-key,
+.wizard-review-val,
+.wizard-review-edit-chip,
+.wizard-slate-header-title,
 .wizard-change-later-note,
 .wizard-nav-btn,
-.wizard-btn--skip {
+.wizard-btn--skip,
+Label,
+Button {
     -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-font-definition: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular%20SDF.asset?fileID=11400000&guid=5fe2459c440cb534d91e6f7990e7d096&type=2#NeevA-Dyslexia-Regular SDF");
     -unity-text-generator: advanced;
 }
 

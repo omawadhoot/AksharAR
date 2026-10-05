@@ -1,8 +1,6 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Resources/DyslexiaOnboarding.uss?fileID=7433441132597879392&amp;guid=0296a755d2a3f724b877d0d16a878f29&amp;type=3#DyslexiaOnboarding"/>
     <ui:VisualElement name="OnboardingModalBackdrop" picking-mode="Position" class="wizard-fullscreen-root">
-        
-        <!-- ── 1. Top Bar: Full-Width Duolingo Progress Bar + Step Counter ── -->
         <ui:VisualElement name="WizardTopBar" picking-mode="Ignore" class="wizard-top-bar">
             <ui:VisualElement name="WizardProgressSegments" picking-mode="Ignore" class="wizard-progress-bar">
                 <ui:VisualElement name="ProgressSeg1" picking-mode="Ignore" class="wizard-progress-seg wizard-progress-seg--active"/>
@@ -12,11 +10,7 @@
             </ui:VisualElement>
             <ui:Label name="WizardStepAccessibleLabel" text="1/4" picking-mode="Ignore" class="wizard-step-accessible-label"/>
         </ui:VisualElement>
-
-        <!-- ── 2. Middle Content Area: Persistent Reading Slate + Step Options ── -->
         <ui:VisualElement name="WizardContentArea" picking-mode="Ignore" class="wizard-content-area">
-
-            <!-- Persistent Cumulative Blackboard / Slate Preview (Shared across all 4 steps) -->
             <ui:VisualElement name="WizardSlateContainer" picking-mode="Ignore" class="wizard-slate-frame">
                 <ui:VisualElement picking-mode="Ignore" class="wizard-slate-top-header">
                     <ui:Label text="📝 वाचन पाटी  •  READING SLATE" picking-mode="Ignore" class="wizard-slate-header-title"/>
@@ -26,16 +20,13 @@
                     <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- Step 1: Text Spacing (Mild, Moderate, Intensive) -->
-            <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page">
+            <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
                 <ui:VisualElement picking-mode="Ignore" class="wizard-prompt-row">
                     <ui:Label text="तुम्हाला कोणते वाचन अंतर योग्य वाटते?" picking-mode="Ignore" class="wizard-prompt"/>
                     <ui:Button name="BtnTtsStep1" picking-mode="Position" class="wizard-tts-btn">
                         <ui:Label text="🔊" picking-mode="Ignore" class="wizard-tts-icon"/>
                     </ui:Button>
                 </ui:VisualElement>
-                
                 <ui:VisualElement name="CardSeverityMild" picking-mode="Position" class="wizard-option-card">
                     <ui:VisualElement picking-mode="Ignore" class="wizard-card-header-row">
                         <ui:Label text="कमी अंतर" picking-mode="Ignore" class="wizard-card-title"/>
@@ -58,8 +49,6 @@
                     <ui:Label text="सुं · दर   फु · ले   उ · म · ल · ली   बा · गे · त   छा · न" picking-mode="Ignore" class="wizard-card-preview wizard-card-preview--expanded"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- Step 2: Syllable Color Palette (Cobalt, Amber, Violet, Monochrome) -->
             <ui:VisualElement name="WizardStep2" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
                 <ui:VisualElement picking-mode="Ignore" class="wizard-prompt-row">
                     <ui:Label text="कोणता अक्षरांचा रंग वाचायला सोपा वाटतो?" picking-mode="Ignore" class="wizard-prompt"/>
@@ -67,7 +56,6 @@
                         <ui:Label text="🔊" picking-mode="Ignore" class="wizard-tts-icon"/>
                     </ui:Button>
                 </ui:VisualElement>
-                
                 <ui:VisualElement name="ChipPaletteCobalt" picking-mode="Position" class="wizard-palette-card wizard-card--selected">
                     <ui:VisualElement picking-mode="Ignore" class="wizard-card-header-row">
                         <ui:Label text="निळा रंग" picking-mode="Ignore" class="wizard-card-title"/>
@@ -97,8 +85,6 @@
                     <ui:Label text="&lt;color=#0F172A&gt;सुंदर फुले उमलली बागेत छान&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- Step 3: Substrate Paper Tint (Neutral Color Cards) -->
             <ui:VisualElement name="WizardStep3" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
                 <ui:VisualElement picking-mode="Ignore" class="wizard-prompt-row">
                     <ui:Label text="कोणता कागदाचा रंग वाचायला सोपा वाटतो?" picking-mode="Ignore" class="wizard-prompt"/>
@@ -106,7 +92,6 @@
                         <ui:Label text="🔊" picking-mode="Ignore" class="wizard-tts-icon"/>
                     </ui:Button>
                 </ui:VisualElement>
-                
                 <ui:VisualElement name="ChipTintCream" picking-mode="Position" class="wizard-tint-card wizard-tint-card--cream wizard-card--selected">
                     <ui:Label text="क्रीमी कागद" picking-mode="Ignore" class="wizard-tint-benefit"/>
                     <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check wizard-tint-check"/>
@@ -124,9 +109,7 @@
                     <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check wizard-tint-check"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-
-            <!-- Step 4: Final Summary Review (Compact rows with बदला affordance) -->
-            <ui:VisualElement name="WizardStep4" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
+            <ui:VisualElement name="WizardStep4" picking-mode="Ignore" class="wizard-step-page" style="display: flex;">
                 <ui:VisualElement picking-mode="Ignore" class="wizard-prompt-row">
                     <ui:Label text="वाचन पूर्वावलोकन (तयार आहे)" picking-mode="Ignore" class="wizard-prompt"/>
                     <ui:Button name="BtnTtsStep4" picking-mode="Position" class="wizard-tts-btn">
@@ -157,12 +140,9 @@
                 <ui:Label text="💡 तुम्ही हे पर्याय नंतर Settings मध्ये कधीही बदलू शकता." picking-mode="Ignore" class="wizard-change-later-note"/>
             </ui:VisualElement>
         </ui:VisualElement>
-
-        <!-- ── 3. Bottom Action Bar: Visually Clear Hierarchy (Next = Primary Blue, Skip = Subdued Secondary) ── -->
         <ui:VisualElement name="WizardFooter" picking-mode="Ignore" class="wizard-footer">
             <ui:Button name="WizardBackButton" picking-mode="Position" text="डिफॉल्ट वापरा" class="wizard-nav-btn wizard-btn--secondary"/>
             <ui:Button name="WizardNextButton" picking-mode="Position" text="पुढे →" class="wizard-nav-btn wizard-btn--next"/>
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

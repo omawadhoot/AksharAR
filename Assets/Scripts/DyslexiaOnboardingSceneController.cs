@@ -76,12 +76,13 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
     private bool didChangeStep3 = false;
 
     private DyslexiaProfile draftProfile;
+    private Font dyslexiaFont;
     private UnityEngine.TextCore.Text.FontAsset dyslexiaSdfFont;
 
     private void Awake()
     {
         EnsureProfileManager();
-        LoadDyslexiaSdfFont();
+        LoadDyslexiaFonts();
     }
 
     private void Start()
@@ -89,22 +90,24 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         InitializeUI();
     }
 
-    private void LoadDyslexiaSdfFont()
+    private void LoadDyslexiaFonts()
     {
+        dyslexiaFont = Resources.Load<Font>("Fonts/NeevA-Dyslexia-Regular");
+        if (dyslexiaFont == null)
+            dyslexiaFont = Resources.Load<Font>("NeevA-Dyslexia-Regular");
+#if UNITY_EDITOR
+        if (dyslexiaFont == null)
+            dyslexiaFont = UnityEditor.AssetDatabase.LoadAssetAtPath<Font>("Assets/Fonts/NeevA-Dyslexia-Regular.ttf");
+#endif
+
         dyslexiaSdfFont = Resources.Load<UnityEngine.TextCore.Text.FontAsset>("Fonts/NeevA-Dyslexia-Regular SDF");
         if (dyslexiaSdfFont == null)
-        {
             dyslexiaSdfFont = Resources.Load<UnityEngine.TextCore.Text.FontAsset>("NeevA-Dyslexia-Regular SDF");
-        }
 #if UNITY_EDITOR
         if (dyslexiaSdfFont == null)
-        {
             dyslexiaSdfFont = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.TextCore.Text.FontAsset>("Assets/Resources/Fonts/NeevA-Dyslexia-Regular SDF.asset");
-        }
         if (dyslexiaSdfFont == null)
-        {
             dyslexiaSdfFont = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.TextCore.Text.FontAsset>("Assets/Fonts/NeevA-Dyslexia-Regular SDF.asset");
-        }
 #endif
     }
 
@@ -203,15 +206,31 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
 
     private void ApplyFonts()
     {
-        if (dyslexiaSdfFont == null || rootElement == null) return;
+        if (rootElement == null) return;
 
-        var fontDef = new StyleFontDefinition(FontDefinition.FromSDFFont(dyslexiaSdfFont));
+        StyleFontDefinition fontDef;
+        if (dyslexiaSdfFont != null)
+        {
+            fontDef = new StyleFontDefinition(FontDefinition.FromSDFFont(dyslexiaSdfFont));
+        }
+        else if (dyslexiaFont != null)
+        {
+            fontDef = new StyleFontDefinition(FontDefinition.FromFont(dyslexiaFont));
+        }
+        else
+        {
+            return;
+        }
 
         var labels = rootElement.Query<Label>().ToList();
         foreach (var l in labels)
         {
             l.style.unityTextGenerator = TextGeneratorType.Advanced;
             l.style.unityFontDefinition = fontDef;
+            if (dyslexiaFont != null)
+            {
+                l.style.unityFont = new StyleFont(dyslexiaFont);
+            }
         }
 
         var buttons = rootElement.Query<Button>().ToList();
@@ -219,6 +238,10 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         {
             b.style.unityTextGenerator = TextGeneratorType.Advanced;
             b.style.unityFontDefinition = fontDef;
+            if (dyslexiaFont != null)
+            {
+                b.style.unityFont = new StyleFont(dyslexiaFont);
+            }
         }
     }
 

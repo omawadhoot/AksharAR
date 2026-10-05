@@ -229,18 +229,22 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         EnsureDyslexiaFont();
         if (modalBackdrop == null) return;
 
+        StyleFontDefinition fontDef;
+        if (dyslexiaSdfFont != null)
+            fontDef = new StyleFontDefinition(FontDefinition.FromSDFFont(dyslexiaSdfFont));
+        else if (dyslexiaFont != null)
+            fontDef = new StyleFontDefinition(FontDefinition.FromFont(dyslexiaFont));
+        else
+            return;
+
         var labels = modalBackdrop.Query<Label>().ToList();
         foreach (var lbl in labels)
         {
             lbl.style.unityTextGenerator = TextGeneratorType.Advanced;
-            if (dyslexiaSdfFont != null)
-            {
-                lbl.style.unityFontDefinition = new StyleFontDefinition(FontDefinition.FromSDFFont(dyslexiaSdfFont));
-            }
-            else if (dyslexiaFont != null)
+            lbl.style.unityFontDefinition = fontDef;
+            if (dyslexiaFont != null)
             {
                 lbl.style.unityFont = new StyleFont(dyslexiaFont);
-                lbl.style.unityFontDefinition = new StyleFontDefinition(FontDefinition.FromFont(dyslexiaFont));
             }
         }
 
@@ -248,14 +252,10 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         foreach (var btn in buttons)
         {
             btn.style.unityTextGenerator = TextGeneratorType.Advanced;
-            if (dyslexiaSdfFont != null)
-            {
-                btn.style.unityFontDefinition = new StyleFontDefinition(FontDefinition.FromSDFFont(dyslexiaSdfFont));
-            }
-            else if (dyslexiaFont != null)
+            btn.style.unityFontDefinition = fontDef;
+            if (dyslexiaFont != null)
             {
                 btn.style.unityFont = new StyleFont(dyslexiaFont);
-                btn.style.unityFontDefinition = new StyleFontDefinition(FontDefinition.FromFont(dyslexiaFont));
             }
         }
     }
