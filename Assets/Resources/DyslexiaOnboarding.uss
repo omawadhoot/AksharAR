@@ -1,4 +1,4 @@
-/* ── Dyslexia Full-Screen Ergonomic Onboarding USS (1080x2400 Responsive) ── */
+/* ── Dyslexia Full-Screen Ergonomic Onboarding USS (1080x2400 Proportional) ── */
 
 .wizard-fullscreen-root,
 .wizard-top-bar,
@@ -19,7 +19,7 @@
     -unity-text-generator: advanced;
 }
 
-/* ── 1. Full-Screen Safe-Area Root ── */
+/* ── 1. Full-Screen Safe-Area Root (1080x2400 Responsive) ── */
 .wizard-fullscreen-root {
     position: absolute;
     left: 0;
@@ -32,20 +32,20 @@
     background-color: rgb(10, 15, 29);
     flex-direction: column;
     justify-content: space-between;
-    padding-left: 36px;
-    padding-right: 36px;
-    padding-top: 54px;
+    padding-left: 44px;
+    padding-right: 44px;
+    padding-top: 56px;
     padding-bottom: 56px;
 }
 
-/* ── 2. Top Bar: Wordmark + Progress + Close ── */
+/* ── 2. Top Bar: Wordmark + Progress Segments + Close Button ── */
 .wizard-top-bar {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    height: 72px;
-    margin-bottom: 8px;
+    height: 84px;
+    margin-bottom: 16px;
 }
 
 .wizard-brand-group {
@@ -54,43 +54,44 @@
 }
 
 .wizard-brand-wordmark {
-    font-size: 30px;
+    font-size: 34px;
     -unity-font-style: bold;
     color: rgb(56, 189, 248);
 }
 
 .wizard-step-accessible-label {
-    font-size: 18px;
+    font-size: 20px;
     color: rgb(148, 163, 184);
+    margin-top: 2px;
 }
 
 .wizard-progress-bar {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    height: 16px;
+    height: 20px;
 }
 
 .wizard-progress-seg {
-    width: 56px;
-    height: 8px;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.16);
-    margin-left: 4px;
-    margin-right: 4px;
+    width: 64px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.18);
+    margin-left: 5px;
+    margin-right: 5px;
     transition-property: background-color, width;
     transition-duration: 0.2s;
 }
 
 .wizard-progress-seg--active {
     background-color: rgb(56, 189, 248);
-    width: 68px;
+    width: 80px;
 }
 
 .wizard-close-btn {
-    width: 56px;
-    height: 56px;
-    border-radius: 28px;
+    width: 64px;
+    height: 64px;
+    border-radius: 32px;
     background-color: rgba(255, 255, 255, 0.12);
     border-width: 0;
     align-items: center;
@@ -105,7 +106,7 @@
 }
 
 .wizard-close-icon {
-    font-size: 28px;
+    font-size: 32px;
     color: rgb(226, 232, 240);
     -unity-text-align: middle-center;
 }
@@ -122,12 +123,12 @@
 .wizard-live-preview-box {
     background-color: rgb(250, 248, 242);
     border-radius: 22px;
-    padding-left: 28px;
-    padding-right: 28px;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    margin-bottom: 18px;
-    min-height: 145px;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    min-height: 190px;
     justify-content: center;
     border-width: 2.5px;
     border-color: rgba(255, 255, 255, 0.12);
@@ -140,31 +141,32 @@
     color: rgb(20, 20, 20);
     -unity-text-align: middle-left;
     white-space: nowrap;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 }
 
 /* ── Step Pages ── */
 .wizard-step-page {
     flex-direction: column;
     width: 100%;
+    flex-grow: 1;
 }
 
 .wizard-step-purpose {
-    font-size: 22px;
+    font-size: 24px;
     color: rgb(148, 163, 184);
-    margin-bottom: 8px;
-    line-height: 1.25;
+    margin-bottom: 12px;
+    line-height: 1.3;
 }
 
 .wizard-prompt-row {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 20px;
 }
 
 .wizard-prompt {
-    font-size: 34px;
+    font-size: 36px;
     -unity-font-style: bold;
     color: rgb(241, 245, 249);
     line-height: 1.25;
@@ -173,16 +175,16 @@
 }
 
 .wizard-tts-btn {
-    width: 58px;
-    height: 58px;
-    border-radius: 29px;
+    width: 64px;
+    height: 64px;
+    border-radius: 32px;
     background-color: rgba(2, 132, 199, 0.25);
     border-width: 2px;
     border-color: rgba(56, 189, 248, 0.6);
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    margin-left: 12px;
+    margin-left: 14px;
     transition-property: scale, background-color;
     transition-duration: 0.15s;
 }
@@ -193,23 +195,25 @@
 }
 
 .wizard-tts-icon {
-    font-size: 28px;
+    font-size: 32px;
     color: rgb(56, 189, 248);
     -unity-text-align: middle-center;
 }
 
-/* ── Step 1 Option Cards ── */
+/* ── Step 1 Option Cards (Generous touch target and clear scale) ── */
 .wizard-option-card {
     background-color: rgb(22, 30, 49);
-    border-radius: 18px;
-    border-width: 2.5px;
+    border-radius: 20px;
+    border-width: 3px;
     border-color: rgba(255, 255, 255, 0.12);
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 14px;
-    padding-bottom: 14px;
-    margin-bottom: 12px;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-top: 22px;
+    padding-bottom: 22px;
+    margin-bottom: 18px;
+    min-height: 145px;
     flex-direction: column;
+    justify-content: center;
     transition-property: border-color, background-color, scale;
     transition-duration: 0.15s;
 }
@@ -224,14 +228,14 @@
 }
 
 .wizard-card-title {
-    font-size: 24px;
+    font-size: 28px;
     -unity-font-style: bold;
     color: rgb(248, 250, 252);
-    margin-bottom: 4px;
+    margin-bottom: 8px;
 }
 
 .wizard-card-preview {
-    font-size: 28px;
+    font-size: 32px;
     color: rgb(226, 232, 240);
     white-space: nowrap;
 }
@@ -239,14 +243,15 @@
 /* ── Step 2 Palette Cards ── */
 .wizard-palette-card {
     background-color: rgb(250, 248, 242);
-    border-radius: 18px;
+    border-radius: 20px;
     border-width: 3px;
     border-color: rgba(0, 0, 0, 0.12);
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 12px;
-    padding-bottom: 12px;
-    margin-bottom: 12px;
+    padding-left: 28px;
+    padding-right: 28px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    margin-bottom: 16px;
+    min-height: 120px;
     flex-direction: column;
     justify-content: center;
     transition-property: border-color, scale;
@@ -264,12 +269,12 @@
 
 .wizard-palette-card .wizard-card-title {
     color: rgb(15, 23, 42);
-    margin-bottom: 2px;
-    font-size: 22px;
+    margin-bottom: 4px;
+    font-size: 24px;
 }
 
 .wizard-palette-sample {
-    font-size: 32px;
+    font-size: 34px;
     -unity-font-style: bold;
     margin: 0;
     padding: 0;
@@ -278,17 +283,17 @@
 
 /* ── Step 3 Paper Tint Cards ── */
 .wizard-tint-card {
-    border-radius: 18px;
+    border-radius: 20px;
     border-width: 3px;
     border-color: rgba(0, 0, 0, 0.12);
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 16px;
-    padding-bottom: 16px;
-    margin-bottom: 12px;
+    padding-left: 28px;
+    padding-right: 28px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 16px;
     align-items: center;
     justify-content: center;
-    min-height: 82px;
+    min-height: 105px;
     transition-property: border-color, scale;
     transition-duration: 0.15s;
 }
@@ -319,7 +324,7 @@
 }
 
 .wizard-tint-benefit {
-    font-size: 30px;
+    font-size: 32px;
     -unity-font-style: bold;
     color: rgb(15, 23, 42);
     -unity-text-align: middle-center;
@@ -330,18 +335,18 @@
 
 /* ── Step 4 Review Subtitle & Note ── */
 .wizard-preview-summary {
-    font-size: 26px;
+    font-size: 30px;
     color: rgb(56, 189, 248);
     -unity-font-style: bold;
-    margin-top: 14px;
-    margin-bottom: 8px;
+    margin-top: 24px;
+    margin-bottom: 14px;
     -unity-text-align: middle-center;
 }
 
 .wizard-change-later-note {
-    font-size: 22px;
+    font-size: 24px;
     color: rgb(148, 163, 184);
-    margin-top: 10px;
+    margin-top: 16px;
     -unity-text-align: middle-center;
     white-space: normal;
 }
@@ -352,19 +357,19 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    height: 88px;
-    padding-top: 12px;
-    border-top-width: 1.5px;
+    height: 100px;
+    padding-top: 14px;
+    border-top-width: 2px;
     border-top-color: rgba(255, 255, 255, 0.12);
 }
 
 .wizard-nav-btn {
-    height: 74px;
-    min-width: 160px;
-    border-radius: 37px;
-    padding-left: 32px;
-    padding-right: 32px;
-    font-size: 26px;
+    height: 80px;
+    min-width: 180px;
+    border-radius: 40px;
+    padding-left: 36px;
+    padding-right: 36px;
+    font-size: 28px;
     -unity-font-style: bold;
     align-items: center;
     justify-content: center;
@@ -386,13 +391,13 @@
 .wizard-btn--skip {
     background-color: transparent;
     color: rgb(148, 163, 184);
-    font-size: 22px;
-    padding-left: 18px;
-    padding-right: 18px;
-    padding-top: 14px;
-    padding-bottom: 14px;
+    font-size: 24px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 16px;
+    padding-bottom: 16px;
     border-width: 0;
-    min-height: 48px;
+    min-height: 54px;
 }
 
 .wizard-btn--skip:active {
@@ -403,7 +408,7 @@
 .wizard-btn--next {
     background-color: rgb(2, 132, 199);
     color: rgb(255, 255, 255);
-    min-width: 180px;
+    min-width: 200px;
 }
 
 .wizard-btn--next:active {
