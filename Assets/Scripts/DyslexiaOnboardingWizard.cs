@@ -613,9 +613,10 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
 
         if (btnNext != null)
         {
-            btnNext.text = (currentStepIndex == TOTAL_STEPS - 1) ? "वाचन सुरू करा ✓" : "पुढे →";
+            btnNext.text = (currentStepIndex == TOTAL_STEPS - 1) ? "सुरू करा ✓" : "पुढे →";
         }
 
+        PlaceLivePreview();
         UpdateStep1Selections();
         UpdateStep2Selections();
         UpdateStep3Selections();
@@ -688,31 +689,51 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         {
             string palName = draftProfile.colorPalette switch
             {
-                ColorBlindPalette.ClassicCobalt => "निळा रंग (Cobalt)",
-                ColorBlindPalette.WarmAmber => "सोनेरी रंग (Amber)",
-                ColorBlindPalette.VioletIris => "जांभळा रंग (Violet)",
-                _ => "काळा रंग (None)"
+                ColorBlindPalette.ClassicCobalt => "निळा रंग",
+                ColorBlindPalette.WarmAmber => "सोनेरी रंग",
+                ColorBlindPalette.VioletIris => "जांभळा रंग",
+                _ => "काळा रंग"
             };
 
             string sevName = draftProfile.severity switch
             {
-                DyslexiaSeverity.Mild => "कमी अंतर (Compact)",
-                DyslexiaSeverity.Moderate => "मध्यम अंतर (Default)",
-                _ => "जास्त अंतर (Expanded)"
+                DyslexiaSeverity.Mild => "कमी अंतर",
+                DyslexiaSeverity.Moderate => "मध्यम अंतर",
+                _ => "जास्त अंतर"
             };
 
             string tintName = draftProfile.substrateTint switch
             {
-                SubstrateTint.WarmCream => "क्रीमी (Warm Cream)",
-                SubstrateTint.MintIce => "हलका हिरवा (Mint)",
-                SubstrateTint.Periwinkle => "हलका निळा (Soft Blue)",
-                _ => "नैसर्गिक कागद (Natural)"
+                SubstrateTint.WarmCream => "क्रीमी",
+                SubstrateTint.MintIce => "हलका हिरवा",
+                SubstrateTint.Periwinkle => "हलका निळा",
+                _ => "नैसर्गिक कागद"
             };
 
             if (reviewValueSpacing != null) reviewValueSpacing.text = sevName;
             if (reviewValueColour != null) reviewValueColour.text = palName;
             if (reviewValuePaper != null) reviewValuePaper.text = tintName;
         }
+    }
+
+    private void PlaceLivePreview()
+    {
+        if (livePreviewCard == null) return;
+        VisualElement page = currentStepIndex == 0 ? step1Page
+                           : currentStepIndex == 2 ? step3Page
+                           : currentStepIndex == 3 ? step4Page
+                           : null;
+        if (page == null)
+        {
+            livePreviewCard.style.display = DisplayStyle.None;
+            return;
+        }
+        if (livePreviewCard.parent != page)
+        {
+            livePreviewCard.RemoveFromHierarchy();
+            page.Insert(Mathf.Min(1, page.childCount), livePreviewCard);
+        }
+        livePreviewCard.style.display = DisplayStyle.Flex;
     }
 
     private void SetSelectedClass(VisualElement elem, bool selected)
