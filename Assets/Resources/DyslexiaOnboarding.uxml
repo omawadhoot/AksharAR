@@ -13,8 +13,19 @@
             <ui:Label name="WizardStepAccessibleLabel" text="1/4" picking-mode="Ignore" class="wizard-step-accessible-label"/>
         </ui:VisualElement>
 
-        <!-- ── 2. Middle Content Area: Question First → Live Preview → Options ── -->
+        <!-- ── 2. Middle Content Area: Persistent Reading Slate + Step Options ── -->
         <ui:VisualElement name="WizardContentArea" picking-mode="Ignore" class="wizard-content-area">
+
+            <!-- Persistent Cumulative Blackboard / Slate Preview (Shared across all 4 steps) -->
+            <ui:VisualElement name="WizardSlateContainer" picking-mode="Ignore" class="wizard-slate-frame">
+                <ui:VisualElement picking-mode="Ignore" class="wizard-slate-top-header">
+                    <ui:Label text="📝 वाचन पाटी  •  READING SLATE" picking-mode="Ignore" class="wizard-slate-header-title"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
+                    <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
+                    <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
 
             <!-- Step 1: Text Spacing (Mild, Moderate, Intensive) -->
             <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page">
@@ -23,17 +34,6 @@
                     <ui:Button name="BtnTtsStep1" picking-mode="Position" class="wizard-tts-btn">
                         <ui:Label text="🔊" picking-mode="Ignore" class="wizard-tts-icon"/>
                     </ui:Button>
-                </ui:VisualElement>
-
-                <!-- Slate / Blackboard Classroom Hero Preview Window -->
-                <ui:VisualElement name="WizardSlateContainer" picking-mode="Ignore" class="wizard-slate-frame">
-                    <ui:VisualElement picking-mode="Ignore" class="wizard-slate-top-header">
-                        <ui:Label text="📝 वाचन पाटी  •  READING SLATE" picking-mode="Ignore" class="wizard-slate-header-title"/>
-                    </ui:VisualElement>
-                    <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
-                        <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
-                        <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
-                    </ui:VisualElement>
                 </ui:VisualElement>
                 
                 <ui:VisualElement name="CardSeverityMild" picking-mode="Position" class="wizard-option-card">
