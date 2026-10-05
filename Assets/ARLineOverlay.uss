@@ -1,7 +1,5 @@
 .hindi-ar-line, .hindi-dyslexic-reveal {
     position: absolute;
-    -unity-font: resource("Fonts/NeevA-Dyslexia-Regular");
-    -unity-font-definition: resource("Fonts/NeevA-Dyslexia-Regular");
     -unity-text-generator: advanced;
     -unity-text-align: middle-left;
     background-color: rgba(255, 255, 255, 0.95);
@@ -35,25 +33,25 @@
     right: 0;
     bottom: 0;
     overflow: hidden;
+    -unity-text-generator: advanced;
 }
 
 /* ── 1. Top Horizon Level Pill ── */
 .level-pill {
     position: absolute;
     top: 48px;
-    left: 0;
-    right: 0;
-    margin-left: auto;
-    margin-right: auto;
+    align-self: center;
     height: 64px;
-    padding-left: 36px;
-    padding-right: 36px;
-    border-radius: 32px;
-    background-color: rgba(4, 8, 16, 0.82);
-    border-width: 2px;
+    height: 72px;
+    padding-left: 32px;
+    padding-right: 32px;
+    border-radius: 36px;
+    background-color: rgba(4, 8, 16, 0.88);
+    border-width: 2.5px;
     border-color: rgba(255, 255, 255, 0.25);
     align-items: center;
     justify-content: center;
+    flex-direction: row;
     transition-property: border-color, background-color;
     transition-duration: 0.2s;
 }
@@ -64,12 +62,12 @@
 }
 
 .level-pill--tilted {
-    border-color: rgba(51, 153, 255, 0.55);
-    background-color: rgba(4, 8, 16, 0.82);
+    border-color: rgba(51, 153, 255, 0.65);
+    background-color: rgba(4, 8, 16, 0.88);
 }
 
 .level-pill-text {
-    font-size: 26px;
+    font-size: 28px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: #3399FF;
@@ -142,13 +140,11 @@
     bottom: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.35);
-    transition-property: background-color;
-    transition-duration: 0.25s;
+    background-color: transparent;
 }
 
 .reading-tint--clear {
-    background-color: rgba(255, 255, 255, 0.0);
+    background-color: transparent;
 }
 
 /* 4 L-shaped Corner Brackets */
@@ -301,54 +297,130 @@
     left: 0;
     right: 0;
     width: 100%;
-    height: 360px;
+    height: 420px;
     background-color: rgba(3, 5, 8, 0.94);
     align-items: center;
     justify-content: flex-start;
-    padding-top: 18px;
+    padding-top: 24px;
 }
 
 .mode-carousel {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    height: 72px;
-    margin-bottom: 24px;
+    height: 96px;
+    margin-bottom: 32px;
 }
 
 .mode-tab {
-    padding-left: 32px;
-    padding-right: 32px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-left: 18px;
+    margin-right: 18px;
+    min-height: 80px;
     background-color: transparent;
     border-width: 0;
+}
+
+/* ── Rhythmic Verse & Prose Text Block Visual Icons (No Emojis) ── */
+.mode-icon {
+    width: 32px;
+    height: 24px;
+    justify-content: space-between;
+    margin-right: 14px;
+}
+
+.mode-icon--poem {
     align-items: center;
 }
 
-.mode-tab-text {
-    font-size: 30px;
-    color: rgba(255, 255, 255, 0.45);
-    -unity-text-align: middle-center;
+.mode-icon--chapter {
+    align-items: flex-start;
+}
+
+.verse-bar {
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.45);
+    align-self: center;
+}
+
+.verse-bar--1 { width: 18px; }
+.verse-bar--2 { width: 32px; }
+.verse-bar--3 { width: 22px; }
+
+.prose-bar {
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.45);
+    align-self: flex-start;
+}
+
+.prose-bar--1 { width: 32px; }
+.prose-bar--2 { width: 32px; }
+.prose-bar--3 { width: 22px; }
+
+/* ── Bilingual Text Labels (Dyslexia Devanagari + Latin Subtitle) ── */
+.mode-text-group {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.mode-label-devanagari {
+    -unity-text-generator: advanced;
+    font-size: 42px;
+    color: rgba(255, 255, 255, 0.72);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
     margin: 0;
     padding: 0;
 }
 
-.mode-tab--active .mode-tab-text {
-    color: #FFB300;
-    -unity-font-style: bold;
+.mode-label-latin {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.52);
+    -unity-text-align: middle-left;
+    margin: 0;
+    margin-top: 2px;
+    padding: 0;
 }
 
 .mode-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
     background-color: #FFB300;
-    margin-top: 6px;
+    margin-left: 14px;
+    align-self: center;
 }
 
 .mode-dot--hidden {
     visibility: hidden;
+}
+
+/* ── Active Selection Accent ── */
+.mode-tab--active .verse-bar {
+    background-color: #FFB300;
+}
+
+.mode-tab--active .prose-bar {
+    background-color: #FFB300;
+}
+
+.mode-tab--active .mode-label-devanagari {
+    color: #FFB300;
+    -unity-font-style: bold;
+}
+
+.mode-tab--active .mode-label-latin {
+    color: #FFD54F;
+    -unity-font-style: bold;
 }
 
 .camera-controls-row {
@@ -386,8 +458,9 @@
     border-width: 0;
     align-items: center;
     justify-content: center;
-    transition-property: scale, background-color;
+    transition-property: scale, background-color, opacity;
     transition-duration: 0.15s;
+    opacity: 1.0;
 }
 
 .shutter-core:active {
@@ -396,6 +469,21 @@
 
 .shutter-core--scanning {
     background-color: #33C5FF;
+    opacity: 0.85;
+}
+
+.shutter-core--tilted {
+    background-color: rgba(255, 255, 255, 0.25);
+    opacity: 0.35;
+}
+
+.shutter-core--reading-locked {
+    background-color: rgba(255, 255, 255, 0.15);
+    opacity: 0.20;
+}
+
+.shutter-core:disabled {
+    opacity: 0.35;
 }
 
 .shutter-core--rescan {
@@ -410,28 +498,721 @@
     padding: 0;
 }
 
+.shutter-core--rescan .shutter-icon {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: #0F172A;
+}
+
 .quick-rescan-btn {
-    width: 100px;
-    height: 100px;
-    border-radius: 50px;
-    background-color: rgba(255, 255, 255, 0.15);
-    border-width: 3px;
-    border-color: rgba(255, 255, 255, 0.40);
+    width: 104px;
+    height: 104px;
+    border-radius: 52px;
+    background-color: rgba(15, 23, 42, 0.88);
+    border-width: 2.5px;
+    border-color: rgba(56, 189, 248, 0.85);
     align-items: center;
     justify-content: center;
-    transition-property: scale, background-color;
+    padding: 0;
+    transition-property: scale, background-color, border-color;
     transition-duration: 0.15s;
 }
 
 .quick-rescan-btn:active {
     scale: 0.90 0.90;
-    background-color: rgba(255, 255, 255, 0.30);
+    background-color: rgba(56, 189, 248, 0.35);
+    border-color: #38BDF8;
 }
 
 .quick-rescan-icon {
-    font-size: 42px;
+    width: 58px;
+    height: 58px;
+    background-image: resource("Icons/Icon_Refresh");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: #FFFFFF;
+    transition-property: -unity-background-image-tint-color, scale;
+    transition-duration: 0.15s;
+}
+
+.quick-rescan-btn:active .quick-rescan-icon {
+    -unity-background-image-tint-color: #38BDF8;
+    scale: 0.95 0.95;
+}
+
+/* ── 4. Landscape Layout Overrides ── */
+
+.camera-bar--landscape {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: 300px;
+    height: 100%;
+    background-color: rgba(3, 5, 8, 0.94);
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Mode Carousel in Landscape: Exact same visual identity as portrait (pure typography + active dot) */
+.camera-bar--landscape .mode-carousel,
+.mode-carousel--landscape {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    width: 100%;
+    margin-top: 24px;
+    margin-bottom: 0;
+}
+
+.camera-bar--landscape .mode-tab {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border-width: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.camera-bar--landscape .mode-label-devanagari {
+    font-size: 36px;
+}
+
+.camera-bar--landscape .mode-label-latin {
+    font-size: 18px;
+}
+
+/* Camera Controls in Landscape: Vertical distribution with large separation */
+.camera-bar--landscape .camera-controls-row,
+.camera-controls-row--landscape {
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100%;
+    height: auto;
+    flex-grow: 1;
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 24px;
+    margin-bottom: 12px;
+}
+
+.camera-bar--landscape #LeftSpacerSlot {
+    display: none;
+}
+
+.camera-bar--landscape .shutter-bezel {
+    width: 180px;
+    height: 180px;
+    align-self: center;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.camera-bar--landscape #RightRescanSlot {
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    margin-top: 50px;
+}
+
+.camera-bar--landscape .quick-rescan-btn {
+    width: 100px;
+    height: 100px;
+    align-self: center;
+}
+
+.viewfinder-root--landscape {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 300px;
+    width: auto;
+    height: 100%;
+}
+
+.level-pill--landscape {
+    position: absolute;
+    top: 24px;
+    align-self: center;
+    margin-right: 300px;
+    left: auto;
+    right: auto;
+}
+
+/* Container rules covering the absolute boundaries of the 2048x2898 Canvas */
+#TextContainer {
+    position: absolute;
+    width: 2048px;
+    height: 2898px;
+    background-color: rgba(0, 0, 0, 0);
+    overflow: visible;
+}
+
+/* Individual label baseline style parameters overrides */
+#TextContainer > Label {
+    margin: 0;
+    padding: 0;
+    color: #1A1A1A; /* High contrast dark charcoal for dyslexic accessibility print */
+}
+
+/* ── In-Situ Freeze-Frame AR Overlay Styles ── */
+.freeze-frame-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    -unity-background-scale-mode: scale-and-crop;
+    background-color: transparent;
+}
+
+.freeze-frame-text-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: transparent;
+}
+
+.freeze-frame-card {
+    position: absolute;
+    border-radius: 8px;
+    transition-property: opacity, transform;
+    transition-duration: 0.2s;
+}
+
+.freeze-frame-line {
+    position: absolute;
+    -unity-text-generator: advanced;
+    -unity-text-align: upper-left;
+    white-space: nowrap;
+    overflow: visible;
+    background-color: transparent;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    margin: 0;
+    border-width: 0;
+    border-radius: 4px;
+    transition-property: background-color, color, scale;
+    transition-duration: 0.15s;
+}
+
+.freeze-frame-line:active,
+.freeze-frame-line--highlighted {
+    background-color: rgba(255, 215, 0, 0.35);
+    scale: 1.02;
+}
+
+/* ── Top Bar Controls (Level Pill + Accessibility Settings) ── */
+.top-controls-container {
+    position: absolute;
+    top: 52px;
+    left: 28px;
+    right: 28px;
+    height: 128px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-top-button {
+    position: absolute;
+    right: 0px;
+    min-width: 176px;
+    height: 84px;
+    border-top-left-radius: 42px;
+    border-top-right-radius: 42px;
+    border-bottom-left-radius: 42px;
+    border-bottom-right-radius: 42px;
+    background-color: rgba(15, 23, 42, 0.94);
+    border-left-width: 3.5px;
+    border-right-width: 3.5px;
+    border-top-width: 3.5px;
+    border-bottom-width: 3.5px;
+    border-left-color: rgb(56, 189, 248);
+    border-right-color: rgb(56, 189, 248);
+    border-top-color: rgb(56, 189, 248);
+    border-bottom-color: rgb(56, 189, 248);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-left: 20px;
+    padding-right: 26px;
+    padding-top: 0;
+    padding-bottom: 0;
+    transition-property: scale, background-color, border-color;
+    transition-duration: 0.15s;
+}
+
+.settings-top-button:active {
+    scale: 0.92;
+    background-color: rgb(2, 132, 199);
+    border-left-color: rgb(255, 255, 255);
+    border-right-color: rgb(255, 255, 255);
+    border-top-color: rgb(255, 255, 255);
+    border-bottom-color: rgb(255, 255, 255);
+}
+
+.settings-button-icon {
+    width: 44px;
+    height: 44px;
+    background-image: resource("Icons/Icon_Settings");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    margin-right: 10px;
+}
+
+.settings-button-label {
+    -unity-text-generator: advanced;
+    font-size: 28px;
+    -unity-font-style: bold;
     color: #FFFFFF;
     -unity-text-align: middle-center;
     margin: 0;
     padding: 0;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* ── Dyslexia Calibration Wizard Full-Screen Styling ── */
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+.wizard-fullscreen-root,
+.wizard-top-bar,
+.wizard-brand-wordmark,
+.wizard-step-accessible-label,
+.wizard-prompt,
+.wizard-step-purpose,
+.wizard-card-title,
+.wizard-card-preview,
+.wizard-palette-sample,
+.wizard-tint-benefit,
+.wizard-preview-line,
+.wizard-preview-summary,
+.wizard-change-later-note,
+.wizard-nav-btn,
+.wizard-btn--skip {
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+/* ── 1. Full-Screen Safe-Area Root ── */
+.wizard-fullscreen-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+    background-color: rgb(10, 15, 29);
+    flex-direction: column;
+    justify-content: space-between;
+    padding-left: 36px;
+    padding-right: 36px;
+    padding-top: 54px;
+    padding-bottom: 56px;
+}
+
+/* ── 2. Top Bar: Wordmark + Progress + Close ── */
+.wizard-top-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 72px;
+    margin-bottom: 8px;
+}
+
+.wizard-brand-group {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.wizard-brand-wordmark {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: rgb(56, 189, 248);
+}
+
+.wizard-step-accessible-label {
+    font-size: 18px;
+    color: rgb(148, 163, 184);
+}
+
+.wizard-progress-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 16px;
+}
+
+.wizard-progress-seg {
+    width: 56px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.16);
+    margin-left: 4px;
+    margin-right: 4px;
+    transition-property: background-color, width;
+    transition-duration: 0.2s;
+}
+
+.wizard-progress-seg--active {
+    background-color: rgb(56, 189, 248);
+    width: 68px;
+}
+
+.wizard-close-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background-color: rgba(255, 255, 255, 0.12);
+    border-width: 0;
+    align-items: center;
+    justify-content: center;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-close-btn:active {
+    background-color: rgba(239, 68, 68, 0.7);
+    scale: 0.92;
+}
+
+.wizard-close-icon {
+    font-size: 28px;
+    color: rgb(226, 232, 240);
+    -unity-text-align: middle-center;
+}
+
+/* ── 3. Middle Content Area ── */
+.wizard-content-area {
+    flex-direction: column;
+    width: 100%;
+    flex-grow: 1;
+    justify-content: flex-start;
+}
+
+/* ── Persistent Cumulative Live Preview Box ── */
+.wizard-live-preview-box {
+    background-color: rgb(250, 248, 242);
+    border-radius: 22px;
+    padding-left: 28px;
+    padding-right: 28px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 18px;
+    min-height: 145px;
+    justify-content: center;
+    border-width: 2.5px;
+    border-color: rgba(255, 255, 255, 0.12);
+    transition-property: background-color;
+    transition-duration: 0.2s;
+}
+
+.wizard-preview-line {
+    font-size: 36px;
+    color: rgb(20, 20, 20);
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    margin-bottom: 6px;
+}
+
+/* ── Step Pages ── */
+.wizard-step-page {
+    flex-direction: column;
+    width: 100%;
+}
+
+.wizard-step-purpose {
+    font-size: 22px;
+    color: rgb(148, 163, 184);
+    margin-bottom: 8px;
+    line-height: 1.25;
+}
+
+.wizard-prompt-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.wizard-prompt {
+    font-size: 34px;
+    -unity-font-style: bold;
+    color: rgb(241, 245, 249);
+    line-height: 1.25;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.wizard-tts-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 29px;
+    background-color: rgba(2, 132, 199, 0.25);
+    border-width: 2px;
+    border-color: rgba(56, 189, 248, 0.6);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 12px;
+    transition-property: scale, background-color;
+    transition-duration: 0.15s;
+}
+
+.wizard-tts-btn:active {
+    background-color: rgb(2, 132, 199);
+    scale: 0.92;
+}
+
+.wizard-tts-icon {
+    font-size: 28px;
+    color: rgb(56, 189, 248);
+    -unity-text-align: middle-center;
+}
+
+/* ── Step 1 Option Cards ── */
+.wizard-option-card {
+    background-color: rgb(22, 30, 49);
+    border-radius: 18px;
+    border-width: 2.5px;
+    border-color: rgba(255, 255, 255, 0.12);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    margin-bottom: 12px;
+    flex-direction: column;
+    transition-property: border-color, background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-option-card:active {
+    scale: 0.98;
+}
+
+.wizard-card--selected {
+    border-color: rgb(56, 189, 248);
+    background-color: rgb(26, 46, 78);
+}
+
+.wizard-card-title {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: rgb(248, 250, 252);
+    margin-bottom: 4px;
+}
+
+.wizard-card-preview {
+    font-size: 28px;
+    color: rgb(226, 232, 240);
+    white-space: nowrap;
+}
+
+/* ── Step 2 Palette Cards ── */
+.wizard-palette-card {
+    background-color: rgb(250, 248, 242);
+    border-radius: 18px;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0.12);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    flex-direction: column;
+    justify-content: center;
+    transition-property: border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-palette-card:active {
+    scale: 0.98;
+}
+
+.wizard-palette-card.wizard-card--selected {
+    border-color: rgb(2, 132, 199);
+    border-width: 4.5px;
+}
+
+.wizard-palette-card .wizard-card-title {
+    color: rgb(15, 23, 42);
+    margin-bottom: 2px;
+    font-size: 22px;
+}
+
+.wizard-palette-sample {
+    font-size: 32px;
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+/* ── Step 3 Paper Tint Cards ── */
+.wizard-tint-card {
+    border-radius: 18px;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0.12);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 12px;
+    align-items: center;
+    justify-content: center;
+    min-height: 82px;
+    transition-property: border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-tint-card:active {
+    scale: 0.98;
+}
+
+.wizard-tint-card.wizard-card--selected {
+    border-color: rgb(2, 132, 199);
+    border-width: 4.5px;
+}
+
+.wizard-tint-card--cream {
+    background-color: rgb(250, 248, 242);
+}
+
+.wizard-tint-card--mint {
+    background-color: rgb(240, 253, 244);
+}
+
+.wizard-tint-card--periwinkle {
+    background-color: rgb(241, 245, 249);
+}
+
+.wizard-tint-card--paper {
+    background-color: rgb(250, 245, 232);
+}
+
+.wizard-tint-benefit {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: rgb(15, 23, 42);
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+/* ── Step 4 Review Subtitle & Note ── */
+.wizard-preview-summary {
+    font-size: 26px;
+    color: rgb(56, 189, 248);
+    -unity-font-style: bold;
+    margin-top: 14px;
+    margin-bottom: 8px;
+    -unity-text-align: middle-center;
+}
+
+.wizard-change-later-note {
+    font-size: 22px;
+    color: rgb(148, 163, 184);
+    margin-top: 10px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+/* ── 4. Bottom Action Bar (Thumb-Height Ergonomics) ── */
+.wizard-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 88px;
+    padding-top: 12px;
+    border-top-width: 1.5px;
+    border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.wizard-nav-btn {
+    height: 74px;
+    min-width: 160px;
+    border-radius: 37px;
+    padding-left: 32px;
+    padding-right: 32px;
+    font-size: 26px;
+    -unity-font-style: bold;
+    align-items: center;
+    justify-content: center;
+    border-width: 0;
+    transition-property: scale, background-color;
+    transition-duration: 0.15s;
+}
+
+.wizard-btn--back {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: rgb(226, 232, 240);
+}
+
+.wizard-btn--back:active {
+    background-color: rgba(255, 255, 255, 0.25);
+    scale: 0.95;
+}
+
+.wizard-btn--skip {
+    background-color: transparent;
+    color: rgb(148, 163, 184);
+    font-size: 22px;
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-width: 0;
+    min-height: 48px;
+}
+
+.wizard-btn--skip:active {
+    color: rgb(241, 245, 249);
+    scale: 0.95;
+}
+
+.wizard-btn--next {
+    background-color: rgb(2, 132, 199);
+    color: rgb(255, 255, 255);
+    min-width: 180px;
+}
+
+.wizard-btn--next:active {
+    background-color: rgb(3, 105, 161);
+    scale: 0.95;
+}
+
+
+
+
+
+
+

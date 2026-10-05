@@ -1,0 +1,17 @@
+<linker>
+    <assembly fullname="UnityEngine.UIElementsModule" preserve="all">
+        <type fullname="UnityEngine.UIElements.PointerEventBase`1" preserve="all" />
+        <type fullname="UnityEngine.UIElements.PointerDownEvent" preserve="all" />
+        <type fullname="UnityEngine.UIElements.PointerMoveEvent" preserve="all" />
+        <type fullname="UnityEngine.UIElements.PointerUpEvent" preserve="all" />
+        <type fullname="UnityEngine.UIElements.ClickEvent" preserve="all" />
+        <type fullname="UnityEngine.UIElements.IPointerEvent" preserve="all" />
+    </assembly>
+    <assembly fullname="UnityEngine.UI" preserve="all">
+        <type fullname="UnityEngine.UIElements.PanelRaycaster" preserve="all" />
+        <type fullname="UnityEngine.UIElements.WorldDocumentRaycaster" preserve="all" />
+    </assembly>
+    <assembly fullname="UnityEngine.TextCoreFontEngineModule" preserve="all" />
+    <assembly fullname="UnityEngine.TextCoreTextEngineModule" preserve="all" />
+    <assembly fullname="UnityEngine.TextRenderingModule" preserve="all" />
+</linker>

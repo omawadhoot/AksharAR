@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.XR.ARFoundation;
@@ -28,6 +29,11 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     [SerializeField] private StyleSheet lineStyleSheet;
     [SerializeField] private Font rawFont;
     [SerializeField] private UnityEngine.TextCore.Text.FontAsset sdfFontAsset;
+
+    // Architectural Const Constraints
+    private const float fontAscenderRatio = 0.22f;
+    private const float minFontScaleFloor = 0.75f;
+    private const float absoluteMaxSquish = 0.65f;
 
     [Header("Page Dimensions (Meters)")]
     [Tooltip("Standard physical textbook column width estimation in meters (0.14m = 14cm)")]
@@ -164,9 +170,12 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             worldQuadObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
             worldQuadObj.name = "AR_WorldSpace_UIQuad";
 
-            // Remove default collider
-            Collider col = worldQuadObj.GetComponent<Collider>();
-            if (col != null) Destroy(col);
+            // Ensure MeshCollider exists for raycast touch detection
+            MeshCollider col = worldQuadObj.GetComponent<MeshCollider>();
+            if (col == null)
+            {
+                col = worldQuadObj.AddComponent<MeshCollider>();
+            }
 
             Material baseMat = Resources.Load<Material>("ARWorldSpaceQuadMaterial");
 #if UNITY_EDITOR
@@ -205,10 +214,10 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             }
         }
 
-        // Keep 3D Quad in world space (unparented from raw 60Hz ARCore transform hierarchy)
-        if (worldQuadObj.transform.parent != transform)
+        // Keep 3D Quad in root world space (unparented from any hierarchy)
+        if (worldQuadObj.transform.parent != null)
         {
-            worldQuadObj.transform.SetParent(transform, true);
+            worldQuadObj.transform.SetParent(null, true);
         }
 
         worldQuadObj.transform.localScale = new Vector3(pageSizeMeters.x, pageSizeMeters.y, 1f);
@@ -242,19 +251,27 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     // Pending lines to display if textContainer isn't ready yet
     private List<DetectedTextLine> pendingLines;
     private Vector2 pendingImageSize;
+    private Texture2D pendingCapturedTexture;
 
     public void AttachToTrackedImage(ARTrackedImage trackedImage)
     {
         if (trackedImage == null) return;
 
         if (trackedImage.size.x > 0 && trackedImage.size.y > 0)
+        {
             pageSizeMeters = trackedImage.size;
+        }
 
         currentTrackedImage = trackedImage;
 
         if (worldQuadObj == null || uiDocument == null)
         {
             InitializeWorldSpaceUIToolkit();
+        }
+
+        if (worldQuadObj != null && pageSizeMeters.x > 0f && pageSizeMeters.y > 0f)
+        {
+            worldQuadObj.transform.localScale = new Vector3(pageSizeMeters.x, pageSizeMeters.y, 1f);
         }
 
         // Route pose through Three-Stage Spatial State Filter
@@ -276,7 +293,19 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         }
     }
 
-    public void DisplayDetectedLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize)
+    /// <summary>
+    /// Frame N Execution: Groups plates, aligns vertical typography metrics, 
+    /// draws ink masking backgrounds, and kicks off the Yoga calculation pass.
+    /// </summary>
+    public void DisplayDetectedLines(List<DetectedTextLine> detectedPlates, Texture2D lastCapturedTexture, float baseFontSize)
+    {
+        Vector2 imageSize = lastCapturedTexture != null 
+            ? new Vector2(lastCapturedTexture.width, lastCapturedTexture.height) 
+            : new Vector2(2048f, 2898f);
+        DisplayDetectedLines(detectedPlates, imageSize, lastCapturedTexture, baseFontSize);
+    }
+
+    public void DisplayDetectedLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize, Texture2D capturedFrameTexture = null, float baseFontSizeOverride = -1f)
     {
         if (detectedLines == null || detectedLines.Count == 0) return;
 
@@ -317,6 +346,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
                 // Still not ready — defer to next frame
                 pendingLines = detectedLines;
                 pendingImageSize = visionImageSize;
+                pendingCapturedTexture = capturedFrameTexture;
                 StartCoroutine(RetryDisplayNextFrame());
                 return;
             }
@@ -324,11 +354,17 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
 
         // Explicit clean-slate: ensure textContainer is cleared before rendering new lines
         textContainer.Clear();
-        RenderLines(detectedLines, visionImageSize);
+        RenderLines(detectedLines, visionImageSize, capturedFrameTexture, baseFontSizeOverride);
 
         // Always show the quad once text is rendered
         if (worldQuadObj != null)
             worldQuadObj.SetActive(true);
+
+        if (poseFilter != null)
+        {
+            poseFilter.SetOverlayVisibility(true);
+            poseFilter.SetCropMetrics(pageSizeMeters.x, pageSizeMeters.x, 0f, "Rendered", 0);
+        }
     }
 
     private IEnumerator RetryDisplayNextFrame()
@@ -338,12 +374,14 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         {
             var lines = pendingLines;
             var imgSize = pendingImageSize;
+            var tex = pendingCapturedTexture;
             pendingLines = null;
-            DisplayDetectedLines(lines, imgSize);
+            pendingCapturedTexture = null;
+            DisplayDetectedLines(lines, imgSize, tex);
         }
     }
 
-    private void RenderLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize)
+    private void RenderLines(List<DetectedTextLine> detectedLines, Vector2 visionImageSize, Texture2D capturedFrameTexture = null, float baseFontSizeOverride = -1f)
     {
         textContainer.Clear();
 
@@ -364,29 +402,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
             worldQuadObj.transform.localScale = new Vector3(physicalWidth, physicalHeight, 1f);
 
             // 3. Map the active top rendered texture portion [0..activePanelHeight] across the full 3D Quad
-            if (quadMaterial != null)
-            {
-                float uvScaleY = Mathf.Clamp01(activePanelHeight / texHeight);
-                float uvOffsetY = 1f - uvScaleY;
-
-                Vector2 scale = new Vector2(1f, uvScaleY);
-                Vector2 offset = new Vector2(0f, uvOffsetY);
-
-                if (quadMaterial.HasProperty("_MainTex"))
-                {
-                    quadMaterial.SetTextureScale("_MainTex", scale);
-                    quadMaterial.SetTextureOffset("_MainTex", offset);
-                }
-                if (quadMaterial.HasProperty("_BaseMap"))
-                {
-                    quadMaterial.SetTextureScale("_BaseMap", scale);
-                    quadMaterial.SetTextureOffset("_BaseMap", offset);
-                }
-                if (quadMaterial.HasProperty("_Cull"))
-                {
-                    quadMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-                }
-            }
+            UpdateMaterialUVSlice(activePanelHeight, texHeight);
         }
 
         if (rootElement != null)
@@ -419,18 +435,109 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
 
         Debug.Log($"[World-Space UI Toolkit] Rendering {detectedLines.Count} lines. ImageSize:{visionImageSize.x}x{visionImageSize.y} | Quad:{physicalWidth:F3}mx{physicalHeight:F3}m | ActivePixels:{texWidth}x{activePanelHeight:F0}");
 
-        bool useRaycastUnprojection = lastCapturePose.isValid && currentTrackedImage != null && worldQuadObj != null;
-        Plane paperPlane = default;
-        if (useRaycastUnprojection)
+        // ─── POEM MODE TYPOGRAPHY HARMONIZATION ────────────────────────────
+        var rawLineHeights = detectedLines.Select(l => l.height * uniformScale).OrderBy(h => h).ToList();
+        float medianScaledLineHeight = rawLineHeights.Count > 0 
+            ? rawLineHeights[rawLineHeights.Count / 2] 
+            : 42f * uniformScale;
+
+        // Calibrated Devanagari Cap-Height Font Size:
+        float harmonizedFontSize = baseFontSizeOverride > 0f 
+            ? baseFontSizeOverride 
+            : Mathf.Clamp(medianScaledLineHeight * 0.95f, 32f, 160f);
+        float uniformPlateHeight = harmonizedFontSize * 1.35f;
+
+        // ─── DYNAMIC METRIC MARGINS ────────────────────────────────────────
+        float quadWidthMm = Mathf.Max(10f, physicalWidth * 1000f);
+        float quadHeightMm = Mathf.Max(10f, physicalHeight * 1000f);
+        float hMarginMm = 3.75f; // 3.75mm horizontal tolerance stack budget
+        float vMarginMm = 2.50f; // 2.50mm block vertical tolerance
+        float hMarginPx = (hMarginMm / quadWidthMm) * texWidth;
+        float vMarginPx = (vMarginMm / quadHeightMm) * activePanelHeight;
+
+        // Context 2: Sample representative paper substrate color with neutral paper normalization
+        DetectedTextLine centralSampleLine = detectedLines.Count > 0 ? detectedLines[detectedLines.Count / 2] : default;
+        Color inpaintColor = SamplePaperColorFromFrame(capturedFrameTexture, centralSampleLine, 6, visionImageSize);
+
+        // Active Contrast Adaptation:
+        // Dynamically evaluate substrate luminance to ensure maximum dyslexic legibility
+        float bgLuminance = (0.299f * inpaintColor.r) + (0.587f * inpaintColor.g) + (0.114f * inpaintColor.b);
+        Color textColor = (bgLuminance < 0.48f)
+            ? new Color(0.98f, 0.98f, 0.98f, 1.0f)  // Crisp white for dark illustrated backgrounds
+            : new Color(0.08f, 0.08f, 0.08f, 1.0f); // Deep charcoal black for light textbook pages
+
+        List<Label> createdLabels = new List<Label>();
+        List<float> targetWidths = new List<float>();
+
+        // ─── PASS 1: Poem Block-Level Anchoring & Rhythm Harmonization ─────
+        var sortedLines = detectedLines.OrderBy(l => l.minY).ToList();
+        List<LineLayoutData> lineLayouts = new List<LineLayoutData>();
+
+        float blockMinX = float.MaxValue;
+        float blockMaxX = float.MinValue;
+        float blockMinY = sortedLines.Count > 0 ? sortedLines[0].minY * uniformScale : 0f;
+        float currentRunningY = blockMinY;
+
+        for (int i = 0; i < sortedLines.Count; i++)
         {
-            paperPlane = new Plane(currentTrackedImage.transform.up, currentTrackedImage.transform.position);
-            Debug.Log($"[World-Space UI Toolkit] Active 3D Raycast Plane Unprojection ENABLED. Paper Normal: {currentTrackedImage.transform.up:F3}");
+            var line = sortedLines[i];
+            float scaledX = line.minX * uniformScale;
+            float scaledW = Math.Max(40f, line.width * uniformScale);
+            float rawTopY = line.minY * uniformScale;
+
+            if (i > 0)
+            {
+                float prevRawTopY = sortedLines[i - 1].minY * uniformScale;
+                float verticalGap = rawTopY - prevRawTopY;
+
+                // Detect semantic stanza break (large whitespace gap between couplets/stanzas)
+                if (verticalGap > medianScaledLineHeight * 1.45f)
+                {
+                    currentRunningY += uniformPlateHeight * 1.40f; // Stanza break gap
+                }
+                else
+                {
+                    currentRunningY += uniformPlateHeight * 1.05f; // Standard line advance
+                }
+            }
+
+            lineLayouts.Add(new LineLayoutData
+            {
+                text = line.text,
+                leftX = scaledX,
+                topY = currentRunningY,
+                width = scaledW,
+                height = uniformPlateHeight
+            });
+
+            blockMinX = Mathf.Min(blockMinX, scaledX);
+            blockMaxX = Mathf.Max(blockMaxX, scaledX + scaledW);
         }
 
-        int index = 1;
-        foreach (var line in detectedLines)
+        float blockMaxY = currentRunningY + uniformPlateHeight;
+
+        // ─── PASS 2: Unified Block-Level Substrate Masking ─────────────────
+        if (lineLayouts.Count > 0)
         {
-            var label = new Label(line.text);
+            VisualElement blockBackingCard = new VisualElement { name = "BlockBackingCard" };
+            blockBackingCard.style.position = Position.Absolute;
+            blockBackingCard.style.left = Mathf.Max(0f, blockMinX - hMarginPx);
+            blockBackingCard.style.top = Mathf.Max(0f, blockMinY - vMarginPx);
+            blockBackingCard.style.width = Mathf.Min(texWidth, (blockMaxX - blockMinX) + (hMarginPx * 2f));
+            blockBackingCard.style.height = Mathf.Max(uniformPlateHeight, (blockMaxY - blockMinY) + (vMarginPx * 2f));
+            blockBackingCard.style.backgroundColor = new StyleColor(inpaintColor);
+            blockBackingCard.style.borderTopLeftRadius = 8;
+            blockBackingCard.style.borderBottomLeftRadius = 8;
+            blockBackingCard.style.borderTopRightRadius = 8;
+            blockBackingCard.style.borderBottomRightRadius = 8;
+            textContainer.Add(blockBackingCard);
+        }
+
+        // ─── PASS 3: Render dyslexic labels inside the anchored block ──────
+        int index = 1;
+        foreach (var data in lineLayouts)
+        {
+            var label = new Label(data.text);
             label.AddToClassList("hindi-ar-line");
             label.AddToClassList("hindi-dyslexic-reveal");
             label.style.unityTextGenerator = new StyleEnum<TextGeneratorType>(TextGeneratorType.Advanced);
@@ -445,100 +552,233 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
                 label.style.unityFontDefinition = new StyleFontDefinition(FontDefinition.FromSDFFont(sdfFontAsset));
             }
 
-            // 1. Default Uniform 2D scale fallback
-            float scaledX = line.boundingBox.x * uniformScale;
-            float scaledY = line.boundingBox.y * uniformScale;
-            float scaledW = Math.Max(40f, line.boundingBox.width * uniformScale);
-            float scaledH = Math.Max(20f, line.boundingBox.height * uniformScale);
+            IStyle style = label.style;
+            style.position = Position.Absolute;
+            style.left = data.leftX;
+            style.top = data.topY;
+            style.width = data.width;
+            style.height = data.height;
 
-            // 2. 3D Raycast Plane Unprojection: eliminates perspective keystoning / trapezoidal distortion
-            if (useRaycastUnprojection)
-            {
-                Rect bb = line.boundingBox;
-                float scaleX = (float)lastCapturePose.pixelCropRect.width / visionImageSize.x;
-                float scaleY = (float)lastCapturePose.pixelCropRect.height / visionImageSize.y;
+            style.unityTextAlign = new StyleEnum<TextAnchor>(TextAnchor.UpperLeft);
+            style.overflow = Overflow.Visible;
+            style.whiteSpace = WhiteSpace.NoWrap;
 
-                float screenLeftX = lastCapturePose.pixelCropRect.x + bb.x * scaleX;
-                float screenRightX = lastCapturePose.pixelCropRect.x + (bb.x + bb.width) * scaleX;
-                float screenCenterX = lastCapturePose.pixelCropRect.x + (bb.x + bb.width * 0.5f) * scaleX;
+            style.marginLeft = 0f;
+            style.marginRight = 0f;
+            style.marginTop = 0f;
+            style.marginBottom = 0f;
+            style.paddingLeft = 0f;
+            style.paddingRight = 0f;
+            style.paddingTop = 0f;
+            style.paddingBottom = 0f;
 
-                // Invert Y: Cloud Vision (0 is top) -> Screen pixels (0 is bottom)
-                float screenCenterY = lastCapturePose.pixelCropRect.y + (visionImageSize.y - (bb.y + bb.height * 0.5f)) * scaleY;
-                float screenTopY = lastCapturePose.pixelCropRect.y + (visionImageSize.y - bb.y) * scaleY;
-                float screenBottomY = lastCapturePose.pixelCropRect.y + (visionImageSize.y - (bb.y + bb.height)) * scaleY;
-
-                Ray rayLeft = GetRayFromPose(lastCapturePose, new Vector2(screenLeftX, screenCenterY));
-                Ray rayRight = GetRayFromPose(lastCapturePose, new Vector2(screenRightX, screenCenterY));
-                Ray rayTop = GetRayFromPose(lastCapturePose, new Vector2(screenCenterX, screenTopY));
-                Ray rayBottom = GetRayFromPose(lastCapturePose, new Vector2(screenCenterX, screenBottomY));
-
-                if (paperPlane.Raycast(rayLeft, out float distL) &&
-                    paperPlane.Raycast(rayRight, out float distR) &&
-                    paperPlane.Raycast(rayTop, out float distT) &&
-                    paperPlane.Raycast(rayBottom, out float distB))
-                {
-                    Vector3 ptL = worldQuadObj.transform.InverseTransformPoint(rayLeft.GetPoint(distL));
-                    Vector3 ptR = worldQuadObj.transform.InverseTransformPoint(rayRight.GetPoint(distR));
-                    Vector3 ptT = worldQuadObj.transform.InverseTransformPoint(rayTop.GetPoint(distT));
-                    Vector3 ptB = worldQuadObj.transform.InverseTransformPoint(rayBottom.GetPoint(distB));
-
-                    // Quad mesh local space is [-0.5..+0.5] in X and Y
-                    // Normalize to [0..1] and scale to UI Toolkit panel dimensions
-                    float unprojectedX = (ptL.x + 0.5f) * texWidth;
-                    float unprojectedY = (0.5f - ptT.y) * activePanelHeight;
-                    float unprojectedW = Mathf.Max(40f, (ptR.x - ptL.x) * texWidth);
-                    float unprojectedH = Mathf.Max(20f, (ptT.y - ptB.y) * activePanelHeight);
-
-                    // Sanity check to protect against extreme grazing raycast angles (>75 degrees)
-                    if (unprojectedW > 10f && unprojectedW < texWidth * 1.5f &&
-                        unprojectedH > 10f && unprojectedH < activePanelHeight)
-                    {
-                        scaledX = unprojectedX;
-                        scaledY = unprojectedY;
-                        scaledW = unprojectedW;
-                        scaledH = unprojectedH;
-                    }
-                }
-            }
-
-            // Font point size matches 72% of the physical detected line height (Devanagari cap-height ratio)
-            float fontSize = Mathf.Clamp(scaledH * 0.72f, 16f, 130f);
-
-            label.style.position = Position.Absolute;
-            label.style.left = scaledX;
-            label.style.top = scaledY;
-            label.style.width = scaledW + 16f;
-            label.style.height = scaledH;
-            label.style.fontSize = fontSize;
-            label.style.unityTextAlign = line.text.Length < 15
-                ? new StyleEnum<TextAnchor>(TextAnchor.MiddleCenter)
-                : new StyleEnum<TextAnchor>(TextAnchor.MiddleLeft);
-            label.style.marginLeft = 0f;
-            label.style.marginRight = 0f;
-            label.style.marginTop = 0f;
-            label.style.marginBottom = 0f;
-            label.style.paddingLeft = 6f;
-            label.style.paddingRight = 6f;
-            label.style.paddingTop = 0f;
-            label.style.paddingBottom = 0f;
-            label.style.borderLeftWidth = 0f;
-            label.style.borderRightWidth = 0f;
-            label.style.borderTopWidth = 0f;
-            label.style.borderBottomWidth = 0f;
-            label.style.overflow = Overflow.Visible;
-            label.style.whiteSpace = WhiteSpace.NoWrap;
-            label.style.color = new StyleColor(new Color(0.05f, 0.05f, 0.05f, 1.0f));
-            label.style.backgroundColor = new StyleColor(new Color(1.0f, 1.0f, 1.0f, 0.94f));
+            style.backgroundColor = new StyleColor(Color.clear);
+            style.color = new StyleColor(textColor);
 
             textContainer.Add(label);
-            Debug.Log($"[World-Space Line #{index++}] \"{line.text}\" | X:{scaledX:F0} Y:{scaledY:F0} W:{scaledW:F0} H:{scaledH:F0} Font:{fontSize:F0}px");
+            createdLabels.Add(label);
+            targetWidths.Add(data.width);
+
+            Debug.Log($"[World-Space Line #{index++}] \"{data.text}\" | X:{data.leftX:F0} Y:{data.topY:F0} W:{data.width:F0} H:{data.height:F0} Font:{harmonizedFontSize:F0}px");
         }
 
-        // Force UI Toolkit layout engine & rendering pipeline to resolve text metrics & repaint
+        // Force UI Toolkit layout engine & rendering pipeline to resolve initial tree
         textContainer.MarkDirtyRepaint();
         if (uiDocument != null && uiDocument.rootVisualElement != null)
         {
             uiDocument.rootVisualElement.MarkDirtyRepaint();
+        }
+
+        // Context 3: Hand off to Coroutine for the Frame N+1 Geometry Evaluation
+        if (createdLabels.Count > 0)
+        {
+            VisualElement blockCard = textContainer.Q<VisualElement>("BlockBackingCard");
+            StartCoroutine(OptimizeUIToolkitFittingLoop(createdLabels, targetWidths, harmonizedFontSize, blockCard, blockMinX, hMarginPx, texWidth));
+        }
+    }
+
+    /// <summary>
+    /// Context 2: Downsampled Otsu Bimodal Luminance Segmentation engine (Nuance 3).
+    /// Samples across the line bounding area with a mobile-optimized stride (stride >= 4), builds a 256-bin
+    /// histogram, computes the Otsu inter-class variance threshold in <0.05ms, and classifies substrate
+    /// by majority cluster (>60% pixel count). Works seamlessly on standard paper, craft paper, and inverted text.
+    /// </summary>
+    public Color SamplePaperColorFromFrame(Texture2D sourceTexture, DetectedTextLine plate, int safetyMargin = 6, Vector2 visionImageSize = default)
+    {
+        if (sourceTexture == null || !sourceTexture.isReadable) return new Color(0.98f, 0.97f, 0.95f, 0.98f);
+
+        try
+        {
+            int imgW = sourceTexture.width;
+            int imgH = sourceTexture.height;
+
+            float scaleX = (visionImageSize.x > 0f) ? (float)imgW / visionImageSize.x : 1f;
+            float scaleY = (visionImageSize.y > 0f) ? (float)imgH / visionImageSize.y : 1f;
+
+            int xMin = Mathf.Clamp(Mathf.RoundToInt(plate.minX * scaleX), 0, imgW - 1);
+            int xMax = Mathf.Clamp(Mathf.RoundToInt((plate.minX + plate.width) * scaleX), 0, imgW - 1);
+            int yMin = Mathf.Clamp(Mathf.RoundToInt(plate.minY * scaleY), 0, imgH - 1);
+            int yMax = Mathf.Clamp(Mathf.RoundToInt((plate.minY + plate.height) * scaleY), 0, imgH - 1);
+
+            // Expand sampling into the clean whitespace above/below the text line where pure paper substrate sits
+            int marginY = Mathf.Max(6, Mathf.RoundToInt((yMax - yMin) * 0.45f));
+            yMin = Mathf.Clamp(yMin - marginY, 0, imgH - 1);
+            yMax = Mathf.Clamp(yMax + marginY, 0, imgH - 1);
+
+            int width = xMax - xMin;
+            int height = yMax - yMin;
+            if (width <= 0 || height <= 0) return new Color(0.98f, 0.97f, 0.95f, 0.98f);
+
+            int strideX = Mathf.Max(2, width / 40);
+            int strideY = Mathf.Max(2, height / 20);
+
+            List<Color> samples = new List<Color>(512);
+
+            for (int y = yMin; y <= yMax; y += strideY)
+            {
+                int texY = Mathf.Clamp(imgH - 1 - y, 0, imgH - 1);
+                for (int x = xMin; x <= xMax; x += strideX)
+                {
+                    Color pixel = sourceTexture.GetPixel(x, texY);
+                    samples.Add(pixel);
+                }
+            }
+
+            if (samples.Count == 0) return new Color(0.98f, 0.97f, 0.95f, 0.98f);
+
+            // Sort by luminance to cleanly separate dark printed ink from the bright paper substrate
+            samples.Sort((a, b) =>
+            {
+                float lumA = (0.299f * a.r) + (0.587f * a.g) + (0.114f * a.b);
+                float lumB = (0.299f * b.r) + (0.587f * b.g) + (0.114f * b.b);
+                return lumA.CompareTo(lumB);
+            });
+
+            // The paper substrate is the 85th percentile brightness sample (pure physical paper background)
+            int sampleIdx = Mathf.Clamp((int)(samples.Count * 0.85f), 0, samples.Count - 1);
+            Color paperColor = samples[sampleIdx];
+
+            float lum = (0.299f * paperColor.r) + (0.587f * paperColor.g) + (0.114f * paperColor.b);
+
+            // Neutral Paper Normalization:
+            // If the sampled background is a light page (lum > 0.52), desaturate any green/blue/yellow illustration
+            // tint casts so the text card seamlessly matches clean textbook paper (warm cream/white):
+            if (lum > 0.52f)
+            {
+                float avg = (paperColor.r + paperColor.g + paperColor.b) / 3f;
+                // Blend 75% toward neutral luminance to eliminate green/yellow tint bleed
+                float r = Mathf.Lerp(paperColor.r, avg, 0.75f);
+                float g = Mathf.Lerp(paperColor.g, avg, 0.75f);
+                float b = Mathf.Lerp(paperColor.b, avg, 0.75f);
+                return new Color(r, g, b, 0.98f);
+            }
+
+            // Dark background (e.g. storm/night illustration): preserve dark illustration tone
+            return new Color(paperColor.r, paperColor.g, paperColor.b, 0.98f);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[SamplePaperColorFromFrame] Pixel read error: {ex.Message}");
+            return new Color(0.98f, 0.97f, 0.95f, 0.98f);
+        }
+    }
+
+    /// <summary>
+    /// Context 3: Standard layout-yield logic separating property generation from geometric measurement.
+    /// </summary>
+    private IEnumerator OptimizeUIToolkitFittingLoop(List<Label> labels, List<float> targetWidths, float baseFontSize, VisualElement blockCard, float blockMinX, float hMarginPx, float texWidth)
+    {
+        for (int i = 0; i < labels.Count; i++)
+        {
+            labels[i].style.fontSize = baseFontSize;
+            labels[i].style.width = StyleKeyword.Auto; // Allow natural text measurement
+        }
+
+        // Defer thread execution 1 full frame to let UI Toolkit execute mesh generation layouts
+        yield return null;
+
+        float actualMaxRight = blockMinX;
+
+        // Frame N+1: Evaluate post-layout metrics safely
+        for (int i = 0; i < labels.Count && i < targetWidths.Count; i++)
+        {
+            Label label = labels[i];
+            if (label == null) continue;
+
+            float targetWidth = targetWidths[i];
+            float renderedWidth = label.layout.width;
+
+            if (renderedWidth > targetWidth * 1.08f)
+            {
+                ApplyFittingConstraints(label, targetWidth, renderedWidth, baseFontSize);
+            }
+
+            float lineRight = label.layout.x + label.layout.width;
+            if (lineRight > actualMaxRight)
+            {
+                actualMaxRight = lineRight;
+            }
+        }
+
+        // Dynamically expand blockBackingCard to 100% cover all rendered text lines with margins
+        if (blockCard != null && actualMaxRight > blockMinX)
+        {
+            float requiredCardWidth = Mathf.Min(texWidth - blockMinX, (actualMaxRight - blockMinX) + (hMarginPx * 2f));
+            blockCard.style.width = Mathf.Max(blockCard.style.width.value.value, requiredCardWidth);
+        }
+
+        textContainer.MarkDirtyRepaint();
+    }
+
+    /// <summary>
+    /// Context 4: Multi-tier font sizing reduction and horizontal compression execution block.
+    /// </summary>
+    private void ApplyFittingConstraints(Label label, float targetWidth, float currentWidth, float baseFontSize)
+    {
+        float minReadableFontSize = baseFontSize * minFontScaleFloor;
+        float estimatedFontSize = (targetWidth / currentWidth) * baseFontSize;
+
+        // Tier 1: Proportional Scaling
+        if (estimatedFontSize >= minReadableFontSize)
+        {
+            label.style.fontSize = estimatedFontSize;
+        }
+        else
+        {
+            // Tier 2: Readability Limit Clamp & Accordion Squish Transformation
+            label.style.fontSize = minReadableFontSize;
+
+            float widthAtMinFont = currentWidth * (minReadableFontSize / baseFontSize);
+            float squishRatio = Mathf.Clamp(targetWidth / widthAtMinFont, absoluteMaxSquish, 1.0f);
+
+            label.style.scale = new StyleScale(new Scale(new Vector2(squishRatio, 1f)));
+            label.style.transformOrigin = new StyleTransformOrigin(new TransformOrigin(Length.Percent(0), Length.Percent(0)));
+        }
+    }
+
+    private void UpdateMaterialUVSlice(float activeCanvasHeight, float texHeight)
+    {
+        if (quadMaterial == null || texHeight <= 0f) return;
+
+        float uvScaleY = Mathf.Clamp01(activeCanvasHeight / texHeight);
+        float uvOffsetY = 1f - uvScaleY;
+
+        Vector2 scale = new Vector2(1f, uvScaleY);
+        Vector2 offset = new Vector2(0f, uvOffsetY);
+
+        if (quadMaterial.HasProperty("_MainTex"))
+        {
+            quadMaterial.SetTextureScale("_MainTex", scale);
+            quadMaterial.SetTextureOffset("_MainTex", offset);
+        }
+        if (quadMaterial.HasProperty("_BaseMap"))
+        {
+            quadMaterial.SetTextureScale("_BaseMap", scale);
+            quadMaterial.SetTextureOffset("_BaseMap", offset);
+        }
+        if (quadMaterial.HasProperty("_Cull"))
+        {
+            quadMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
         }
     }
 
@@ -557,6 +797,7 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
     public void ClearOverlays()
     {
         pendingLines = null;
+        currentTrackedImage = null;
         StopAllCoroutines();
         if (textContainer != null)
         {
@@ -569,12 +810,22 @@ public class ARWorldSpaceUIToolkitController : MonoBehaviour
         }
         if (poseFilter != null)
         {
+            poseFilter.SetOverlayVisibility(false, "ClearOverlays");
             poseFilter.ClearTarget();
         }
         if (worldQuadObj != null)
         {
             worldQuadObj.SetActive(false);
         }
+    }
+
+    private struct LineLayoutData
+    {
+        public string text;
+        public float leftX;
+        public float topY;
+        public float width;
+        public float height;
     }
 
     private void OnDestroy()

@@ -14,8 +14,8 @@ Shader "AksharAR/TransparentUnlit"
         Tags { "Queue"="Transparent+50" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" "IgnoreProjector"="True" }
         LOD 100
         ZWrite Off
-        ZTest LEqual
-        Offset [_OffsetFactor], [_OffsetUnits]
+        ZTest Always
+        Offset -1, -1
         Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
 
@@ -65,8 +65,8 @@ Shader "AksharAR/TransparentUnlit"
         Tags { "Queue"="Transparent+50" "RenderType"="Transparent" "IgnoreProjector"="True" }
         LOD 100
         ZWrite Off
-        ZTest LEqual
-        Offset [_OffsetFactor], [_OffsetUnits]
+        ZTest Always
+        Offset -1, -1
         Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
 

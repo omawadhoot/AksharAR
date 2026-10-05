@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 /// <summary>
 /// Active textbook framing mode.
@@ -90,6 +93,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     private int lastScreenWidth = -1;
     private int lastScreenHeight = -1;
+    private bool isViewfinderVisible = true;
 
     private void Awake()
     {
@@ -107,6 +111,13 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     private void Update()
     {
+        if (rootElement == null || rootElement.panel == null || (uiDocument != null && uiDocument.rootVisualElement != rootElement))
+        {
+            InitializeUIToolkit();
+        }
+
+        if (rootElement == null) return;
+
         CheckScreenSizeChange();
         UpdateDeviceTiltAndReticleColor();
         HandleTwoFingerPinch();
@@ -129,12 +140,15 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
         if (uiDocument == null)
         {
-            Debug.LogError("[ReadingWindowViewfinder] UIDocument not found!");
             return;
         }
 
         rootElement = uiDocument.rootVisualElement;
-        if (rootElement == null) return;
+        if (rootElement == null || rootElement.panel == null)
+        {
+            rootElement = null;
+            return;
+        }
 
         viewfinderRoot = rootElement.Q<VisualElement>("ViewfinderRoot");
         readingBox = rootElement.Q<VisualElement>("ReadingBox");
@@ -308,6 +322,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         if (overlayCtrl != null)
         {
             overlayCtrl.SyncModeCarousel(mode);
+            overlayCtrl.ApplyOrientationLayout(mode == ReadingMode.Chapter);
         }
 
         Debug.Log($"[ReadingWindowViewfinder] UI switched Reading Mode to {activeReadingMode} | Orientation: {Screen.orientation}");
@@ -315,7 +330,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     private void ApplyOrientationForMode(ReadingMode mode)
     {
-        if (mode == ReadingMode.Chapter)
+        bool isLandscape = (mode == ReadingMode.Chapter);
+        if (isLandscape)
         {
             Screen.autorotateToPortrait = false;
             Screen.autorotateToPortraitUpsideDown = false;
@@ -331,7 +347,76 @@ public class ReadingWindowViewfinder : MonoBehaviour
             Screen.autorotateToPortrait = true;
             Screen.orientation = ScreenOrientation.Portrait;
         }
+
+#if UNITY_EDITOR
+        SetEditorGameViewOrientation(isLandscape);
+#endif
     }
+
+#if UNITY_EDITOR
+    public static void SetEditorGameViewOrientation(bool landscape)
+    {
+        try
+        {
+            var asm = typeof(UnityEditor.Editor).Assembly;
+            var gameViewType = asm.GetType("UnityEditor.GameView");
+            UnityEditor.EditorWindow gv = UnityEditor.EditorWindow.GetWindow(gameViewType, false, null, false);
+            if (gv == null) return;
+
+            var sizesType = asm.GetType("UnityEditor.GameViewSizes");
+            var singleType = typeof(UnityEditor.ScriptableSingleton<>).MakeGenericType(sizesType);
+            var instanceProp = singleType.GetProperty("instance");
+            var getGroup = sizesType.GetMethod("GetGroup");
+            var instance = instanceProp.GetValue(null, null);
+            var group = getGroup.Invoke(instance, new object[] { (int)UnityEditor.GameViewSizeGroupType.Android });
+            if (group == null)
+                group = getGroup.Invoke(instance, new object[] { (int)UnityEditor.GameViewSizeGroupType.Standalone });
+
+            var getTotalCount = group.GetType().GetMethod("GetTotalCount");
+            int count = (int)getTotalCount.Invoke(group, null);
+            var getGameViewSize = group.GetType().GetMethod("GetGameViewSize");
+
+            int targetIndex = -1;
+            for (int i = 0; i < count; i++)
+            {
+                var size = getGameViewSize.Invoke(group, new object[] { i });
+                var width = (int)size.GetType().GetProperty("width").GetValue(size);
+                var height = (int)size.GetType().GetProperty("height").GetValue(size);
+                var baseText = (string)size.GetType().GetProperty("baseText").GetValue(size);
+
+                if (landscape)
+                {
+                    if (width > height && (baseText.Contains("16:9") || baseText.Contains("18:9") || width == 2412 || width == 2400))
+                    {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (height > width && (width == 1080 || baseText.Contains("Portrait") || baseText.Contains("9:16")))
+                    {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (targetIndex >= 0)
+            {
+                var sizeCallback = gameViewType.GetMethod("SizeSelectionCallback", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+                if (sizeCallback != null)
+                {
+                    sizeCallback.Invoke(gv, new object[] { targetIndex, null });
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[ReadingWindowViewfinder] Could not switch GameView in Editor: {ex.Message}");
+        }
+    }
+#endif
 
     public void ApplyModePreset(ReadingMode mode)
     {
@@ -357,6 +442,52 @@ public class ReadingWindowViewfinder : MonoBehaviour
 
     private void HandleTwoFingerPinch()
     {
+#if ENABLE_INPUT_SYSTEM
+        var touchscreen = Touchscreen.current;
+        if (touchscreen != null && touchscreen.touches.Count >= 2)
+        {
+            var t0 = touchscreen.touches[0];
+            var t1 = touchscreen.touches[1];
+
+            if (t0.press.isPressed && t1.press.isPressed)
+            {
+                Vector2 pos0 = t0.position.ReadValue();
+                Vector2 pos1 = t1.position.ReadValue();
+                Vector2 delta0 = t0.delta.ReadValue();
+                Vector2 delta1 = t1.delta.ReadValue();
+
+                Vector2 prevPos0 = pos0 - delta0;
+                Vector2 prevPos1 = pos1 - delta1;
+
+                float prevDistanceX = Mathf.Abs(prevPos0.x - prevPos1.x);
+                float currentDistanceX = Mathf.Abs(pos0.x - pos1.x);
+
+                float prevDistanceY = Mathf.Abs(prevPos0.y - prevPos1.y);
+                float currentDistanceY = Mathf.Abs(pos0.y - pos1.y);
+
+                float deltaX = (currentDistanceX - prevDistanceX) / (float)Screen.width;
+                float deltaY = (currentDistanceY - prevDistanceY) / (float)Screen.height;
+
+                bool changed = false;
+                if (Mathf.Abs(deltaX) > 0.0015f)
+                {
+                    windowWidthNormalized = Mathf.Clamp(windowWidthNormalized + deltaX * 1.5f, minWidthNormalized, maxWidthNormalized);
+                    changed = true;
+                }
+
+                if (Mathf.Abs(deltaY) > 0.0015f)
+                {
+                    windowHeightNormalized = Mathf.Clamp(windowHeightNormalized + deltaY * 1.5f, minHeightNormalized, maxHeightNormalized);
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    UpdateLayout();
+                }
+            }
+        }
+#else
         if (Input.touchCount == 2)
         {
             Touch touch0 = Input.GetTouch(0);
@@ -392,6 +523,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
                 UpdateLayout();
             }
         }
+#endif
     }
 
     private void UpdateDeviceTiltAndReticleColor()
@@ -408,10 +540,34 @@ public class ReadingWindowViewfinder : MonoBehaviour
             CurrentTiltAngle = 0f;
         }
 
+#if UNITY_EDITOR
+        // Developer convenience in Editor Play Mode: hold 'L' key to force level state
+#if ENABLE_INPUT_SYSTEM
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.lKey.isPressed)
+        {
+            IsDeviceLevel = true;
+            CurrentTiltAngle = 0f;
+        }
+#else
+        if (Input.GetKey(KeyCode.L))
+        {
+            IsDeviceLevel = true;
+            CurrentTiltAngle = 0f;
+        }
+#endif
+#endif
+
+        if (!isViewfinderVisible)
+        {
+            if (levelPill != null) levelPill.style.display = DisplayStyle.None;
+            return;
+        }
+
         if (enableSoftGatekeeping)
         {
             if (levelPill != null && levelPillText != null)
             {
+                levelPill.style.display = DisplayStyle.Flex;
                 levelPill.EnableInClassList("level-pill--level", IsDeviceLevel);
                 levelPill.EnableInClassList("level-pill--tilted", !IsDeviceLevel);
                 levelPillText.text = IsDeviceLevel ? "✨ LEVEL" : $"📐 TILT {CurrentTiltAngle:F0}°";
@@ -466,9 +622,20 @@ public class ReadingWindowViewfinder : MonoBehaviour
     /// </summary>
     public Rect GetNormalizedCropRect()
     {
-        float left = (1f - windowWidthNormalized) / 2f;
-        float bottom = windowCenterYNormalized - (windowHeightNormalized / 2f);
-        return new Rect(left, bottom, windowWidthNormalized, windowHeightNormalized);
+        if (readingBox != null && readingBox.layout.width > 10f && rootElement != null && rootElement.layout.width > 10f)
+        {
+            float panelW = rootElement.layout.width;
+            float panelH = rootElement.layout.height;
+            float left = readingBox.worldBound.xMin / panelW;
+            float bottom = 1.0f - (readingBox.worldBound.yMax / panelH);
+            float width = readingBox.worldBound.width / panelW;
+            float height = readingBox.worldBound.height / panelH;
+            return new Rect(left, bottom, width, height);
+        }
+
+        float fallbackLeft = (1f - windowWidthNormalized) / 2f;
+        float fallbackBottom = windowCenterYNormalized - (windowHeightNormalized / 2f);
+        return new Rect(fallbackLeft, fallbackBottom, windowWidthNormalized, windowHeightNormalized);
     }
 
     /// <summary>
@@ -493,19 +660,47 @@ public class ReadingWindowViewfinder : MonoBehaviour
         if (source == null) return null;
 
         RectInt cropRect = GetPixelCropRect(source.width, source.height);
-        Color[] pixels = source.GetPixels(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
-        Texture2D cropped = new Texture2D(cropRect.width, cropRect.height, TextureFormat.RGBA32, false);
-        cropped.SetPixels(pixels);
-        cropped.Apply();
+        int cropX = Mathf.Clamp(cropRect.x, 0, Mathf.Max(0, source.width - 2));
+        int cropY = Mathf.Clamp(cropRect.y, 0, Mathf.Max(0, source.height - 2));
+        int cropW = Mathf.Clamp(cropRect.width, 1, source.width - cropX);
+        int cropH = Mathf.Clamp(cropRect.height, 1, source.height - cropY);
 
-        return cropped;
+        if (source.isReadable)
+        {
+            Color[] pixels = source.GetPixels(cropX, cropY, cropW, cropH);
+            Texture2D cropped = new Texture2D(cropW, cropH, TextureFormat.RGBA32, false);
+            cropped.SetPixels(pixels);
+            cropped.Apply();
+            return cropped;
+        }
+        else
+        {
+            // Robust fallback for non-CPU-readable textures: blit to RT and ReadPixels
+            RenderTexture rt = RenderTexture.GetTemporary(source.width, source.height, 0);
+            Graphics.Blit(source, rt);
+            RenderTexture prev = RenderTexture.active;
+            RenderTexture.active = rt;
+
+            Texture2D cropped = new Texture2D(cropW, cropH, TextureFormat.RGBA32, false);
+            cropped.ReadPixels(new Rect(cropX, cropY, cropW, cropH), 0, 0);
+            cropped.Apply();
+
+            RenderTexture.active = prev;
+            RenderTexture.ReleaseTemporary(rt);
+            return cropped;
+        }
     }
 
     public void SetVisibility(bool visible)
     {
+        isViewfinderVisible = visible;
         if (viewfinderRoot != null)
         {
             viewfinderRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+        if (levelPill != null)
+        {
+            levelPill.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
     }
 }

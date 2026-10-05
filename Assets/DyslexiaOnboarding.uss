@@ -1,0 +1,412 @@
+/* ── Dyslexia Full-Screen Ergonomic Onboarding USS (1080x2400 Responsive) ── */
+
+.wizard-fullscreen-root,
+.wizard-top-bar,
+.wizard-brand-wordmark,
+.wizard-step-accessible-label,
+.wizard-prompt,
+.wizard-step-purpose,
+.wizard-card-title,
+.wizard-card-preview,
+.wizard-palette-sample,
+.wizard-tint-benefit,
+.wizard-preview-line,
+.wizard-preview-summary,
+.wizard-change-later-note,
+.wizard-nav-btn,
+.wizard-btn--skip {
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+/* ── 1. Full-Screen Safe-Area Root ── */
+.wizard-fullscreen-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+    background-color: rgb(10, 15, 29);
+    flex-direction: column;
+    justify-content: space-between;
+    padding-left: 36px;
+    padding-right: 36px;
+    padding-top: 54px;
+    padding-bottom: 56px;
+}
+
+/* ── 2. Top Bar: Wordmark + Progress + Close ── */
+.wizard-top-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 72px;
+    margin-bottom: 8px;
+}
+
+.wizard-brand-group {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.wizard-brand-wordmark {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: rgb(56, 189, 248);
+}
+
+.wizard-step-accessible-label {
+    font-size: 18px;
+    color: rgb(148, 163, 184);
+}
+
+.wizard-progress-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 16px;
+}
+
+.wizard-progress-seg {
+    width: 56px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.16);
+    margin-left: 4px;
+    margin-right: 4px;
+    transition-property: background-color, width;
+    transition-duration: 0.2s;
+}
+
+.wizard-progress-seg--active {
+    background-color: rgb(56, 189, 248);
+    width: 68px;
+}
+
+.wizard-close-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background-color: rgba(255, 255, 255, 0.12);
+    border-width: 0;
+    align-items: center;
+    justify-content: center;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-close-btn:active {
+    background-color: rgba(239, 68, 68, 0.7);
+    scale: 0.92;
+}
+
+.wizard-close-icon {
+    font-size: 28px;
+    color: rgb(226, 232, 240);
+    -unity-text-align: middle-center;
+}
+
+/* ── 3. Middle Content Area ── */
+.wizard-content-area {
+    flex-direction: column;
+    width: 100%;
+    flex-grow: 1;
+    justify-content: flex-start;
+}
+
+/* ── Persistent Cumulative Live Preview Box ── */
+.wizard-live-preview-box {
+    background-color: rgb(250, 248, 242);
+    border-radius: 22px;
+    padding-left: 28px;
+    padding-right: 28px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 18px;
+    min-height: 145px;
+    justify-content: center;
+    border-width: 2.5px;
+    border-color: rgba(255, 255, 255, 0.12);
+    transition-property: background-color;
+    transition-duration: 0.2s;
+}
+
+.wizard-preview-line {
+    font-size: 36px;
+    color: rgb(20, 20, 20);
+    -unity-text-align: middle-left;
+    white-space: nowrap;
+    margin-bottom: 6px;
+}
+
+/* ── Step Pages ── */
+.wizard-step-page {
+    flex-direction: column;
+    width: 100%;
+}
+
+.wizard-step-purpose {
+    font-size: 22px;
+    color: rgb(148, 163, 184);
+    margin-bottom: 8px;
+    line-height: 1.25;
+}
+
+.wizard-prompt-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.wizard-prompt {
+    font-size: 34px;
+    -unity-font-style: bold;
+    color: rgb(241, 245, 249);
+    line-height: 1.25;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.wizard-tts-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 29px;
+    background-color: rgba(2, 132, 199, 0.25);
+    border-width: 2px;
+    border-color: rgba(56, 189, 248, 0.6);
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-left: 12px;
+    transition-property: scale, background-color;
+    transition-duration: 0.15s;
+}
+
+.wizard-tts-btn:active {
+    background-color: rgb(2, 132, 199);
+    scale: 0.92;
+}
+
+.wizard-tts-icon {
+    font-size: 28px;
+    color: rgb(56, 189, 248);
+    -unity-text-align: middle-center;
+}
+
+/* ── Step 1 Option Cards ── */
+.wizard-option-card {
+    background-color: rgb(22, 30, 49);
+    border-radius: 18px;
+    border-width: 2.5px;
+    border-color: rgba(255, 255, 255, 0.12);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    margin-bottom: 12px;
+    flex-direction: column;
+    transition-property: border-color, background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-option-card:active {
+    scale: 0.98;
+}
+
+.wizard-card--selected {
+    border-color: rgb(56, 189, 248);
+    background-color: rgb(26, 46, 78);
+}
+
+.wizard-card-title {
+    font-size: 24px;
+    -unity-font-style: bold;
+    color: rgb(248, 250, 252);
+    margin-bottom: 4px;
+}
+
+.wizard-card-preview {
+    font-size: 28px;
+    color: rgb(226, 232, 240);
+    white-space: nowrap;
+}
+
+/* ── Step 2 Palette Cards ── */
+.wizard-palette-card {
+    background-color: rgb(250, 248, 242);
+    border-radius: 18px;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0.12);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    flex-direction: column;
+    justify-content: center;
+    transition-property: border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-palette-card:active {
+    scale: 0.98;
+}
+
+.wizard-palette-card.wizard-card--selected {
+    border-color: rgb(2, 132, 199);
+    border-width: 4.5px;
+}
+
+.wizard-palette-card .wizard-card-title {
+    color: rgb(15, 23, 42);
+    margin-bottom: 2px;
+    font-size: 22px;
+}
+
+.wizard-palette-sample {
+    font-size: 32px;
+    -unity-font-style: bold;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+/* ── Step 3 Paper Tint Cards ── */
+.wizard-tint-card {
+    border-radius: 18px;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0.12);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 12px;
+    align-items: center;
+    justify-content: center;
+    min-height: 82px;
+    transition-property: border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.wizard-tint-card:active {
+    scale: 0.98;
+}
+
+.wizard-tint-card.wizard-card--selected {
+    border-color: rgb(2, 132, 199);
+    border-width: 4.5px;
+}
+
+.wizard-tint-card--cream {
+    background-color: rgb(250, 248, 242);
+}
+
+.wizard-tint-card--mint {
+    background-color: rgb(240, 253, 244);
+}
+
+.wizard-tint-card--periwinkle {
+    background-color: rgb(241, 245, 249);
+}
+
+.wizard-tint-card--paper {
+    background-color: rgb(250, 245, 232);
+}
+
+.wizard-tint-benefit {
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: rgb(15, 23, 42);
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+/* ── Step 4 Review Subtitle & Note ── */
+.wizard-preview-summary {
+    font-size: 26px;
+    color: rgb(56, 189, 248);
+    -unity-font-style: bold;
+    margin-top: 14px;
+    margin-bottom: 8px;
+    -unity-text-align: middle-center;
+}
+
+.wizard-change-later-note {
+    font-size: 22px;
+    color: rgb(148, 163, 184);
+    margin-top: 10px;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+/* ── 4. Bottom Action Bar (Thumb-Height Ergonomics) ── */
+.wizard-footer {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 88px;
+    padding-top: 12px;
+    border-top-width: 1.5px;
+    border-top-color: rgba(255, 255, 255, 0.12);
+}
+
+.wizard-nav-btn {
+    height: 74px;
+    min-width: 160px;
+    border-radius: 37px;
+    padding-left: 32px;
+    padding-right: 32px;
+    font-size: 26px;
+    -unity-font-style: bold;
+    align-items: center;
+    justify-content: center;
+    border-width: 0;
+    transition-property: scale, background-color;
+    transition-duration: 0.15s;
+}
+
+.wizard-btn--back {
+    background-color: rgba(255, 255, 255, 0.14);
+    color: rgb(226, 232, 240);
+}
+
+.wizard-btn--back:active {
+    background-color: rgba(255, 255, 255, 0.25);
+    scale: 0.95;
+}
+
+.wizard-btn--skip {
+    background-color: transparent;
+    color: rgb(148, 163, 184);
+    font-size: 22px;
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-width: 0;
+    min-height: 48px;
+}
+
+.wizard-btn--skip:active {
+    color: rgb(241, 245, 249);
+    scale: 0.95;
+}
+
+.wizard-btn--next {
+    background-color: rgb(2, 132, 199);
+    color: rgb(255, 255, 255);
+    min-width: 180px;
+}
+
+.wizard-btn--next:active {
+    background-color: rgb(3, 105, 161);
+    scale: 0.95;
+}

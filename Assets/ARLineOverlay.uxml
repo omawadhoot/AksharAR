@@ -1,9 +1,9 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/ARLineOverlay.uss?fileID=7433441132597879392&amp;guid=ea9a53b44882d6d45aec87ea626c1e73&amp;type=3#ARLineOverlay"/>
-    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay" style="position: absolute; left: 0px; top: 0px; right: 0px; bottom: 0px; width: 100%; height: 100%;">
-        <ui:VisualElement name="LevelPill" picking-mode="Ignore" class="level-pill level-pill--tilted">
-            <ui:Label name="LevelPillText" text="📐 TILT 0°" picking-mode="Ignore" class="level-pill-text"/>
-        </ui:VisualElement>
+    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%;">
+        <ui:VisualElement name="FreezeFrameBackdrop" picking-mode="Ignore" class="freeze-frame-backdrop" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
+        <ui:VisualElement name="FreezeFrameTextContainer" picking-mode="Position" class="freeze-frame-text-container" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
+        
         <ui:VisualElement name="ViewfinderRoot" picking-mode="Ignore" class="viewfinder-root">
             <ui:VisualElement name="TopMask" picking-mode="Ignore" class="viewfinder-mask top-mask"/>
             <ui:VisualElement name="BottomMask" picking-mode="Ignore" class="viewfinder-mask bottom-mask"/>
@@ -28,28 +28,141 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+
+        <!-- Top Controls & Level Pill (Drawn Above Masks with Full Hit Targeting) -->
+        <ui:VisualElement name="TopControlsContainer" picking-mode="Ignore" class="top-controls-container">
+            <ui:VisualElement name="LevelPill" picking-mode="Ignore" class="level-pill level-pill--tilted">
+                <ui:Label name="LevelPillText" text="📐 TILT 0°" picking-mode="Ignore" class="level-pill-text"/>
+            </ui:VisualElement>
+            <ui:Button name="AccessibilitySettingsButton" picking-mode="Position" class="settings-top-button">
+                <ui:VisualElement name="SettingsButtonIcon" picking-mode="Ignore" class="settings-button-icon"/>
+                <ui:Label text="सुलभता" picking-mode="Ignore" class="settings-button-label"/>
+            </ui:Button>
+        </ui:VisualElement>
         <ui:VisualElement name="BottomBar" picking-mode="Ignore" class="camera-bottom-bar">
             <ui:VisualElement name="ModeCarousel" picking-mode="Ignore" class="mode-carousel">
                 <ui:Button name="TabPoem" picking-mode="Position" class="mode-tab mode-tab--active">
-                    <ui:Label text="POEM" picking-mode="Ignore" class="mode-tab-text"/>
+                    <ui:VisualElement name="PoemIcon" picking-mode="Ignore" class="mode-icon mode-icon--poem">
+                        <ui:VisualElement picking-mode="Ignore" class="verse-bar verse-bar--1"/>
+                        <ui:VisualElement picking-mode="Ignore" class="verse-bar verse-bar--2"/>
+                        <ui:VisualElement picking-mode="Ignore" class="verse-bar verse-bar--3"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement picking-mode="Ignore" class="mode-text-group">
+                        <ui:Label name="PoemLabelDevanagari" text="कविता" picking-mode="Ignore" class="mode-label-devanagari" style="font-size: 46px;"/>
+                        <ui:Label name="PoemLabelLatin" text="Kavita" picking-mode="Ignore" class="mode-label-latin"/>
+                    </ui:VisualElement>
                     <ui:VisualElement name="PoemDot" picking-mode="Ignore" class="mode-dot"/>
                 </ui:Button>
                 <ui:Button name="TabChapter" picking-mode="Position" class="mode-tab">
-                    <ui:Label text="CHAPTER" picking-mode="Ignore" class="mode-tab-text"/>
+                    <ui:VisualElement name="ChapterIcon" picking-mode="Ignore" class="mode-icon mode-icon--chapter">
+                        <ui:VisualElement picking-mode="Ignore" class="prose-bar prose-bar--1"/>
+                        <ui:VisualElement picking-mode="Ignore" class="prose-bar prose-bar--2"/>
+                        <ui:VisualElement picking-mode="Ignore" class="prose-bar prose-bar--3"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement picking-mode="Ignore" class="mode-text-group">
+                        <ui:Label name="ChapterLabelDevanagari" text="धडा " picking-mode="Ignore" class="mode-label-devanagari" style="font-size: 46px;"/>
+                        <ui:Label name="ChapterLabelLatin" text="Dhada" picking-mode="Ignore" class="mode-label-latin"/>
+                    </ui:VisualElement>
                     <ui:VisualElement name="ChapterDot" picking-mode="Ignore" class="mode-dot mode-dot--hidden"/>
                 </ui:Button>
             </ui:VisualElement>
             <ui:VisualElement name="CameraControlsRow" picking-mode="Ignore" class="camera-controls-row">
-                <ui:VisualElement picking-mode="Ignore" class="control-side-slot"/>
+                <ui:VisualElement name="LeftSpacerSlot" picking-mode="Ignore" class="control-side-slot"/>
                 <ui:VisualElement name="ShutterBezel" picking-mode="Ignore" class="shutter-bezel">
                     <ui:Button name="ShutterButton" picking-mode="Position" class="shutter-core">
                         <ui:Label name="ShutterIcon" picking-mode="Ignore" text="" class="shutter-icon"/>
                     </ui:Button>
                 </ui:VisualElement>
-                <ui:VisualElement picking-mode="Ignore" class="control-side-slot">
+                <ui:VisualElement name="RightRescanSlot" picking-mode="Ignore" class="control-side-slot">
                     <ui:Button name="QuickRescanButton" picking-mode="Position" class="quick-rescan-btn">
-                        <ui:Label text="🔄" picking-mode="Ignore" class="quick-rescan-icon"/>
+                        <ui:VisualElement name="RescanIcon" picking-mode="Ignore" class="quick-rescan-icon"/>
                     </ui:Button>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Dyslexia Personalization & Onboarding Modal (Unified HUD Layer) -->
+        <ui:VisualElement name="OnboardingModalBackdrop" picking-mode="Position" class="wizard-modal-backdrop">
+            <ui:VisualElement name="WizardCard" picking-mode="Position" class="wizard-card-window">
+                <ui:VisualElement name="WizardHeader" picking-mode="Ignore" class="wizard-header">
+                    <ui:VisualElement name="WizardHeaderLeft" picking-mode="Ignore" class="wizard-header-left">
+                        <ui:Label text="वाचन सुलभता पर्याय" picking-mode="Ignore" class="wizard-title-devanagari"/>
+                        <ui:Label name="WizardStepIndicator" text="1 / 4" picking-mode="Ignore" class="wizard-step-badge"/>
+                    </ui:VisualElement>
+                    <ui:Button name="WizardCloseButton" picking-mode="Position" class="wizard-close-btn">
+                        <ui:Label text="✕" picking-mode="Ignore" class="wizard-close-icon"/>
+                    </ui:Button>
+                </ui:VisualElement>
+
+                <!-- Step 1: Severity & Spacing -->
+                <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page">
+                    <ui:Label text="तुम्हाला कोणते वाचन अंतर आरामदायक वाटते?" picking-mode="Ignore" class="wizard-prompt"/>
+                    <ui:Label text="Choose the text spacing that feels easiest to read" picking-mode="Ignore" class="wizard-subprompt"/>
+                    <ui:VisualElement name="CardSeverityMild" picking-mode="Position" class="wizard-option-card">
+                        <ui:Label text="सोपे (Mild Spacing)" picking-mode="Ignore" class="wizard-card-title"/>
+                        <ui:Label text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-card-preview"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="CardSeverityModerate" picking-mode="Position" class="wizard-option-card wizard-card--selected">
+                        <ui:Label text="मध्यम (Moderate - Recommended)" picking-mode="Ignore" class="wizard-card-title"/>
+                        <ui:Label text="सुं•दर फु•ले उ•म•ल•ली बा•गे•त" picking-mode="Ignore" class="wizard-card-preview"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="CardSeverityIntensive" picking-mode="Position" class="wizard-option-card">
+                        <ui:Label text="सखोल (Intensive Focus)" picking-mode="Ignore" class="wizard-card-title"/>
+                        <ui:Label text="सुं • दर   फु • ले   उ • म • ल • ली" picking-mode="Ignore" class="wizard-card-preview"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Step 2: CVD Color-Blind Safe Palettes -->
+                <ui:VisualElement name="WizardStep2" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
+                    <ui:Label text="कोणते अक्षरांचे रंग वाचायला सोपे वाटतात?" picking-mode="Ignore" class="wizard-prompt"/>
+                    <ui:Label text="Tap the syllable colors that feel easiest to read" picking-mode="Ignore" class="wizard-subprompt"/>
+                    <ui:VisualElement name="ChipPaletteCobalt" picking-mode="Position" class="wizard-palette-card wizard-card--selected">
+                        <ui:Label text="&lt;color=#141414&gt;सुं&lt;/color&gt;&lt;color=#1E40AF&gt;दर&lt;/color&gt; &lt;color=#141414&gt;फु&lt;/color&gt;&lt;color=#1E40AF&gt;ले&lt;/color&gt; &lt;color=#141414&gt;उ&lt;/color&gt;&lt;color=#1E40AF&gt;म&lt;/color&gt;&lt;color=#141414&gt;ल&lt;/color&gt;&lt;color=#1E40AF&gt;ली&lt;/color&gt; &lt;color=#141414&gt;बा&lt;/color&gt;&lt;color=#1E40AF&gt;गे&lt;/color&gt;&lt;color=#141414&gt;त&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ChipPaletteAmber" picking-mode="Position" class="wizard-palette-card">
+                        <ui:Label text="&lt;color=#141414&gt;सुं&lt;/color&gt;&lt;color=#B45309&gt;दर&lt;/color&gt; &lt;color=#141414&gt;फु&lt;/color&gt;&lt;color=#B45309&gt;ले&lt;/color&gt; &lt;color=#141414&gt;उ&lt;/color&gt;&lt;color=#B45309&gt;म&lt;/color&gt;&lt;color=#141414&gt;ल&lt;/color&gt;&lt;color=#B45309&gt;ली&lt;/color&gt; &lt;color=#141414&gt;बा&lt;/color&gt;&lt;color=#B45309&gt;गे&lt;/color&gt;&lt;color=#141414&gt;त&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ChipPaletteViolet" picking-mode="Position" class="wizard-palette-card">
+                        <ui:Label text="&lt;color=#1E293B&gt;सुं&lt;/color&gt;&lt;color=#6D28D9&gt;दर&lt;/color&gt; &lt;color=#1E293B&gt;फु&lt;/color&gt;&lt;color=#6D28D9&gt;ले&lt;/color&gt; &lt;color=#1E293B&gt;उ&lt;/color&gt;&lt;color=#6D28D9&gt;म&lt;/color&gt;&lt;color=#1E293B&gt;ल&lt;/color&gt;&lt;color=#6D28D9&gt;ली&lt;/color&gt; &lt;color=#1E293B&gt;बा&lt;/color&gt;&lt;color=#6D28D9&gt;गे&lt;/color&gt;&lt;color=#1E293B&gt;त&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ChipPaletteMonochrome" picking-mode="Position" class="wizard-palette-card">
+                        <ui:Label text="&lt;color=#0F172A&gt;सुंदर फुले उमलली बागेत छान&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Step 3: Substrate Paper Tints -->
+                <ui:VisualElement name="WizardStep3" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
+                    <ui:Label text="कोणता कागदाचा रंग वाचायला सोपा वाटतो?" picking-mode="Ignore" class="wizard-prompt"/>
+                    <ui:Label text="Tap the background paper color that feels best to read" picking-mode="Ignore" class="wizard-subprompt"/>
+                    <ui:VisualElement name="ChipTintCream" picking-mode="Position" class="wizard-tint-card wizard-tint-card--cream wizard-card--selected">
+                        <ui:Label text="🍦 डोळ्यांवर ताण नाही (कमी चमक)" picking-mode="Ignore" class="wizard-tint-benefit"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ChipTintMint" picking-mode="Position" class="wizard-tint-card wizard-tint-card--mint">
+                        <ui:Label text="🍃 डोळ्यांना थंडावा (शांत वाचन)" picking-mode="Ignore" class="wizard-tint-benefit"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ChipTintPeriwinkle" picking-mode="Position" class="wizard-tint-card wizard-tint-card--periwinkle">
+                        <ui:Label text="🧊 अक्षरांची धारदार स्पष्टता" picking-mode="Ignore" class="wizard-tint-benefit"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ChipTintPaper" picking-mode="Position" class="wizard-tint-card wizard-tint-card--paper">
+                        <ui:Label text="📜 पुस्तकाचा नैसर्गिक कागदी रंग" picking-mode="Ignore" class="wizard-tint-benefit"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <!-- Step 4: Live Preview & Completion -->
+                <ui:VisualElement name="WizardStep4" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
+                    <ui:Label text="वाचन पूर्वावलोकन (Live Preview)" picking-mode="Ignore" class="wizard-prompt"/>
+                    <ui:Label text="Your personalized reading setup is ready" picking-mode="Ignore" class="wizard-subprompt"/>
+                    <ui:VisualElement name="WizardPreviewCard" picking-mode="Ignore" class="wizard-preview-box">
+                        <ui:Label name="WizardPreviewLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
+                        <ui:Label name="WizardPreviewLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
+                    </ui:VisualElement>
+                    <ui:Label name="WizardPreviewSubtitle" text="निवड: Moderate • ClassicCobalt • WarmCream" picking-mode="Ignore" class="wizard-preview-summary"/>
+                </ui:VisualElement>
+
+                <!-- Footer Navigation -->
+                <ui:VisualElement name="WizardFooter" picking-mode="Ignore" class="wizard-footer">
+                    <ui:Button name="WizardBackButton" picking-mode="Position" text="← मागे" class="wizard-nav-btn wizard-btn--back" style="visibility: hidden;"/>
+                    <ui:Button name="WizardNextButton" picking-mode="Position" text="पुढे →" class="wizard-nav-btn wizard-btn--next"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
