@@ -57,7 +57,7 @@ Button {
 }
 
 .wizard-step-accessible-label {
-    font-size: 34px;
+    font-size: 38px;
     -unity-font-style: bold;
     color: rgb(226, 232, 240);
     margin-left: 28px;
@@ -145,7 +145,7 @@ Button {
 }
 
 .wizard-slate-header-title {
-    font-size: 26px;
+    font-size: 30px;
     -unity-font-style: bold;
     color: rgb(148, 163, 184);
     letter-spacing: 2px;
@@ -167,7 +167,7 @@ Button {
 }
 
 .wizard-preview-line {
-    font-size: 48px;
+    font-size: 52px;
     color: rgb(20, 20, 20);
     -unity-text-align: middle-left;
     white-space: normal;
@@ -184,7 +184,7 @@ Button {
 }
 
 .wizard-step-purpose {
-    font-size: 32px;
+    font-size: 36px;
     color: rgb(148, 163, 184);
     white-space: normal;
     margin-bottom: 20px;
@@ -200,7 +200,7 @@ Button {
 }
 
 .wizard-prompt {
-    font-size: 48px;
+    font-size: 52px;
     -unity-font-style: bold;
     color: rgb(241, 245, 249);
     white-space: normal;
@@ -287,19 +287,19 @@ Button {
 }
 
 .wizard-card-title {
-    font-size: 38px;
+    font-size: 46px;
     -unity-font-style: bold;
-    color: rgb(226, 232, 240);
+    color: rgb(241, 245, 249);
 }
 
 .wizard-card-check {
-    font-size: 30px;
+    font-size: 34px;
     -unity-font-style: bold;
     color: rgb(15, 23, 42);
     background-color: rgb(56, 189, 248);
-    width: 52px;
-    height: 52px;
-    border-radius: 26px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
     -unity-text-align: middle-center;
     display: none;
 }
@@ -309,13 +309,13 @@ Button {
 }
 
 .wizard-card-preview {
-    font-size: 50px;
+    font-size: 54px;
     color: rgb(248, 250, 252);
     white-space: normal;
 }
 
 .wizard-card-preview--expanded {
-    font-size: 42px;
+    font-size: 46px;
     white-space: normal;
     letter-spacing: 1px;
 }
@@ -340,16 +340,20 @@ Button {
 
 .wizard-palette-card .wizard-card-title {
     color: rgb(30, 41, 59);
-    font-size: 34px;
+    font-size: 44px;
 }
 
 .wizard-palette-card .wizard-card-check {
     color: rgb(255, 255, 255);
     background-color: rgb(2, 132, 199);
+    font-size: 34px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
 }
 
 .wizard-palette-sample {
-    font-size: 50px;
+    font-size: 54px;
     margin: 0;
     padding: 0;
     white-space: normal;
@@ -380,7 +384,7 @@ Button {
 .wizard-tint-card--paper { background-color: rgb(250, 245, 232); }
 
 .wizard-tint-benefit {
-    font-size: 48px;
+    font-size: 54px;
     -unity-font-style: bold;
     color: rgb(15, 23, 42);
     -unity-text-align: middle-left;
@@ -391,10 +395,10 @@ Button {
 .wizard-tint-check {
     color: rgb(255, 255, 255);
     background-color: rgb(2, 132, 199);
-    font-size: 32px;
-    width: 52px;
-    height: 52px;
-    border-radius: 26px;
+    font-size: 34px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
     -unity-text-align: middle-center;
 }
 
@@ -415,25 +419,25 @@ Button {
 }
 
 .wizard-review-edit-chip {
-    font-size: 28px;
+    font-size: 34px;
     -unity-font-style: bold;
     color: rgb(56, 189, 248);
     background-color: rgba(56, 189, 248, 0.15);
-    border-radius: 14px;
-    padding-left: 18px;
-    padding-right: 18px;
-    padding-top: 4px;
-    padding-bottom: 4px;
+    border-radius: 16px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 6px;
+    padding-bottom: 6px;
 }
 
 .wizard-review-val {
-    font-size: 48px;
+    font-size: 54px;
     color: rgb(248, 250, 252);
     -unity-font-style: bold;
 }
 
 .wizard-change-later-note {
-    font-size: 32px;
+    font-size: 36px;
     color: rgb(148, 163, 184);
     white-space: normal;
     flex-shrink: 0;
@@ -460,7 +464,7 @@ Button {
     height: 116px;
     border-radius: 58px;
     margin: 0;
-    font-size: 42px;
+    font-size: 46px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     border-width: 0;
