@@ -44,23 +44,19 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    height: 112px;
+    height: 80px;
     flex-shrink: 0;
 }
 
-.wizard-brand-group {
-    flex-direction: column;
-    justify-content: center;
-}
-
 .wizard-brand-wordmark {
-    font-size: 44px;
+    font-size: 38px;
     -unity-font-style: bold;
     color: rgb(56, 189, 248);
 }
 
 .wizard-step-accessible-label {
-    font-size: 26px;
+    font-size: 30px;
+    -unity-font-style: bold;
     color: rgb(148, 163, 184);
 }
 

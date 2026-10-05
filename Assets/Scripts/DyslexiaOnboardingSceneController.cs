@@ -332,7 +332,7 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
 
         if (accessibleStepLabel != null)
         {
-            accessibleStepLabel.text = $"Step {currentStepIndex + 1} of {TOTAL_STEPS}";
+            accessibleStepLabel.text = $"{currentStepIndex + 1}/{TOTAL_STEPS}";
         }
 
         for (int i = 0; i < TOTAL_STEPS; i++)

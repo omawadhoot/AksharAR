@@ -4,32 +4,28 @@
         
         <!-- ── 1. Top Bar: Wordmark + 4-Segment Progress Bar ── -->
         <ui:VisualElement name="WizardTopBar" picking-mode="Ignore" class="wizard-top-bar">
-            <ui:VisualElement name="WizardBrandGroup" picking-mode="Ignore" class="wizard-brand-group">
-                <ui:Label text="AksharAR" picking-mode="Ignore" class="wizard-brand-wordmark"/>
-                <ui:Label name="WizardStepAccessibleLabel" text="Step 1 of 4" picking-mode="Ignore" class="wizard-step-accessible-label"/>
-            </ui:VisualElement>
-            
+            <ui:Label text="AksharAR" picking-mode="Ignore" class="wizard-brand-wordmark"/>
             <ui:VisualElement name="WizardProgressSegments" picking-mode="Ignore" class="wizard-progress-bar">
                 <ui:VisualElement name="ProgressSeg1" picking-mode="Ignore" class="wizard-progress-seg wizard-progress-seg--active"/>
                 <ui:VisualElement name="ProgressSeg2" picking-mode="Ignore" class="wizard-progress-seg"/>
                 <ui:VisualElement name="ProgressSeg3" picking-mode="Ignore" class="wizard-progress-seg"/>
                 <ui:VisualElement name="ProgressSeg4" picking-mode="Ignore" class="wizard-progress-seg"/>
             </ui:VisualElement>
+            <ui:Label name="WizardStepAccessibleLabel" text="1/4" picking-mode="Ignore" class="wizard-step-accessible-label"/>
         </ui:VisualElement>
 
-        <!-- ── 2. Middle Content Area: Persistent Live Preview + Step Options ── -->
+        <!-- ── 2. Middle Content Area: Live Preview + Step Options ── -->
         <ui:VisualElement name="WizardContentArea" picking-mode="Ignore" class="wizard-content-area">
             
-            <!-- Persistent Cumulative Live Preview (With distinct non-tappable caption badge & border) -->
+            <!-- Persistent Cumulative Live Preview (Non-tappable sample window) -->
             <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
-                <ui:Label text="पूर्वावलोकन  •  LIVE PREVIEW" picking-mode="Ignore" class="wizard-preview-badge"/>
+                <ui:Label text="पूर्वावलोकन  •  PREVIEW" picking-mode="Ignore" class="wizard-preview-badge"/>
                 <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
                 <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
             </ui:VisualElement>
 
             <!-- Step 1: Text Spacing (Mild, Moderate, Intensive) -->
             <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page">
-                <ui:Label text="आम्ही वाचन देखावा सेट करत आहोत. तुम्ही हे नंतर Settings मध्ये बदलू शकता." picking-mode="Ignore" class="wizard-step-purpose"/>
                 <ui:VisualElement picking-mode="Ignore" class="wizard-prompt-row">
                     <ui:Label text="तुम्हाला कोणते वाचन अंतर योग्य वाटते?" picking-mode="Ignore" class="wizard-prompt"/>
                     <ui:Button name="BtnTtsStep1" picking-mode="Position" class="wizard-tts-btn">
