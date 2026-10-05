@@ -54,7 +54,7 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
     private VisualElement chipPaperInpaint;
 
     // Step 4 Review Subtitle
-    private Label previewSubtitle;
+    private Label reviewValueSpacing, reviewValueColour, reviewValuePaper;
 
     private int currentStepIndex = 0; // 0: Step 1, 1: Step 2, 2: Step 3, 3: Step 4
     private const int TOTAL_STEPS = 4;
@@ -167,7 +167,12 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         chipPaperInpaint = rootElement.Q<VisualElement>("ChipTintPaper");
 
         // Step 4
-        previewSubtitle = rootElement.Q<Label>("WizardPreviewSubtitle");
+        reviewValueSpacing = rootElement.Q<Label>("ReviewValueSpacing");
+        reviewValueColour = rootElement.Q<Label>("ReviewValueColour");
+        reviewValuePaper = rootElement.Q<Label>("ReviewValuePaper");
+        BindReviewRow("ReviewRowSpacing", 0);
+        BindReviewRow("ReviewRowColour", 1);
+        BindReviewRow("ReviewRowPaper", 2);
 
         // TTS Buttons
         btnTtsStep1 = rootElement.Q<Button>("BtnTtsStep1");
@@ -485,6 +490,19 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         }
     }
 
+    private void BindReviewRow(string rowName, int targetStep)
+    {
+        var row = rootElement.Q<VisualElement>(rowName);
+        if (row == null) return;
+        row.RegisterCallback<ClickEvent>(evt =>
+        {
+            RecordStepDwellTime();
+            currentStepIndex = targetStep;
+            stepEnterTime = Time.realtimeSinceStartup;
+            UpdateWizardPageDisplay();
+        });
+    }
+
     private void OnBackClicked()
     {
         RecordStepDwellTime();
@@ -666,7 +684,7 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
             );
         }
 
-        if (previewSubtitle != null)
+        if (reviewValueSpacing != null)
         {
             string palName = draftProfile.colorPalette switch
             {
@@ -691,7 +709,9 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
                 _ => "नैसर्गिक कागद (Natural)"
             };
 
-            previewSubtitle.text = $"निवड: {sevName} • {palName} • {tintName}";
+            if (reviewValueSpacing != null) reviewValueSpacing.text = sevName;
+            if (reviewValueColour != null) reviewValueColour.text = palName;
+            if (reviewValuePaper != null) reviewValuePaper.text = tintName;
         }
     }
 

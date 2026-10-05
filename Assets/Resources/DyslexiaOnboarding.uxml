@@ -112,8 +112,19 @@
                         <ui:Label text="🔊" picking-mode="Ignore" class="wizard-tts-icon"/>
                     </ui:Button>
                 </ui:VisualElement>
-                <ui:Label name="WizardPreviewSubtitle" text="निवड: Moderate • ClassicCobalt • WarmCream" picking-mode="Ignore" class="wizard-preview-summary"/>
-                <ui:Label text="💡 टीप: तुम्ही हे पर्याय नंतर कधीही Settings मध्ये बदलू शकता." picking-mode="Ignore" class="wizard-change-later-note"/>
+                <ui:VisualElement name="ReviewRowSpacing" picking-mode="Position" class="wizard-option-card">
+                    <ui:Label text="वाचन अंतर (Spacing)" picking-mode="Ignore" class="wizard-card-title"/>
+                    <ui:Label name="ReviewValueSpacing" text="मध्यम अंतर (Default)" picking-mode="Ignore" class="wizard-card-preview"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="ReviewRowColour" picking-mode="Position" class="wizard-option-card">
+                    <ui:Label text="अक्षरांचा रंग (Syllable colour)" picking-mode="Ignore" class="wizard-card-title"/>
+                    <ui:Label name="ReviewValueColour" text="निळा रंग (Cobalt)" picking-mode="Ignore" class="wizard-card-preview"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="ReviewRowPaper" picking-mode="Position" class="wizard-option-card">
+                    <ui:Label text="कागदाचा रंग (Paper colour)" picking-mode="Ignore" class="wizard-card-title"/>
+                    <ui:Label name="ReviewValuePaper" text="क्रीमी (Warm Cream)" picking-mode="Ignore" class="wizard-card-preview"/>
+                </ui:VisualElement>
+                <ui:Label text="बदलण्यासाठी निवडीला स्पर्श करा. तुम्ही हे नंतर Settings मध्येही बदलू शकता." picking-mode="Ignore" class="wizard-change-later-note"/>
             </ui:VisualElement>
         </ui:VisualElement>
 

@@ -300,25 +300,13 @@
     white-space: nowrap;
 }
 
-/* ── Step 4: summary ── */
-#WizardStep4 {
-    justify-content: center;
-    align-items: center;
-}
-
-.wizard-preview-summary {
-    font-size: 40px;
-    color: rgb(56, 189, 248);
-    -unity-font-style: bold;
-    white-space: normal;
-    margin-bottom: 24px;
-    -unity-text-align: middle-center;
-}
-
+/* ── Step 4: review rows reuse the option-card style and share the height ── */
 .wizard-change-later-note {
     font-size: 32px;
     color: rgb(148, 163, 184);
     white-space: normal;
+    flex-shrink: 0;
+    margin-top: 4px;
     -unity-text-align: middle-center;
 }
 
