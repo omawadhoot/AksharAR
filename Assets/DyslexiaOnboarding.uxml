@@ -121,10 +121,9 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- ── 3. Bottom Action Bar: Thumb-Anchored Ergonomics ── -->
+        <!-- ── 3. Bottom Action Bar: Two Balanced Thumb-Anchored Pills ── -->
         <ui:VisualElement name="WizardFooter" picking-mode="Ignore" class="wizard-footer">
-            <ui:Button name="WizardBackButton" picking-mode="Position" text="← मागे" class="wizard-nav-btn wizard-btn--back" style="visibility: hidden;"/>
-            <ui:Button name="WizardSkipButton" picking-mode="Position" text="डिफॉल्ट वापरा" class="wizard-btn--skip"/>
+            <ui:Button name="WizardBackButton" picking-mode="Position" text="डिफॉल्ट वापरा" class="wizard-nav-btn wizard-btn--secondary"/>
             <ui:Button name="WizardNextButton" picking-mode="Position" text="पुढे →" class="wizard-nav-btn wizard-btn--next"/>
         </ui:VisualElement>
 

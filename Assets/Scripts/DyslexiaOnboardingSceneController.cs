@@ -345,7 +345,8 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
 
         if (btnBack != null)
         {
-            btnBack.style.visibility = currentStepIndex == 0 ? Visibility.Hidden : Visibility.Visible;
+            btnBack.style.visibility = Visibility.Visible;
+            btnBack.text = currentStepIndex == 0 ? "डिफॉल्ट वापरा" : "← मागे";
         }
 
         if (btnNext != null)
@@ -503,6 +504,12 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
 
     private void OnBackClicked()
     {
+        if (currentStepIndex == 0)
+        {
+            OnSkipClicked();
+            return;
+        }
+
         if (currentStepIndex > 0)
         {
             ShowStep(currentStepIndex - 1);

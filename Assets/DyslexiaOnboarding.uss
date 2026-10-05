@@ -342,12 +342,16 @@
     border-width: 0;
 }
 
-.wizard-btn--back {
+.wizard-btn--back,
+.wizard-btn--secondary {
     background-color: rgba(255, 255, 255, 0.14);
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.22);
     color: rgb(226, 232, 240);
 }
 
-.wizard-btn--back:active {
+.wizard-btn--back:active,
+.wizard-btn--secondary:active {
     background-color: rgba(255, 255, 255, 0.25);
     scale: 0.96;
 }
