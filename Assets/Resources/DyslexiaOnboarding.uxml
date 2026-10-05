@@ -2,9 +2,8 @@
     <Style src="project://database/Assets/Resources/DyslexiaOnboarding.uss?fileID=7433441132597879392&amp;guid=0296a755d2a3f724b877d0d16a878f29&amp;type=3#DyslexiaOnboarding"/>
     <ui:VisualElement name="OnboardingModalBackdrop" picking-mode="Position" class="wizard-fullscreen-root">
         
-        <!-- ── 1. Top Bar: Wordmark + 4-Segment Progress Bar ── -->
+        <!-- ── 1. Top Bar: Full-Width Duolingo Progress Bar + Step Counter ── -->
         <ui:VisualElement name="WizardTopBar" picking-mode="Ignore" class="wizard-top-bar">
-            <ui:Label text="AksharAR" picking-mode="Ignore" class="wizard-brand-wordmark"/>
             <ui:VisualElement name="WizardProgressSegments" picking-mode="Ignore" class="wizard-progress-bar">
                 <ui:VisualElement name="ProgressSeg1" picking-mode="Ignore" class="wizard-progress-seg wizard-progress-seg--active"/>
                 <ui:VisualElement name="ProgressSeg2" picking-mode="Ignore" class="wizard-progress-seg"/>
@@ -14,15 +13,8 @@
             <ui:Label name="WizardStepAccessibleLabel" text="1/4" picking-mode="Ignore" class="wizard-step-accessible-label"/>
         </ui:VisualElement>
 
-        <!-- ── 2. Middle Content Area: Live Preview + Step Options ── -->
+        <!-- ── 2. Middle Content Area: Question First → Live Preview → Options ── -->
         <ui:VisualElement name="WizardContentArea" picking-mode="Ignore" class="wizard-content-area">
-            
-            <!-- Persistent Cumulative Live Preview (Non-tappable sample window) -->
-            <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
-                <ui:Label text="पूर्वावलोकन  •  PREVIEW" picking-mode="Ignore" class="wizard-preview-badge"/>
-                <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
-                <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
-            </ui:VisualElement>
 
             <!-- Step 1: Text Spacing (Mild, Moderate, Intensive) -->
             <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page">
@@ -31,6 +23,13 @@
                     <ui:Button name="BtnTtsStep1" picking-mode="Position" class="wizard-tts-btn">
                         <ui:Label text="🔊" picking-mode="Ignore" class="wizard-tts-icon"/>
                     </ui:Button>
+                </ui:VisualElement>
+
+                <!-- Persistent Cumulative Live Preview (Duolingo Hero Speech/Context Window) -->
+                <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
+                    <ui:Label text="पूर्वावलोकन  •  PREVIEW" picking-mode="Ignore" class="wizard-preview-badge"/>
+                    <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
+                    <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
                 </ui:VisualElement>
                 
                 <ui:VisualElement name="CardSeverityMild" picking-mode="Position" class="wizard-option-card">
