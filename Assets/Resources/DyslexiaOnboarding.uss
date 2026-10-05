@@ -227,9 +227,15 @@ Button {
 }
 
 .wizard-tts-icon {
-    font-size: 48px;
-    color: rgb(56, 189, 248);
-    -unity-text-align: middle-center;
+    width: 56px;
+    height: 56px;
+    background-image: resource("Icons/Icon_Speaker");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(56, 189, 248);
+}
+
+.wizard-tts-btn:active .wizard-tts-icon {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 
 /* ── Option cards (all steps): equal share of the remaining height ── */

@@ -195,6 +195,7 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         btnTtsStep2 = rootElement.Q<Button>("BtnTtsStep2");
         btnTtsStep3 = rootElement.Q<Button>("BtnTtsStep3");
         btnTtsStep4 = rootElement.Q<Button>("BtnTtsStep4");
+        ApplySpeakerIcons();
 
         ApplyFonts();
         BindEvents();
@@ -202,6 +203,18 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         ShowStep(0);
 
         Debug.Log("[DyslexiaOnboardingSceneController] Native 2D Screen-Space Onboarding UI ready.");
+    }
+
+    private void ApplySpeakerIcons()
+    {
+        var speakerTex = Resources.Load<Texture2D>("Icons/Icon_Speaker");
+        if (speakerTex == null) return;
+
+        var ttsIcons = rootElement.Query<VisualElement>(className: "wizard-tts-icon").ToList();
+        foreach (var icon in ttsIcons)
+        {
+            icon.style.backgroundImage = new StyleBackground(speakerTex);
+        }
     }
 
     private void ApplyFonts()

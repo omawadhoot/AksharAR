@@ -181,6 +181,7 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         btnTtsStep4 = rootElement.Q<Button>("BtnTtsStep4");
 
         ApplyDyslexiaFontsToWizard();
+        ApplySpeakerIcons();
         BindWizardEvents();
         BindHUDTriggerButton();
 
@@ -257,6 +258,19 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
             {
                 btn.style.unityFont = new StyleFont(dyslexiaFont);
             }
+        }
+    }
+
+    private void ApplySpeakerIcons()
+    {
+        if (modalBackdrop == null) return;
+        var speakerTex = Resources.Load<Texture2D>("Icons/Icon_Speaker");
+        if (speakerTex == null) return;
+
+        var ttsIcons = modalBackdrop.Query<VisualElement>(className: "wizard-tts-icon").ToList();
+        foreach (var icon in ttsIcons)
+        {
+            icon.style.backgroundImage = new StyleBackground(speakerTex);
         }
     }
 
