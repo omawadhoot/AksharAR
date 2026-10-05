@@ -705,7 +705,7 @@
 .freeze-frame-line {
     position: absolute;
     -unity-text-generator: advanced;
-    -unity-text-align: upper-left;
+    -unity-text-align: middle-left;
     white-space: nowrap;
     overflow: visible;
     background-color: transparent;

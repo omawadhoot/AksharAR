@@ -12,7 +12,9 @@ public struct DetectedTextLine
     public Rect boundingBox;
 
     public float minX => boundingBox.xMin;
+    public float maxX => boundingBox.xMax;
     public float minY => boundingBox.yMin;
+    public float maxY => boundingBox.yMax;
     public float width => boundingBox.width;
     public float height => boundingBox.height;
 }
@@ -731,7 +733,8 @@ public class ARLineOverlayController : MonoBehaviour
         float boxWidth = normCrop.width * panelW;
         float boxHeight = normCrop.height * panelH;
 
-        float uniformScale = (visionImageSize.x > 0f) ? (boxWidth / visionImageSize.x) : 1f;
+        float scaleX = (visionImageSize.x > 0f) ? (boxWidth / visionImageSize.x) : 1f;
+        float scaleY = (visionImageSize.y > 0f) ? (boxHeight / visionImageSize.y) : 1f;
 
         // 4. Retrieve Active Dyslexia Profile
         DyslexiaProfile activeProfile = (DyslexiaProfileManager.Instance != null)
@@ -740,12 +743,15 @@ public class ARLineOverlayController : MonoBehaviour
 
         // 5. Stanza & typography harmonization
         var sortedLines = detectedLines.OrderBy(l => l.minY).ToList();
-        var rawHeights = sortedLines.Select(l => l.height * uniformScale).OrderBy(h => h).ToList();
-        float medianLineHeight = rawHeights.Count > 0 ? rawHeights[rawHeights.Count / 2] : 40f * uniformScale;
-        float baseFontSize = Mathf.Clamp(medianLineHeight * 0.95f, 18f, 90f);
+        float stanzaMinX = sortedLines.Min(l => l.minX) * scaleX;
+        float stanzaMaxX = sortedLines.Max(l => l.maxX) * scaleX;
+        float stanzaMinY = sortedLines.Min(l => l.minY) * scaleY;
+        float stanzaMaxY = sortedLines.Max(l => l.maxY) * scaleY;
+
+        var rawHeights = sortedLines.Select(l => l.height * scaleY).OrderBy(h => h).ToList();
+        float medianLineHeight = rawHeights.Count > 0 ? rawHeights[rawHeights.Count / 2] : 40f * scaleY;
+        float baseFontSize = Mathf.Clamp(medianLineHeight * 0.75f, 18f, 90f);
         float harmonizedFontSize = baseFontSize * activeProfile.fontScaleMultiplier;
-        float lineMultiplier = activeProfile.GetLineHeightMultiplier();
-        float uniformPlateHeight = harmonizedFontSize * lineMultiplier;
 
         // 6. Paper Substrate Color & CVD-Safe Color Scheme
         Color sampledPaperColor = SamplePaperColorFromFrame(capturedFrameTexture != null ? capturedFrameTexture : currentFreezeTexture, sortedLines.Count > 0 ? sortedLines[sortedLines.Count / 2] : default, visionImageSize);
@@ -757,55 +763,33 @@ public class ARLineOverlayController : MonoBehaviour
                                       activeProfile.colorPalette != ColorBlindPalette.Monochrome &&
                                       activeProfile.severity != DyslexiaSeverity.Mild;
 
-        // 7. Poem Block Layout Calculation
+        // 7. Direct 2D Line-by-Line Anchoring (Exact In-Situ Placement)
         List<FreezeLineLayoutData> layouts = new List<FreezeLineLayoutData>();
-        float blockMinX = float.MaxValue;
-        float blockMaxX = float.MinValue;
-        float blockMinY = sortedLines.Count > 0 ? sortedLines[0].minY * uniformScale : 0f;
-        float currentRunningY = blockMinY;
 
         for (int i = 0; i < sortedLines.Count; i++)
         {
             var line = sortedLines[i];
-            float scaledX = line.minX * uniformScale;
-            float scaledW = Mathf.Max(30f, line.width * uniformScale);
-            float rawTopY = line.minY * uniformScale;
-
-            if (i > 0)
-            {
-                float prevRawTopY = sortedLines[i - 1].minY * uniformScale;
-                float verticalGap = rawTopY - prevRawTopY;
-
-                if (verticalGap > medianLineHeight * 1.45f)
-                {
-                    currentRunningY += uniformPlateHeight * 1.40f; // Couplet break
-                }
-                else
-                {
-                    currentRunningY += uniformPlateHeight * 1.05f; // Standard line advance
-                }
-            }
+            float scaledX = line.minX * scaleX;
+            float scaledY = line.minY * scaleY;
+            float scaledW = Mathf.Max(30f, line.width * scaleX);
+            float scaledH = Mathf.Max(24f, line.height * scaleY);
 
             layouts.Add(new FreezeLineLayoutData
             {
                 text = line.text,
                 screenX = boxLeft + scaledX,
-                screenY = boxTop + currentRunningY,
+                screenY = boxTop + scaledY,
                 width = scaledW,
-                height = uniformPlateHeight
+                height = scaledH
             });
-
-            blockMinX = Mathf.Min(blockMinX, scaledX);
-            blockMaxX = Mathf.Max(blockMaxX, scaledX + scaledW);
         }
 
-        float blockMaxY = currentRunningY + uniformPlateHeight;
-        float hMarginPx = 16f;
-        float vMarginPx = 12f;
+        float hMarginPx = 20f;
+        float vMarginPx = 16f;
 
         bool insertSeparators = activeProfile.ShouldInsertSeparators();
 
-        // 8. Backing Card Mask
+        // 8. Backing Card Mask: Perfectly blankets the entire detected stanza
         VisualElement blockCard = new VisualElement { name = "FreezeBlockCard" };
         blockCard.AddToClassList("freeze-frame-card");
         if (activeProfile.substrateTint == SubstrateTint.InpaintedPaper)
@@ -817,10 +801,10 @@ public class ARLineOverlayController : MonoBehaviour
             blockCard.AddToClassList("freeze-frame-card--tinted");
         }
 
-        blockCard.style.left = Mathf.Max(0f, boxLeft + blockMinX - hMarginPx);
-        blockCard.style.top = Mathf.Max(0f, boxTop + blockMinY - vMarginPx);
-        blockCard.style.width = (blockMaxX - blockMinX) + (hMarginPx * 2f);
-        blockCard.style.height = (blockMaxY - blockMinY) + (vMarginPx * 2f);
+        blockCard.style.left = Mathf.Max(0f, boxLeft + stanzaMinX - hMarginPx);
+        blockCard.style.top = Mathf.Max(0f, boxTop + stanzaMinY - vMarginPx);
+        blockCard.style.width = (stanzaMaxX - stanzaMinX) + (hMarginPx * 2f);
+        blockCard.style.height = (stanzaMaxY - stanzaMinY) + (vMarginPx * 2f);
         blockCard.style.backgroundColor = new StyleColor(finalSubstrateColor);
         freezeFrameTextContainer.Add(blockCard);
 
@@ -889,7 +873,7 @@ public class ARLineOverlayController : MonoBehaviour
         // 10. Multi-Stage Layout Fit Policy (Width & Font-Floor Adjustment)
         if (createdLabels.Count > 0)
         {
-            StartCoroutine(OptimizeFreezeFittingLoop(createdLabels, targetWidths, harmonizedFontSize, blockCard, boxLeft + blockMinX, hMarginPx, panelW));
+            StartCoroutine(OptimizeFreezeFittingLoop(createdLabels, targetWidths, harmonizedFontSize, blockCard, boxLeft + stanzaMinX, hMarginPx, panelW));
         }
 
         Debug.Log($"[Freeze-Frame AR] Rendered {createdLabels.Count} lines with Profile [Severity={activeProfile.severity}, Palette={activeProfile.colorPalette}, Tint={activeProfile.substrateTint}, Separators={insertSeparators}]");
