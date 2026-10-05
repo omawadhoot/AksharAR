@@ -235,11 +235,11 @@
     flex-basis: 0;
     border-radius: 28px;
     border-width: 4px;
-    padding-left: 44px;
-    padding-right: 44px;
-    padding-top: 24px;
-    padding-bottom: 24px;
-    margin-bottom: 24px;
+    padding-left: 48px;
+    padding-right: 48px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
     flex-direction: column;
     justify-content: center;
     transition-property: border-color, background-color;
@@ -253,7 +253,7 @@
 }
 
 .wizard-option-card {
-    min-height: 200px;
+    min-height: 180px;
     background-color: rgb(22, 30, 49);
     border-color: rgba(255, 255, 255, 0.16);
     border-bottom-width: 8px;
@@ -268,39 +268,44 @@
 }
 
 .wizard-card-title {
-    font-size: 34px;
+    font-size: 38px;
     -unity-font-style: bold;
-    color: rgb(248, 250, 252);
-    margin-bottom: 12px;
+    color: rgb(148, 163, 184);
+    margin-bottom: 10px;
 }
 
 .wizard-card-preview {
-    font-size: 46px;
-    color: rgb(226, 232, 240);
+    font-size: 58px;
+    -unity-font-style: bold;
+    color: rgb(248, 250, 252);
     white-space: nowrap;
 }
 
 /* ── Step 2: colour samples sit on paper ── */
 .wizard-palette-card {
-    min-height: 170px;
+    min-height: 160px;
     background-color: rgb(250, 248, 242);
     border-color: rgba(0, 0, 0, 0.14);
+    border-bottom-width: 8px;
+    border-bottom-color: rgba(0, 0, 0, 0.24);
 }
 
 .wizard-palette-card.wizard-card--selected,
 .wizard-tint-card.wizard-card--selected {
     border-color: rgb(2, 132, 199);
-    border-width: 7px;
+    border-width: 6px;
+    border-bottom-width: 9px;
+    border-bottom-color: rgb(3, 105, 161);
 }
 
 .wizard-palette-card .wizard-card-title {
-    color: rgb(15, 23, 42);
-    font-size: 30px;
+    color: rgb(71, 85, 105);
+    font-size: 34px;
     margin-bottom: 6px;
 }
 
 .wizard-palette-sample {
-    font-size: 46px;
+    font-size: 58px;
     -unity-font-style: bold;
     margin: 0;
     padding: 0;
@@ -312,6 +317,8 @@
     min-height: 150px;
     align-items: center;
     border-color: rgba(0, 0, 0, 0.14);
+    border-bottom-width: 8px;
+    border-bottom-color: rgba(0, 0, 0, 0.24);
 }
 
 .wizard-tint-card--cream { background-color: rgb(250, 248, 242); }
@@ -320,7 +327,7 @@
 .wizard-tint-card--paper { background-color: rgb(250, 245, 232); }
 
 .wizard-tint-benefit {
-    font-size: 44px;
+    font-size: 54px;
     -unity-font-style: bold;
     color: rgb(15, 23, 42);
     -unity-text-align: middle-center;
