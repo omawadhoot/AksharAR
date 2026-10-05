@@ -657,7 +657,6 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
             livePreviewLine1.text = DevanagariSyllableParser.ColorizeSyllablesRichText(
                 line1Raw, colA, colB, useAlternating, insertSeparators, letterSpacing, wordSpacing, isLightBackground
             );
-            livePreviewLine1.style.fontSize = (draftProfile.severity == DyslexiaSeverity.Intensive) ? 38f : 32f;
         }
 
         if (livePreviewLine2 != null)
@@ -665,8 +664,6 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
             livePreviewLine2.text = DevanagariSyllableParser.ColorizeSyllablesRichText(
                 line2Raw, colA, colB, useAlternating, insertSeparators, letterSpacing, wordSpacing, isLightBackground
             );
-            livePreviewLine2.style.fontSize = (draftProfile.severity == DyslexiaSeverity.Intensive) ? 38f : 32f;
-            livePreviewLine2.style.marginTop = (draftProfile.severity == DyslexiaSeverity.Intensive) ? 14f : 8f;
         }
 
         if (previewSubtitle != null)
