@@ -20,7 +20,7 @@
                     <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
+            <ui:VisualElement name="WizardStep1" picking-mode="Ignore" class="wizard-step-page" style="display: flex;">
                 <ui:VisualElement picking-mode="Ignore" class="wizard-prompt-row">
                     <ui:Label text="तुम्हाला कोणते वाचन अंतर योग्य वाटते?" picking-mode="Ignore" class="wizard-prompt"/>
                     <ui:Button name="BtnTtsStep1" picking-mode="Position" class="wizard-tts-btn">
@@ -32,21 +32,21 @@
                         <ui:Label text="कमी अंतर" picking-mode="Ignore" class="wizard-card-title"/>
                         <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check"/>
                     </ui:VisualElement>
-                    <ui:Label text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-card-preview"/>
+                    <ui:Label text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-card-preview" style="-unity-font-definition: url(&quot;project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&amp;guid=83e005baf2790934ebb370ef42525d05&amp;type=3#NeevA-Dyslexia-Regular&quot;);"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="CardSeverityModerate" picking-mode="Position" class="wizard-option-card wizard-card--selected">
                     <ui:VisualElement picking-mode="Ignore" class="wizard-card-header-row">
                         <ui:Label text="मध्यम अंतर" picking-mode="Ignore" class="wizard-card-title"/>
                         <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check"/>
                     </ui:VisualElement>
-                    <ui:Label text="सुं·दर  फु·ले  उ·म·ल·ली  बा·गे·त  छा·न" picking-mode="Ignore" class="wizard-card-preview"/>
+                    <ui:Label text="सुं·दर  फु·ले  उ·म·ल·ली  बा·गे·त  छा·न" picking-mode="Ignore" class="wizard-card-preview" style="-unity-font-definition: url(&quot;project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&amp;guid=83e005baf2790934ebb370ef42525d05&amp;type=3#NeevA-Dyslexia-Regular&quot;);"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="CardSeverityIntensive" picking-mode="Position" class="wizard-option-card">
                     <ui:VisualElement picking-mode="Ignore" class="wizard-card-header-row">
                         <ui:Label text="जास्त अंतर" picking-mode="Ignore" class="wizard-card-title"/>
                         <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check"/>
                     </ui:VisualElement>
-                    <ui:Label text="सुं · दर   फु · ले   उ · म · ल · ली   बा · गे · त   छा · न" picking-mode="Ignore" class="wizard-card-preview wizard-card-preview--expanded"/>
+                    <ui:Label text="सुं · दर   फु · ले   उ · म · ल · ली   बा · गे · त   छा · न" picking-mode="Ignore" class="wizard-card-preview wizard-card-preview--expanded" style="-unity-font-definition: url(&quot;project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&amp;guid=83e005baf2790934ebb370ef42525d05&amp;type=3#NeevA-Dyslexia-Regular&quot;);"/>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="WizardStep2" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
@@ -61,28 +61,28 @@
                         <ui:Label text="निळा रंग" picking-mode="Ignore" class="wizard-card-title"/>
                         <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check"/>
                     </ui:VisualElement>
-                    <ui:Label text="&lt;color=#141414&gt;सुं&lt;/color&gt;&lt;color=#1E40AF&gt;दर&lt;/color&gt; &lt;color=#141414&gt;फु&lt;/color&gt;&lt;color=#1E40AF&gt;ले&lt;/color&gt; &lt;color=#141414&gt;उ&lt;/color&gt;&lt;color=#1E40AF&gt;म&lt;/color&gt;&lt;color=#141414&gt;ल&lt;/color&gt;&lt;color=#1E40AF&gt;ली&lt;/color&gt; &lt;color=#141414&gt;बा&lt;/color&gt;&lt;color=#1E40AF&gt;गे&lt;/color&gt;&lt;color=#141414&gt;त&lt;/color&gt; &lt;color=#1E40AF&gt;छा&lt;/color&gt;&lt;color=#141414&gt;न&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    <ui:Label text="&lt;color=#141414&gt;सुं&lt;/color&gt;&lt;color=#1E40AF&gt;दर&lt;/color&gt; &lt;color=#141414&gt;फु&lt;/color&gt;&lt;color=#1E40AF&gt;ले&lt;/color&gt; &lt;color=#141414&gt;उ&lt;/color&gt;&lt;color=#1E40AF&gt;म&lt;/color&gt;&lt;color=#141414&gt;ल&lt;/color&gt;&lt;color=#1E40AF&gt;ली&lt;/color&gt; &lt;color=#141414&gt;बा&lt;/color&gt;&lt;color=#1E40AF&gt;गे&lt;/color&gt;&lt;color=#141414&gt;त&lt;/color&gt; &lt;color=#1E40AF&gt;छा&lt;/color&gt;&lt;color=#141414&gt;न&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample" style="-unity-font-definition: url(&quot;project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&amp;guid=83e005baf2790934ebb370ef42525d05&amp;type=3#NeevA-Dyslexia-Regular&quot;);"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="ChipPaletteAmber" picking-mode="Position" class="wizard-palette-card">
                     <ui:VisualElement picking-mode="Ignore" class="wizard-card-header-row">
                         <ui:Label text="सोनेरी रंग" picking-mode="Ignore" class="wizard-card-title"/>
                         <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check"/>
                     </ui:VisualElement>
-                    <ui:Label text="&lt;color=#141414&gt;सुं&lt;/color&gt;&lt;color=#9A3412&gt;दर&lt;/color&gt; &lt;color=#141414&gt;फु&lt;/color&gt;&lt;color=#9A3412&gt;ले&lt;/color&gt; &lt;color=#141414&gt;उ&lt;/color&gt;&lt;color=#9A3412&gt;म&lt;/color&gt;&lt;color=#141414&gt;ल&lt;/color&gt;&lt;color=#9A3412&gt;ली&lt;/color&gt; &lt;color=#141414&gt;बा&lt;/color&gt;&lt;color=#9A3412&gt;गे&lt;/color&gt;&lt;color=#141414&gt;त&lt;/color&gt; &lt;color=#9A3412&gt;छा&lt;/color&gt;&lt;color=#141414&gt;न&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    <ui:Label text="&lt;color=#141414&gt;सुं&lt;/color&gt;&lt;color=#9A3412&gt;दर&lt;/color&gt; &lt;color=#141414&gt;फु&lt;/color&gt;&lt;color=#9A3412&gt;ले&lt;/color&gt; &lt;color=#141414&gt;उ&lt;/color&gt;&lt;color=#9A3412&gt;म&lt;/color&gt;&lt;color=#141414&gt;ल&lt;/color&gt;&lt;color=#9A3412&gt;ली&lt;/color&gt; &lt;color=#141414&gt;बा&lt;/color&gt;&lt;color=#9A3412&gt;गे&lt;/color&gt;&lt;color=#141414&gt;त&lt;/color&gt; &lt;color=#9A3412&gt;छा&lt;/color&gt;&lt;color=#141414&gt;न&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample" style="-unity-font-definition: url(&quot;project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&amp;guid=83e005baf2790934ebb370ef42525d05&amp;type=3#NeevA-Dyslexia-Regular&quot;);"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="ChipPaletteViolet" picking-mode="Position" class="wizard-palette-card">
                     <ui:VisualElement picking-mode="Ignore" class="wizard-card-header-row">
                         <ui:Label text="जांभळा रंग" picking-mode="Ignore" class="wizard-card-title"/>
                         <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check"/>
                     </ui:VisualElement>
-                    <ui:Label text="&lt;color=#1E293B&gt;सुं&lt;/color&gt;&lt;color=#5B21B6&gt;दर&lt;/color&gt; &lt;color=#1E293B&gt;फु&lt;/color&gt;&lt;color=#5B21B6&gt;ले&lt;/color&gt; &lt;color=#1E293B&gt;उ&lt;/color&gt;&lt;color=#5B21B6&gt;म&lt;/color&gt;&lt;color=#1E293B&gt;ल&lt;/color&gt;&lt;color=#5B21B6&gt;ली&lt;/color&gt; &lt;color=#1E293B&gt;बा&lt;/color&gt;&lt;color=#5B21B6&gt;गे&lt;/color&gt;&lt;color=#1E293B&gt;त&lt;/color&gt; &lt;color=#5B21B6&gt;छा&lt;/color&gt;&lt;color=#1E293B&gt;न&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    <ui:Label text="&lt;color=#1E293B&gt;सुं&lt;/color&gt;&lt;color=#5B21B6&gt;दर&lt;/color&gt; &lt;color=#1E293B&gt;फु&lt;/color&gt;&lt;color=#5B21B6&gt;ले&lt;/color&gt; &lt;color=#1E293B&gt;उ&lt;/color&gt;&lt;color=#5B21B6&gt;म&lt;/color&gt;&lt;color=#1E293B&gt;ल&lt;/color&gt;&lt;color=#5B21B6&gt;ली&lt;/color&gt; &lt;color=#1E293B&gt;बा&lt;/color&gt;&lt;color=#5B21B6&gt;गे&lt;/color&gt;&lt;color=#1E293B&gt;त&lt;/color&gt; &lt;color=#5B21B6&gt;छा&lt;/color&gt;&lt;color=#1E293B&gt;न&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample" style="-unity-font-definition: url(&quot;project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&amp;guid=83e005baf2790934ebb370ef42525d05&amp;type=3#NeevA-Dyslexia-Regular&quot;);"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="ChipPaletteMonochrome" picking-mode="Position" class="wizard-palette-card">
                     <ui:VisualElement picking-mode="Ignore" class="wizard-card-header-row">
                         <ui:Label text="साधा / काळा रंग" picking-mode="Ignore" class="wizard-card-title"/>
                         <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check"/>
                     </ui:VisualElement>
-                    <ui:Label text="&lt;color=#0F172A&gt;सुंदर फुले उमलली बागेत छान&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample"/>
+                    <ui:Label text="&lt;color=#0F172A&gt;सुंदर फुले उमलली बागेत छान&lt;/color&gt;" picking-mode="Ignore" class="wizard-palette-sample" style="-unity-font-definition: url(&quot;project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&amp;guid=83e005baf2790934ebb370ef42525d05&amp;type=3#NeevA-Dyslexia-Regular&quot;);"/>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="WizardStep3" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
@@ -109,7 +109,7 @@
                     <ui:Label text="✓" picking-mode="Ignore" class="wizard-card-check wizard-tint-check"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="WizardStep4" picking-mode="Ignore" class="wizard-step-page" style="display: flex;">
+            <ui:VisualElement name="WizardStep4" picking-mode="Ignore" class="wizard-step-page" style="display: none;">
                 <ui:VisualElement picking-mode="Ignore" class="wizard-prompt-row">
                     <ui:Label text="वाचन पूर्वावलोकन (तयार आहे)" picking-mode="Ignore" class="wizard-prompt"/>
                     <ui:Button name="BtnTtsStep4" picking-mode="Position" class="wizard-tts-btn">
