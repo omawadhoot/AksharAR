@@ -695,25 +695,25 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         {
             string palName = draftProfile.colorPalette switch
             {
-                ColorBlindPalette.ClassicCobalt => "निळा रंग (Cobalt)",
-                ColorBlindPalette.WarmAmber => "सोनेरी रंग (Amber)",
-                ColorBlindPalette.VioletIris => "जांभळा रंग (Violet)",
-                _ => "काळा रंग (None)"
+                ColorBlindPalette.ClassicCobalt => "निळा रंग",
+                ColorBlindPalette.WarmAmber => "सोनेरी रंग",
+                ColorBlindPalette.VioletIris => "जांभळा रंग",
+                _ => "साधा / काळा रंग"
             };
 
             string sevName = draftProfile.severity switch
             {
-                DyslexiaSeverity.Mild => "कमी अंतर (Compact)",
-                DyslexiaSeverity.Moderate => "मध्यम अंतर (Default)",
-                _ => "जास्त अंतर (Expanded)"
+                DyslexiaSeverity.Mild => "कमी अंतर",
+                DyslexiaSeverity.Moderate => "मध्यम अंतर",
+                _ => "जास्त अंतर"
             };
 
             string tintName = draftProfile.substrateTint switch
             {
-                SubstrateTint.WarmCream => "क्रीमी (Warm Cream)",
-                SubstrateTint.MintIce => "हलका हिरवा (Mint)",
-                SubstrateTint.Periwinkle => "हलका निळा (Soft Blue)",
-                _ => "नैसर्गिक कागद (Natural)"
+                SubstrateTint.WarmCream => "क्रीमी कागद",
+                SubstrateTint.MintIce => "हलका हिरवा",
+                SubstrateTint.Periwinkle => "हलका निळा",
+                _ => "नैसर्गिक कागद"
             };
 
             if (reviewValueSpacing != null) reviewValueSpacing.text = sevName;
