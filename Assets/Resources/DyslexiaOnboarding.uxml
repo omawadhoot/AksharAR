@@ -2,7 +2,7 @@
     <Style src="project://database/Assets/Resources/DyslexiaOnboarding.uss?fileID=7433441132597879392&amp;guid=0296a755d2a3f724b877d0d16a878f29&amp;type=3#DyslexiaOnboarding"/>
     <ui:VisualElement name="OnboardingModalBackdrop" picking-mode="Position" class="wizard-fullscreen-root">
         
-        <!-- ── 1. Top Bar: Wordmark + 4-Segment Progress Bar + Close ── -->
+        <!-- ── 1. Top Bar: Wordmark + 4-Segment Progress Bar ── -->
         <ui:VisualElement name="WizardTopBar" picking-mode="Ignore" class="wizard-top-bar">
             <ui:VisualElement name="WizardBrandGroup" picking-mode="Ignore" class="wizard-brand-group">
                 <ui:Label text="AksharAR" picking-mode="Ignore" class="wizard-brand-wordmark"/>
@@ -15,17 +15,14 @@
                 <ui:VisualElement name="ProgressSeg3" picking-mode="Ignore" class="wizard-progress-seg"/>
                 <ui:VisualElement name="ProgressSeg4" picking-mode="Ignore" class="wizard-progress-seg"/>
             </ui:VisualElement>
-
-            <ui:Button name="WizardCloseButton" picking-mode="Position" class="wizard-close-btn">
-                <ui:Label text="✕" picking-mode="Ignore" class="wizard-close-icon"/>
-            </ui:Button>
         </ui:VisualElement>
 
         <!-- ── 2. Middle Content Area: Persistent Live Preview + Step Options ── -->
         <ui:VisualElement name="WizardContentArea" picking-mode="Ignore" class="wizard-content-area">
             
-            <!-- Persistent Cumulative Live Preview (Always rendered using same engine as AR overlay) -->
+            <!-- Persistent Cumulative Live Preview (With distinct non-tappable caption badge & border) -->
             <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
+                <ui:Label text="पूर्वावलोकन  •  LIVE PREVIEW" picking-mode="Ignore" class="wizard-preview-badge"/>
                 <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
                 <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
             </ui:VisualElement>
