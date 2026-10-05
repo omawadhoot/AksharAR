@@ -25,11 +25,15 @@
                     </ui:Button>
                 </ui:VisualElement>
 
-                <!-- Persistent Cumulative Live Preview (Duolingo Hero Speech/Context Window) -->
-                <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
-                    <ui:Label text="पूर्वावलोकन  •  PREVIEW" picking-mode="Ignore" class="wizard-preview-badge"/>
-                    <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
-                    <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
+                <!-- Slate / Blackboard Classroom Hero Preview Window -->
+                <ui:VisualElement name="WizardSlateContainer" picking-mode="Ignore" class="wizard-slate-frame">
+                    <ui:VisualElement picking-mode="Ignore" class="wizard-slate-top-header">
+                        <ui:Label text="📝 वाचन पाटी  •  READING SLATE" picking-mode="Ignore" class="wizard-slate-header-title"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="WizardLivePreviewCard" picking-mode="Ignore" class="wizard-live-preview-box">
+                        <ui:Label name="PreviewLiveLine1" text="सुंदर फुले उमलली बागेत छान" picking-mode="Ignore" class="wizard-preview-line"/>
+                        <ui:Label name="PreviewLiveLine2" text="हळूच वारा सांगे आनंदाचे गाण" picking-mode="Ignore" class="wizard-preview-line"/>
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 
                 <ui:VisualElement name="CardSeverityMild" picking-mode="Position" class="wizard-option-card">

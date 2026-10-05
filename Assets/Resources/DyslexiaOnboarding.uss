@@ -112,30 +112,50 @@
     margin-bottom: 28px;
 }
 
+/* ── 3. Blackboard / Slate Hero Preview Window ── */
+.wizard-slate-frame {
+    background-color: rgb(15, 23, 42);
+    border-radius: 32px;
+    border-width: 4px;
+    border-color: rgb(51, 65, 85);
+    border-bottom-width: 8px;
+    border-bottom-color: rgb(30, 41, 59);
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 16px;
+    padding-bottom: 20px;
+    margin-bottom: 40px;
+    flex-shrink: 0;
+}
+
+.wizard-slate-top-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 16px;
+    padding-bottom: 12px;
+}
+
+.wizard-slate-header-title {
+    font-size: 26px;
+    -unity-font-style: bold;
+    color: rgb(148, 163, 184);
+    letter-spacing: 2px;
+}
+
 .wizard-live-preview-box {
     background-color: rgb(250, 248, 242);
-    border-radius: 28px;
-    border-width: 3px;
-    border-color: rgba(56, 189, 248, 0.4);
-    padding-left: 40px;
-    padding-right: 40px;
+    border-radius: 20px;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0.08);
+    padding-left: 36px;
+    padding-right: 36px;
     padding-top: 24px;
-    padding-bottom: 28px;
-    margin-bottom: 28px;
-    min-height: 270px;
-    flex-shrink: 0;
+    padding-bottom: 24px;
+    min-height: 220px;
     justify-content: center;
     transition-property: background-color;
     transition-duration: 0.2s;
-}
-
-.wizard-preview-badge {
-    font-size: 24px;
-    -unity-font-style: bold;
-    color: rgb(100, 116, 139);
-    letter-spacing: 2px;
-    margin-bottom: 12px;
-    -unity-text-align: middle-left;
 }
 
 .wizard-preview-line {
