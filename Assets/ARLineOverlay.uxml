@@ -2,6 +2,7 @@
     <Style src="project://database/Assets/ARLineOverlay.uss?fileID=7433441132597879392&amp;guid=ea9a53b44882d6d45aec87ea626c1e73&amp;type=3#ARLineOverlay"/>
     <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%;">
         <ui:VisualElement name="FreezeFrameBackdrop" picking-mode="Ignore" class="freeze-frame-backdrop" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
+        <ui:VisualElement name="FreezeFrameVignette" picking-mode="Ignore" class="freeze-frame-vignette" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
         <ui:VisualElement name="FreezeFrameTextContainer" picking-mode="Position" class="freeze-frame-text-container" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
         
         <ui:VisualElement name="ViewfinderRoot" picking-mode="Ignore" class="viewfinder-root">

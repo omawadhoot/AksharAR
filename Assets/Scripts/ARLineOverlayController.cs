@@ -39,6 +39,7 @@ public class ARLineOverlayController : MonoBehaviour
     // UI Toolkit Elements
     private VisualElement rootElement;
     private VisualElement freezeFrameBackdrop;
+    private VisualElement freezeFrameVignette;
     private VisualElement freezeFrameTextContainer;
     private VisualElement bottomBar;
     private Button shutterButton;
@@ -198,6 +199,7 @@ public class ARLineOverlayController : MonoBehaviour
         }
 
         freezeFrameBackdrop = rootElement.Q<VisualElement>("FreezeFrameBackdrop");
+        freezeFrameVignette = rootElement.Q<VisualElement>("FreezeFrameVignette");
         freezeFrameTextContainer = rootElement.Q<VisualElement>("FreezeFrameTextContainer");
         bottomBar = rootElement.Q<VisualElement>("BottomBar");
         shutterButton = rootElement.Q<Button>("ShutterButton");
@@ -621,6 +623,9 @@ public class ARLineOverlayController : MonoBehaviour
         if (freezeFrameBackdrop == null && rootElement != null)
             freezeFrameBackdrop = rootElement.Q<VisualElement>("FreezeFrameBackdrop");
 
+        if (freezeFrameVignette == null && rootElement != null)
+            freezeFrameVignette = rootElement.Q<VisualElement>("FreezeFrameVignette");
+
         if (freezeFrameTextContainer == null && rootElement != null)
             freezeFrameTextContainer = rootElement.Q<VisualElement>("FreezeFrameTextContainer");
 
@@ -628,6 +633,17 @@ public class ARLineOverlayController : MonoBehaviour
         {
             freezeFrameBackdrop.style.backgroundImage = new StyleBackground(liveFrame);
             freezeFrameBackdrop.style.display = DisplayStyle.Flex;
+        }
+
+        if (freezeFrameVignette != null)
+        {
+            var vigTex = Resources.Load<Texture2D>("Textures/Vignette_Spotlight");
+            if (vigTex != null)
+            {
+                freezeFrameVignette.style.backgroundImage = new StyleBackground(vigTex);
+            }
+            freezeFrameVignette.style.display = DisplayStyle.Flex;
+            freezeFrameVignette.style.opacity = 1f;
         }
 
         if (freezeFrameTextContainer != null)
@@ -650,6 +666,11 @@ public class ARLineOverlayController : MonoBehaviour
         {
             freezeFrameBackdrop.style.display = DisplayStyle.None;
             freezeFrameBackdrop.style.backgroundImage = StyleKeyword.None;
+        }
+
+        if (freezeFrameVignette != null)
+        {
+            freezeFrameVignette.style.display = DisplayStyle.None;
         }
 
         if (freezeFrameTextContainer != null)

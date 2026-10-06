@@ -683,6 +683,21 @@
     background-color: transparent;
 }
 
+.freeze-frame-vignette {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-image: resource("Textures/Vignette_Spotlight");
+    -unity-background-scale-mode: stretch-to-fill;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+    opacity: 1;
+}
+
 .freeze-frame-text-container {
     position: absolute;
     left: 0;
