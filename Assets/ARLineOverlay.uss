@@ -756,28 +756,16 @@
 .settings-top-button {
     position: absolute;
     right: 0px;
-    min-width: 176px;
-    height: 84px;
-    border-top-left-radius: 42px;
-    border-top-right-radius: 42px;
-    border-bottom-left-radius: 42px;
-    border-bottom-right-radius: 42px;
+    width: 96px;
+    height: 96px;
+    border-radius: 48px;
     background-color: rgba(15, 23, 42, 0.94);
-    border-left-width: 3.5px;
-    border-right-width: 3.5px;
-    border-top-width: 3.5px;
-    border-bottom-width: 3.5px;
-    border-left-color: rgb(56, 189, 248);
-    border-right-color: rgb(56, 189, 248);
-    border-top-color: rgb(56, 189, 248);
-    border-bottom-color: rgb(56, 189, 248);
-    flex-direction: row;
+    border-width: 3.5px;
+    border-color: rgb(56, 189, 248);
     align-items: center;
     justify-content: center;
-    padding-left: 20px;
-    padding-right: 26px;
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 0;
+    margin: 0;
     transition-property: scale, background-color, border-color;
     transition-duration: 0.15s;
 }
@@ -785,29 +773,21 @@
 .settings-top-button:active {
     scale: 0.92;
     background-color: rgb(2, 132, 199);
-    border-left-color: rgb(255, 255, 255);
-    border-right-color: rgb(255, 255, 255);
-    border-top-color: rgb(255, 255, 255);
-    border-bottom-color: rgb(255, 255, 255);
+    border-color: rgb(255, 255, 255);
 }
 
 .settings-button-icon {
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
     background-image: resource("Icons/Icon_Settings");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: rgb(255, 255, 255);
-    margin-right: 10px;
+    margin: 0;
+    padding: 0;
 }
 
 .settings-button-label {
-    -unity-text-generator: advanced;
-    font-size: 28px;
-    -unity-font-style: bold;
-    color: #FFFFFF;
-    -unity-text-align: middle-center;
-    margin: 0;
-    padding: 0;
+    display: none;
 }
 
 /* -------------------------------------------------------------------------- */
