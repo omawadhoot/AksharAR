@@ -39,15 +39,14 @@
 /* ── 1. Top Horizon Level Pill ── */
 .level-pill {
     position: absolute;
-    top: 48px;
+    top: 52px;
     align-self: center;
-    height: 64px;
-    height: 72px;
-    padding-left: 32px;
-    padding-right: 32px;
-    border-radius: 36px;
+    height: 84px;
+    padding-left: 36px;
+    padding-right: 36px;
+    border-radius: 42px;
     background-color: rgba(4, 8, 16, 0.88);
-    border-width: 2.5px;
+    border-width: 3px;
     border-color: rgba(255, 255, 255, 0.25);
     align-items: center;
     justify-content: center;
@@ -67,7 +66,7 @@
 }
 
 .level-pill-text {
-    font-size: 28px;
+    font-size: 34px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: #3399FF;
@@ -150,8 +149,8 @@
 /* 4 L-shaped Corner Brackets */
 .corner-bracket {
     position: absolute;
-    width: 72px;
-    height: 72px;
+    width: 92px;
+    height: 92px;
     border-color: #3399FF;
     transition-property: border-color;
     transition-duration: 0.2s;
@@ -160,29 +159,29 @@
 .corner-tl {
     top: 0;
     left: 0;
-    border-top-width: 9px;
-    border-left-width: 9px;
+    border-top-width: 12px;
+    border-left-width: 12px;
 }
 
 .corner-tr {
     top: 0;
     right: 0;
-    border-top-width: 9px;
-    border-right-width: 9px;
+    border-top-width: 12px;
+    border-right-width: 12px;
 }
 
 .corner-bl {
     bottom: 0;
     left: 0;
-    border-bottom-width: 9px;
-    border-left-width: 9px;
+    border-bottom-width: 12px;
+    border-left-width: 12px;
 }
 
 .corner-br {
     bottom: 0;
     right: 0;
-    border-bottom-width: 9px;
-    border-right-width: 9px;
+    border-bottom-width: 12px;
+    border-right-width: 12px;
 }
 
 .reading-box--level .corner-bracket {
@@ -192,21 +191,21 @@
 /* Drag Handles */
 .drag-handle-bottom {
     position: absolute;
-    bottom: -60px;
+    bottom: -72px;
     left: 0;
     right: 0;
     margin-left: auto;
     margin-right: auto;
-    width: 360px;
-    height: 96px;
+    width: 380px;
+    height: 110px;
     align-items: center;
     justify-content: center;
 }
 
 .handle-pill-h {
-    width: 160px;
-    height: 14px;
-    border-radius: 7px;
+    width: 180px;
+    height: 22px;
+    border-radius: 11px;
     background-color: #3399FF;
     transition-property: background-color, scale;
     transition-duration: 0.15s;
@@ -218,7 +217,7 @@
 }
 
 .handle-label-h {
-    font-size: 26px;
+    font-size: 34px;
     color: rgba(255, 255, 255, 0.88);
     -unity-text-align: middle-center;
     margin-top: 6px;
@@ -226,21 +225,21 @@
 
 .drag-handle-right {
     position: absolute;
-    right: -60px;
+    right: -72px;
     top: 0;
     bottom: 0;
     margin-top: auto;
     margin-bottom: auto;
-    width: 96px;
-    height: 320px;
+    width: 110px;
+    height: 340px;
     align-items: center;
     justify-content: center;
 }
 
 .handle-pill-v {
-    width: 14px;
-    height: 160px;
-    border-radius: 7px;
+    width: 22px;
+    height: 180px;
+    border-radius: 11px;
     background-color: #3399FF;
     transition-property: background-color, scale;
     transition-duration: 0.15s;
@@ -252,7 +251,7 @@
 }
 
 .handle-label-v {
-    font-size: 24px;
+    font-size: 30px;
     color: rgba(255, 255, 255, 0.88);
     -unity-text-align: middle-center;
     margin-left: 8px;
@@ -260,27 +259,27 @@
 
 .drag-handle-corner {
     position: absolute;
-    right: -40px;
-    bottom: -40px;
-    width: 96px;
-    height: 96px;
+    right: -48px;
+    bottom: -48px;
+    width: 110px;
+    height: 110px;
     align-items: center;
     justify-content: center;
 }
 
 .handle-dot {
-    width: 34px;
-    height: 34px;
-    border-radius: 17px;
+    width: 46px;
+    height: 46px;
+    border-radius: 23px;
     background-color: #3399FF;
-    border-width: 3px;
+    border-width: 4px;
     border-color: rgba(255, 255, 255, 0.95);
     transition-property: background-color, scale;
     transition-duration: 0.15s;
 }
 
 .drag-handle-corner:active .handle-dot {
-    scale: 1.3 1.3;
+    scale: 1.25 1.25;
     background-color: #66DDFF;
 }
 
@@ -308,31 +307,31 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    height: 96px;
-    margin-bottom: 32px;
+    height: 110px;
+    margin-bottom: 24px;
 }
 
 .mode-tab {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    margin-left: 18px;
-    margin-right: 18px;
-    min-height: 80px;
+    padding-left: 28px;
+    padding-right: 28px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-left: 20px;
+    margin-right: 20px;
+    min-height: 90px;
     background-color: transparent;
     border-width: 0;
 }
 
 /* ── Rhythmic Verse & Prose Text Block Visual Icons (No Emojis) ── */
 .mode-icon {
-    width: 32px;
-    height: 24px;
+    width: 48px;
+    height: 36px;
     justify-content: space-between;
-    margin-right: 14px;
+    margin-right: 18px;
 }
 
 .mode-icon--poem {
@@ -344,26 +343,26 @@
 }
 
 .verse-bar {
-    height: 4px;
-    border-radius: 2px;
+    height: 6px;
+    border-radius: 3px;
     background-color: rgba(255, 255, 255, 0.45);
     align-self: center;
 }
 
-.verse-bar--1 { width: 18px; }
-.verse-bar--2 { width: 32px; }
-.verse-bar--3 { width: 22px; }
+.verse-bar--1 { width: 24px; }
+.verse-bar--2 { width: 48px; }
+.verse-bar--3 { width: 32px; }
 
 .prose-bar {
-    height: 4px;
-    border-radius: 2px;
+    height: 6px;
+    border-radius: 3px;
     background-color: rgba(255, 255, 255, 0.45);
     align-self: flex-start;
 }
 
-.prose-bar--1 { width: 32px; }
-.prose-bar--2 { width: 32px; }
-.prose-bar--3 { width: 22px; }
+.prose-bar--1 { width: 48px; }
+.prose-bar--2 { width: 48px; }
+.prose-bar--3 { width: 32px; }
 
 /* ── Bilingual Text Labels (Dyslexia Devanagari + Latin Subtitle) ── */
 .mode-text-group {
@@ -374,7 +373,7 @@
 
 .mode-label-devanagari {
     -unity-text-generator: advanced;
-    font-size: 42px;
+    font-size: 56px;
     color: rgba(255, 255, 255, 0.72);
     -unity-font-style: bold;
     -unity-text-align: middle-left;
@@ -383,20 +382,20 @@
 }
 
 .mode-label-latin {
-    font-size: 20px;
+    font-size: 28px;
     color: rgba(255, 255, 255, 0.52);
     -unity-text-align: middle-left;
     margin: 0;
-    margin-top: 2px;
+    margin-top: 4px;
     padding: 0;
 }
 
 .mode-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
     background-color: #FFB300;
-    margin-left: 14px;
+    margin-left: 18px;
     align-self: center;
 }
 
@@ -588,11 +587,11 @@
 }
 
 .camera-bar--landscape .mode-label-devanagari {
-    font-size: 36px;
+    font-size: 48px;
 }
 
 .camera-bar--landscape .mode-label-latin {
-    font-size: 18px;
+    font-size: 24px;
 }
 
 /* Camera Controls in Landscape: Vertical distribution with large separation */
@@ -645,13 +644,36 @@
     height: 100%;
 }
 
-.level-pill--landscape {
+.hud-overlay--landscape .top-controls-container,
+.top-controls-container.top-controls-container--landscape {
     position: absolute;
     top: 24px;
+    left: 28px;
+    right: 328px;
+    height: 100px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.hud-overlay--landscape .level-pill,
+.level-pill.level-pill--landscape {
+    position: absolute;
+    top: 0;
     align-self: center;
-    margin-right: 300px;
+    margin-right: 0;
     left: auto;
     right: auto;
+}
+
+.hud-overlay--landscape .settings-top-button,
+.settings-top-button.settings-button--landscape {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: 88px;
+    height: 88px;
+    border-radius: 44px;
 }
 
 /* Container rules covering the absolute boundaries of the 2048x2898 Canvas */

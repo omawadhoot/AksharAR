@@ -81,6 +81,14 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
 
     private void Awake()
     {
+        Screen.autorotateToLandscapeLeft = false;
+        Screen.autorotateToLandscapeRight = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToPortrait = true;
+        Screen.orientation = ScreenOrientation.Portrait;
+#if UNITY_EDITOR
+        ReadingWindowViewfinder.SetEditorGameViewOrientation(false);
+#endif
         EnsureProfileManager();
         LoadDyslexiaFonts();
     }
@@ -581,8 +589,13 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         FinishAndTransition(-1);
     }
 
+    private bool isTransitioningToTarget = false;
+
     private void FinishAndTransition(int skippedAtStep)
     {
+        if (isTransitioningToTarget) return;
+        isTransitioningToTarget = true;
+
         RecordStepDwellTime();
         EnsureProfileManager();
         if (DyslexiaProfileManager.Instance != null && draftProfile != null)
@@ -605,7 +618,13 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
             didChangeStep3
         );
 
-        Debug.Log($"[DyslexiaOnboardingSceneController] Calibration completed & logged. Loading AR Scene '{targetSceneName}'...");
-        SceneManager.LoadScene(targetSceneName);
+        Debug.Log($"[DyslexiaOnboardingSceneController] Calibration completed & logged. Safely loading AR Scene '{targetSceneName}'...");
+        StartCoroutine(TransitionToSceneRoutine());
+    }
+
+    private System.Collections.IEnumerator TransitionToSceneRoutine()
+    {
+        yield return new WaitForEndOfFrame();
+        SceneManager.LoadSceneAsync(targetSceneName);
     }
 }

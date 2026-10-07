@@ -299,6 +299,11 @@ public class ARUIRenderTextureBridge : MonoBehaviour
         }
         else if (uiRenderTexture.width != targetW || uiRenderTexture.height != targetH)
         {
+            if (uiDocument != null && uiDocument.panelSettings != null)
+            {
+                uiDocument.panelSettings.targetTexture = null;
+            }
+
             uiRenderTexture.Release();
             uiRenderTexture.width = targetW;
             uiRenderTexture.height = targetH;
@@ -307,6 +312,14 @@ public class ARUIRenderTextureBridge : MonoBehaviour
             if (uiDocument != null && uiDocument.panelSettings != null)
             {
                 uiDocument.panelSettings.referenceResolution = new Vector2Int(targetW, targetH);
+                uiDocument.panelSettings.targetTexture = uiRenderTexture;
+            }
+
+            if (hudMaterial != null)
+            {
+                hudMaterial.mainTexture = uiRenderTexture;
+                if (hudMaterial.HasProperty("_BaseMap"))
+                    hudMaterial.SetTexture("_BaseMap", uiRenderTexture);
             }
 
             Debug.Log($"[ARUIRenderTextureBridge] Resized UI RenderTexture for {(IsLandscape ? "LANDSCAPE" : "PORTRAIT")}: {targetW}x{targetH}");

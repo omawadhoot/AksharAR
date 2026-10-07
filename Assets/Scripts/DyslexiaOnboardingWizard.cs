@@ -483,6 +483,16 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
             InitializeWizardUI();
         }
 
+        // Force portrait orientation for the onboarding wizard calibration UI
+        Screen.autorotateToLandscapeLeft = false;
+        Screen.autorotateToLandscapeRight = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToPortrait = true;
+        Screen.orientation = ScreenOrientation.Portrait;
+#if UNITY_EDITOR
+        ReadingWindowViewfinder.SetEditorGameViewOrientation(false);
+#endif
+
         EnsureDraftProfile();
         currentStepIndex = Mathf.Clamp(startingStep, 0, TOTAL_STEPS - 1);
         stepEnterTime = Time.realtimeSinceStartup;
@@ -493,7 +503,7 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         }
 
         UpdateWizardPageDisplay();
-        Debug.Log($"[DyslexiaOnboardingWizard] Opened Wizard at Step {currentStepIndex + 1}/{TOTAL_STEPS}");
+        Debug.Log($"[DyslexiaOnboardingWizard] Opened Wizard in Portrait mode at Step {currentStepIndex + 1}/{TOTAL_STEPS}");
     }
 
     public void HideWizard()
@@ -501,6 +511,20 @@ public class DyslexiaOnboardingWizard : MonoBehaviour
         if (modalBackdrop != null)
         {
             modalBackdrop.style.display = DisplayStyle.None;
+        }
+
+        // Restore landscape orientation if active reading mode is Chapter
+        ReadingWindowViewfinder vf = FindAnyObjectByType<ReadingWindowViewfinder>(FindObjectsInactive.Include);
+        if (vf != null && vf.ActiveReadingMode == ReadingMode.Chapter)
+        {
+            Screen.autorotateToPortrait = false;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = true;
+            Screen.autorotateToLandscapeRight = true;
+            Screen.orientation = ScreenOrientation.LandscapeLeft;
+#if UNITY_EDITOR
+            ReadingWindowViewfinder.SetEditorGameViewOrientation(true);
+#endif
         }
     }
 

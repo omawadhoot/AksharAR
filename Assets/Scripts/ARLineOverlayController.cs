@@ -52,6 +52,7 @@ public class ARLineOverlayController : MonoBehaviour
     private Label chapterLabelDevanagari;
     private VisualElement poemDot;
     private VisualElement chapterDot;
+    private Button accessibilitySettingsBtn;
 
     private Texture2D currentFreezeTexture;
     private float lastScanClickTimestamp = -1f;
@@ -82,15 +83,6 @@ public class ARLineOverlayController : MonoBehaviour
             var mgrObj = new GameObject("DyslexiaProfileManager");
             mgrObj.AddComponent<DyslexiaProfileManager>();
         }
-
-        if (FindFirstObjectByType<DyslexiaOnboardingWizard>() == null)
-        {
-            var wizardObj = GameObject.Find("ARLineOverlayDocument") ?? gameObject;
-            if (wizardObj.GetComponent<DyslexiaOnboardingWizard>() == null)
-            {
-                wizardObj.AddComponent<DyslexiaOnboardingWizard>();
-            }
-        }
     }
 
     private void EnsureUIRenderTextureBridge()
@@ -116,6 +108,12 @@ public class ARLineOverlayController : MonoBehaviour
 
     private void Start()
     {
+        if (DyslexiaProfileManager.Instance != null && !DyslexiaProfileManager.Instance.Profile.hasCompletedOnboarding)
+        {
+            OpenAccessibilityWizard();
+            return;
+        }
+
         InitializeUIToolkit();
     }
 
@@ -225,6 +223,8 @@ public class ARLineOverlayController : MonoBehaviour
             }
         }
 
+        accessibilitySettingsBtn = rootElement.Q<Button>("AccessibilitySettingsButton");
+
         tabPoem = rootElement.Q<Button>("TabPoem");
         tabChapter = rootElement.Q<Button>("TabChapter");
         poemDot = rootElement.Q<VisualElement>("PoemDot");
@@ -282,42 +282,19 @@ public class ARLineOverlayController : MonoBehaviour
             quickRescanBtn.clicked += OnRescanButtonClicked;
         }
 
-        var settingsBtn = rootElement.Q<Button>("AccessibilitySettingsButton");
-        if (settingsBtn != null)
+        if (accessibilitySettingsBtn != null)
         {
-            settingsBtn.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                OpenAccessibilityWizard();
-                evt.StopPropagation();
-            });
-            settingsBtn.RegisterCallback<ClickEvent>(evt =>
-            {
-                OpenAccessibilityWizard();
-                evt.StopPropagation();
-            });
-            settingsBtn.clicked += OpenAccessibilityWizard;
+            accessibilitySettingsBtn.clicked += OpenAccessibilityWizard;
         }
 
         if (tabPoem != null)
         {
-            tabPoemPointerDownCallback = evt =>
-            {
-                SwitchReadingMode(ReadingMode.Poem);
-                evt.StopPropagation();
-            };
-            tabPoem.RegisterCallback(tabPoemPointerDownCallback);
             onPoemClicked = () => SwitchReadingMode(ReadingMode.Poem);
             tabPoem.clicked += onPoemClicked;
         }
 
         if (tabChapter != null)
         {
-            tabChapterPointerDownCallback = evt =>
-            {
-                SwitchReadingMode(ReadingMode.Chapter);
-                evt.StopPropagation();
-            };
-            tabChapter.RegisterCallback(tabChapterPointerDownCallback);
             onChapterClicked = () => SwitchReadingMode(ReadingMode.Chapter);
             tabChapter.clicked += onChapterClicked;
         }
@@ -341,18 +318,19 @@ public class ARLineOverlayController : MonoBehaviour
 
         if (tabPoem != null)
         {
-            if (tabPoemPointerDownCallback != null)
-                tabPoem.UnregisterCallback(tabPoemPointerDownCallback);
             if (onPoemClicked != null)
                 tabPoem.clicked -= onPoemClicked;
         }
 
         if (tabChapter != null)
         {
-            if (tabChapterPointerDownCallback != null)
-                tabChapter.UnregisterCallback(tabChapterPointerDownCallback);
             if (onChapterClicked != null)
                 tabChapter.clicked -= onChapterClicked;
+        }
+
+        if (accessibilitySettingsBtn != null)
+        {
+            accessibilitySettingsBtn.clicked -= OpenAccessibilityWizard;
         }
     }
 
@@ -384,6 +362,9 @@ public class ARLineOverlayController : MonoBehaviour
 
         if (chapterDot != null)
             chapterDot.EnableInClassList("mode-dot--hidden", mode != ReadingMode.Chapter);
+
+        if (accessibilitySettingsBtn != null)
+            accessibilitySettingsBtn.style.display = DisplayStyle.Flex;
     }
 
     private void EnsureDyslexiaFont()
@@ -454,9 +435,16 @@ public class ARLineOverlayController : MonoBehaviour
         if (viewfinder != null)
             viewfinder.EnableInClassList("viewfinder-root--landscape", isLandscape);
 
+        var topControls = rootElement.Q<VisualElement>("TopControlsContainer");
+        if (topControls != null)
+            topControls.EnableInClassList("top-controls-container--landscape", isLandscape);
+
         var levelPillElem = rootElement.Q<VisualElement>("LevelPill");
         if (levelPillElem != null)
             levelPillElem.EnableInClassList("level-pill--landscape", isLandscape);
+
+        if (accessibilitySettingsBtn != null)
+            accessibilitySettingsBtn.EnableInClassList("settings-button--landscape", isLandscape);
 
         var leftSpacer = rootElement.Q<VisualElement>("LeftSpacerSlot");
         if (leftSpacer != null)
@@ -473,10 +461,38 @@ public class ARLineOverlayController : MonoBehaviour
 
     // ─── Button Callback ──────────────────────────────────────────────────────
 
+    private bool isTransitioningToOnboarding = false;
+
     public void OpenAccessibilityWizard()
     {
-        Debug.Log("[ARLineOverlayController] >>> ACCESSIBILITY SETTINGS BUTTON CLICKED <<< Loading Onboarding Scene.");
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Onboarding");
+        if (isTransitioningToOnboarding) return;
+        isTransitioningToOnboarding = true;
+        StartCoroutine(TransitionToOnboardingRoutine());
+    }
+
+    private System.Collections.IEnumerator TransitionToOnboardingRoutine()
+    {
+        Debug.Log("[ARLineOverlayController] >>> ACCESSIBILITY SETTINGS BUTTON CLICKED <<< Safely waiting for frame completion before orientation switch & scene load.");
+        
+        if (accessibilitySettingsBtn != null)
+            accessibilitySettingsBtn.SetEnabled(false);
+
+        // Wait until all OpenGL draw calls and UI render textures for the current frame finish
+        yield return new WaitForEndOfFrame();
+
+        // Switch to portrait safely outside the active render loop
+        Screen.autorotateToLandscapeLeft = false;
+        Screen.autorotateToLandscapeRight = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToPortrait = true;
+        Screen.orientation = ScreenOrientation.Portrait;
+#if UNITY_EDITOR
+        ReadingWindowViewfinder.SetEditorGameViewOrientation(false);
+#endif
+
+        yield return null;
+
+        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Onboarding");
     }
 
     public void OnRescanButtonClicked()
