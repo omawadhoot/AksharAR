@@ -284,17 +284,32 @@ public class ARLineOverlayController : MonoBehaviour
 
         if (accessibilitySettingsBtn != null)
         {
+            accessibilitySettingsBtn.RegisterCallback<ClickEvent>(evt =>
+            {
+                OpenAccessibilityWizard();
+                evt.StopPropagation();
+            });
             accessibilitySettingsBtn.clicked += OpenAccessibilityWizard;
         }
 
         if (tabPoem != null)
         {
+            tabPoem.RegisterCallback<ClickEvent>(evt =>
+            {
+                SwitchReadingMode(ReadingMode.Poem);
+                evt.StopPropagation();
+            });
             onPoemClicked = () => SwitchReadingMode(ReadingMode.Poem);
             tabPoem.clicked += onPoemClicked;
         }
 
         if (tabChapter != null)
         {
+            tabChapter.RegisterCallback<ClickEvent>(evt =>
+            {
+                SwitchReadingMode(ReadingMode.Chapter);
+                evt.StopPropagation();
+            });
             onChapterClicked = () => SwitchReadingMode(ReadingMode.Chapter);
             tabChapter.clicked += onChapterClicked;
         }
