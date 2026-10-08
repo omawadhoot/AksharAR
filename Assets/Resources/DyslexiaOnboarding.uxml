@@ -2,8 +2,11 @@
     <Style src="project://database/Assets/Resources/DyslexiaOnboarding.uss?fileID=7433441132597879392&amp;guid=0296a755d2a3f724b877d0d16a878f29&amp;type=3#DyslexiaOnboarding"/>
     <ui:VisualElement name="OnboardingModalBackdrop" picking-mode="Position" class="wizard-fullscreen-root">
         
-        <!-- ── 1. Top Bar: Full-Width Duolingo Progress Bar + Step Counter ── -->
+        <!-- ── 1. Top Bar: Back Button + Full-Width Progress Bar + Step Counter ── -->
         <ui:VisualElement name="WizardTopBar" picking-mode="Ignore" class="wizard-top-bar">
+            <ui:Button name="WizardCloseButton" picking-mode="Position" class="wizard-back-top-btn">
+                <ui:VisualElement name="WizardCloseIcon" picking-mode="Ignore" class="wizard-back-top-icon"/>
+            </ui:Button>
             <ui:VisualElement name="WizardProgressSegments" picking-mode="Ignore" class="wizard-progress-bar">
                 <ui:VisualElement name="ProgressSeg1" picking-mode="Ignore" class="wizard-progress-seg wizard-progress-seg--active"/>
                 <ui:VisualElement name="ProgressSeg2" picking-mode="Ignore" class="wizard-progress-seg"/>

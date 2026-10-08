@@ -47,44 +47,76 @@ Button {
     padding-bottom: 72px;
 }
 
-/* ── 2. Top bar: Full-width Duolingo progress bar ── */
+/* ── 2. Top bar: Back Button + Full-Width Progress Bar ── */
 .wizard-top-bar {
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     width: 100%;
-    height: 60px;
+    height: 88px;
+    flex-shrink: 0;
+    margin-bottom: 24px;
+}
+
+.wizard-back-top-btn {
+    width: 88px;
+    height: 88px;
+    border-radius: 44px;
+    background-color: rgba(30, 41, 59, 0.85);
+    border-width: 3px;
+    border-color: rgba(56, 189, 248, 0.65);
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    margin-right: 28px;
+    padding: 0;
+    transition-property: scale, background-color, border-color;
+    transition-duration: 0.15s;
     flex-shrink: 0;
 }
 
-.wizard-step-accessible-label {
-    font-size: 38px;
-    color: rgb(226, 232, 240);
-    margin-left: 28px;
-    flex-shrink: 0;
+.wizard-back-top-btn:active {
+    scale: 0.92;
+    background-color: rgba(56, 189, 248, 0.35);
+    border-color: rgb(56, 189, 248);
+}
+
+.wizard-back-top-icon {
+    width: 44px;
+    height: 44px;
+    background-image: resource("Icons/Icon_Back");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    margin: 0;
+    padding: 0;
 }
 
 .wizard-progress-bar {
     flex-direction: row;
     align-items: center;
     flex-grow: 1;
-    height: 20px;
+    height: 88px;
+    margin: 0;
 }
 
 .wizard-progress-seg {
     flex-grow: 1;
     flex-basis: 0;
-    height: 18px;
-    border-radius: 9px;
+    height: 24px;
+    border-radius: 12px;
     background-color: rgba(255, 255, 255, 0.16);
-    margin-left: 6px;
-    margin-right: 6px;
+    margin-left: 8px;
+    margin-right: 8px;
     transition-property: background-color;
     transition-duration: 0.25s;
 }
 
 .wizard-progress-seg--active {
     background-color: rgb(56, 189, 248);
+}
+
+.wizard-step-accessible-label {
+    display: none;
 }
 
 .wizard-close-btn {

@@ -92,9 +92,9 @@ public class DyslexiaProfile
 
     public bool ShouldInsertSeparators()
     {
-        return enableSyllableSegmentation &&
-               colorPalette != ColorBlindPalette.Monochrome &&
-               (severity == DyslexiaSeverity.Moderate || severity == DyslexiaSeverity.Intensive);
+        // For Devanagari, middle dots (·) create visual noise and conflict with anusvara (ं) / nukta (़).
+        // Syllable boundaries are cleanly conveyed via dual-tone colors and font tracking (cspace).
+        return false;
     }
 
     public float GetWordSpacingMultiplier()

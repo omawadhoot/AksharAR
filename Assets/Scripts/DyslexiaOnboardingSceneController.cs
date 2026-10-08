@@ -18,6 +18,9 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
     [Header("Target AR Scene Name")]
     [SerializeField] private string targetSceneName = "Index";
 
+    [Header("Start Screen Scene Name")]
+    [SerializeField] private string homeSceneName = "StartScreen";
+
     private VisualElement rootElement;
     private VisualElement modalBackdrop;
     private Button closeBtn;
@@ -93,6 +96,21 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         LoadDyslexiaFonts();
     }
 
+    private void OnEnable()
+    {
+        AppLanguageManager.OnLanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        AppLanguageManager.OnLanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(AppLanguage lang)
+    {
+        UpdateLocalizedWizardText();
+    }
+
     private void Start()
     {
         InitializeUI();
@@ -153,6 +171,15 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         modalBackdrop = rootElement.Q<VisualElement>("OnboardingModalBackdrop");
 
         closeBtn = rootElement.Q<Button>("WizardCloseButton");
+        if (closeBtn != null)
+        {
+            var closeIcon = closeBtn.Q<VisualElement>("WizardCloseIcon");
+            var backTex = Resources.Load<Texture2D>("Icons/Icon_Back");
+            if (closeIcon != null && backTex != null)
+            {
+                closeIcon.style.backgroundImage = new StyleBackground(backTex);
+            }
+        }
         btnBack = rootElement.Q<Button>("WizardBackButton");
         btnNext = rootElement.Q<Button>("WizardNextButton");
         btnSkip = rootElement.Q<Button>("WizardSkipButton");
@@ -208,6 +235,7 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         ApplyFonts();
         BindEvents();
         EnsureDraftProfile();
+        UpdateLocalizedWizardText();
         ShowStep(0);
 
         Debug.Log("[DyslexiaOnboardingSceneController] Native 2D Screen-Space Onboarding UI ready.");
@@ -317,10 +345,10 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         }
 
         // TTS Read-Aloud Bindings
-        BindTTSButton(btnTtsStep1, "तुम्हाला कोणते वाचन अंतर योग्य वाटते?");
-        BindTTSButton(btnTtsStep2, "कोणता अक्षरांचा रंग वाचायला सोपा वाटतो?");
-        BindTTSButton(btnTtsStep3, "कोणता कागदाचा रंग वाचायला सोपा वाटतो?");
-        BindTTSButton(btnTtsStep4, "वाचन पूर्वावलोकन. तुमची वाचन रचना तयार आहे.");
+        BindTTSButton(btnTtsStep1, () => AppLanguageManager.WizardPromptStep1);
+        BindTTSButton(btnTtsStep2, () => AppLanguageManager.WizardPromptStep2);
+        BindTTSButton(btnTtsStep3, () => AppLanguageManager.WizardPromptStep3);
+        BindTTSButton(btnTtsStep4, () => AppLanguageManager.WizardPromptStep4);
 
         // Step 1 Severity Bindings
         BindCard(cardMild, () => SelectSeverity(DyslexiaSeverity.Mild));
@@ -340,11 +368,11 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         BindCard(chipPaperInpaint, () => SelectSubstrate(SubstrateTint.InpaintedPaper));
     }
 
-    private void BindTTSButton(Button btn, string marathiText)
+    private void BindTTSButton(Button btn, Func<string> textGetter)
     {
         if (btn == null) return;
-        btn.clicked -= () => PlayTTS(marathiText);
-        btn.clicked += () => PlayTTS(marathiText);
+        btn.clicked -= () => PlayTTS(textGetter());
+        btn.clicked += () => PlayTTS(textGetter());
     }
 
     private void PlayTTS(string text)
@@ -390,12 +418,12 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         if (btnBack != null)
         {
             btnBack.style.visibility = Visibility.Visible;
-            btnBack.text = currentStepIndex == 0 ? "डिफॉल्ट वापरा" : "← मागे";
+            btnBack.text = currentStepIndex == 0 ? AppLanguageManager.WizardBtnUseDefaults : AppLanguageManager.WizardBtnBack;
         }
 
         if (btnNext != null)
         {
-            btnNext.text = currentStepIndex == TOTAL_STEPS - 1 ? "वाचन सुरू करा ✓" : "पुढे →";
+            btnNext.text = currentStepIndex == TOTAL_STEPS - 1 ? AppLanguageManager.WizardBtnFinish : AppLanguageManager.WizardBtnNext;
         }
 
         UpdateVisualSelections();
@@ -483,8 +511,8 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
             livePreviewCard.style.backgroundColor = new StyleColor(tintColor);
         }
 
-        string line1Raw = "सुंदर फुले उमलली बागेत छान";
-        string line2Raw = "हळूच वारा सांगे आनंदाचे गाण";
+        string line1Raw = AppLanguageManager.WizardSlateLine1;
+        string line2Raw = AppLanguageManager.WizardSlateLine2;
 
         Color colA = draftProfile.GetSyllableColorA();
         Color colB = draftProfile.GetSyllableColorB();
@@ -512,31 +540,113 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         {
             string palName = draftProfile.colorPalette switch
             {
-                ColorBlindPalette.ClassicCobalt => "निळा रंग",
-                ColorBlindPalette.WarmAmber => "सोनेरी रंग",
-                ColorBlindPalette.VioletIris => "जांभळा रंग",
-                _ => "साधा / काळा रंग"
+                ColorBlindPalette.ClassicCobalt => AppLanguageManager.WizardPaletteCobalt,
+                ColorBlindPalette.WarmAmber => AppLanguageManager.WizardPaletteAmber,
+                ColorBlindPalette.VioletIris => AppLanguageManager.WizardPaletteViolet,
+                _ => AppLanguageManager.WizardPaletteMonochrome
             };
 
             string sevName = draftProfile.severity switch
             {
-                DyslexiaSeverity.Mild => "कमी अंतर",
-                DyslexiaSeverity.Moderate => "मध्यम अंतर",
-                _ => "जास्त अंतर"
+                DyslexiaSeverity.Mild => AppLanguageManager.WizardSeverityMild,
+                DyslexiaSeverity.Moderate => AppLanguageManager.WizardSeverityModerate,
+                _ => AppLanguageManager.WizardSeverityIntensive
             };
 
             string tintName = draftProfile.substrateTint switch
             {
-                SubstrateTint.WarmCream => "क्रीमी कागद",
-                SubstrateTint.MintIce => "हलका हिरवा",
-                SubstrateTint.Periwinkle => "हलका निळा",
-                _ => "नैसर्गिक कागद"
+                SubstrateTint.WarmCream => AppLanguageManager.WizardSubstrateCream,
+                SubstrateTint.MintIce => AppLanguageManager.WizardSubstrateMint,
+                SubstrateTint.Periwinkle => AppLanguageManager.WizardSubstratePeriwinkle,
+                _ => AppLanguageManager.WizardSubstratePaper
             };
 
             if (reviewValueSpacing != null) reviewValueSpacing.text = sevName;
             if (reviewValueColour != null) reviewValueColour.text = palName;
             if (reviewValuePaper != null) reviewValuePaper.text = tintName;
         }
+    }
+
+    private void UpdateLocalizedWizardText()
+    {
+        if (rootElement == null) return;
+
+        // Slate Header
+        var slateHeader = rootElement.Q<Label>(className: "wizard-slate-header-title");
+        if (slateHeader != null) slateHeader.text = AppLanguageManager.WizardSlateHeaderTitle;
+
+        // Step 1
+        if (step1Page != null)
+        {
+            var prompt = step1Page.Q<Label>(className: "wizard-prompt");
+            if (prompt != null) prompt.text = AppLanguageManager.WizardPromptStep1;
+            SetCardTitle(cardMild, AppLanguageManager.WizardSeverityMild);
+            SetCardTitle(cardModerate, AppLanguageManager.WizardSeverityModerate);
+            SetCardTitle(cardIntensive, AppLanguageManager.WizardSeverityIntensive);
+        }
+
+        // Step 2
+        if (step2Page != null)
+        {
+            var prompt = step2Page.Q<Label>(className: "wizard-prompt");
+            if (prompt != null) prompt.text = AppLanguageManager.WizardPromptStep2;
+            SetCardTitle(chipCobalt, AppLanguageManager.WizardPaletteCobalt);
+            SetCardTitle(chipAmber, AppLanguageManager.WizardPaletteAmber);
+            SetCardTitle(chipViolet, AppLanguageManager.WizardPaletteViolet);
+            SetCardTitle(chipMonochrome, AppLanguageManager.WizardPaletteMonochrome);
+        }
+
+        // Step 3
+        if (step3Page != null)
+        {
+            var prompt = step3Page.Q<Label>(className: "wizard-prompt");
+            if (prompt != null) prompt.text = AppLanguageManager.WizardPromptStep3;
+            SetSubstrateTitle(chipWarmCream, AppLanguageManager.WizardSubstrateCream);
+            SetSubstrateTitle(chipMintIce, AppLanguageManager.WizardSubstrateMint);
+            SetSubstrateTitle(chipPeriwinkle, AppLanguageManager.WizardSubstratePeriwinkle);
+            SetSubstrateTitle(chipPaperInpaint, AppLanguageManager.WizardSubstratePaper);
+        }
+
+        // Step 4
+        if (step4Page != null)
+        {
+            var prompt = step4Page.Q<Label>(className: "wizard-prompt");
+            if (prompt != null) prompt.text = AppLanguageManager.WizardPromptStep4;
+            var changeNote = step4Page.Q<Label>(className: "wizard-change-later-note");
+            if (changeNote != null) changeNote.text = AppLanguageManager.WizardChangeLaterNote;
+
+            var editChips = step4Page.Query<Label>(className: "wizard-review-edit-chip").ToList();
+            foreach (var chip in editChips)
+            {
+                chip.text = AppLanguageManager.WizardEditChip;
+            }
+        }
+
+        // Refresh navigation buttons and live preview text
+        if (btnBack != null)
+        {
+            btnBack.text = currentStepIndex == 0 ? AppLanguageManager.WizardBtnUseDefaults : AppLanguageManager.WizardBtnBack;
+        }
+        if (btnNext != null)
+        {
+            btnNext.text = currentStepIndex == TOTAL_STEPS - 1 ? AppLanguageManager.WizardBtnFinish : AppLanguageManager.WizardBtnNext;
+        }
+
+        UpdatePersistentLivePreview();
+    }
+
+    private void SetCardTitle(VisualElement card, string text)
+    {
+        if (card == null) return;
+        var lbl = card.Q<Label>(className: "wizard-card-title");
+        if (lbl != null) lbl.text = text;
+    }
+
+    private void SetSubstrateTitle(VisualElement card, string text)
+    {
+        if (card == null) return;
+        var lbl = card.Q<Label>(className: "wizard-tint-benefit");
+        if (lbl != null) lbl.text = text;
     }
 
     private void BindReviewRow(string rowName, int targetStep)
@@ -584,9 +694,23 @@ public class DyslexiaOnboardingSceneController : MonoBehaviour
         FinishAndTransition(currentStepIndex);
     }
 
+    private bool isTransitioningToHome = false;
+
     private void OnCloseOrFinishClicked()
     {
-        FinishAndTransition(-1);
+        if (isTransitioningToHome || isTransitioningToTarget) return;
+        isTransitioningToHome = true;
+
+        RecordStepDwellTime();
+        Debug.Log($"[DyslexiaOnboardingSceneController] User clicked Back/Exit at Step {currentStepIndex + 1} -> Returning to StartScreen ({homeSceneName})...");
+        StartCoroutine(TransitionToHomeRoutine());
+    }
+
+    private System.Collections.IEnumerator TransitionToHomeRoutine()
+    {
+        if (closeBtn != null) closeBtn.SetEnabled(false);
+        yield return new WaitForEndOfFrame();
+        SceneManager.LoadSceneAsync(homeSceneName);
     }
 
     private bool isTransitioningToTarget = false;
