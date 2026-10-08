@@ -15,9 +15,13 @@ public static class AndroidBuildDeployer
 
         string apkPath = Path.Combine(buildDirectory, "AksharAR.apk");
 
+        var activeScenes = System.Array.FindAll(EditorBuildSettings.scenes, s => s.enabled);
+        string[] scenePaths = new string[activeScenes.Length];
+        for (int i = 0; i < activeScenes.Length; i++) scenePaths[i] = activeScenes[i].path;
+
         BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions
         {
-            scenes = new[] { "Assets/Index.unity" },
+            scenes = scenePaths.Length > 0 ? scenePaths : new[] { "Assets/Scenes/StartScreen.unity", "Assets/Scenes/Onboarding.unity", "Assets/Index.unity" },
             locationPathName = apkPath,
             target = BuildTarget.Android,
             options = BuildOptions.None
