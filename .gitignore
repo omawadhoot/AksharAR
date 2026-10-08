@@ -79,3 +79,6 @@ backend-proxy/node_modules/
 backend-proxy/.env
 backend-proxy/.vercel/
 backend-proxy/*.log
+
+# Unity Auto-Recovery Scenes
+/[Aa]ssets/_Recovery/
