@@ -1,0 +1,52 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Resources/StartScreen.uss?fileID=7433441132597879392&amp;guid=fd76095f6e92a4d4e9c099af680e2146&amp;type=3#StartScreen"/>
+    
+    <ui:VisualElement name="StartScreenRoot" picking-mode="Position" class="start-fullscreen-root">
+        
+        <!-- ── 1. Top Navigation & Accessibility Bar ── -->
+        <ui:VisualElement name="StartTopBar" picking-mode="Ignore" class="start-top-bar">
+            <!-- Language Selector Dropdown Pill -->
+            <ui:Button name="BtnLanguageSelect" picking-mode="Position" class="start-lang-btn">
+                <ui:Label name="LblCurrentLanguage" text="मराठी  ▼" picking-mode="Ignore" class="start-lang-label"/>
+            </ui:Button>
+            
+            <!-- Settings Gear Button -->
+            <ui:Button name="BtnStartSettings" picking-mode="Position" class="start-settings-btn">
+                <ui:VisualElement picking-mode="Ignore" class="start-settings-icon"/>
+            </ui:Button>
+        </ui:VisualElement>
+
+        <!-- ── 2. Hero Center: Official Logo Artwork + Brand Tagline ── -->
+        <ui:VisualElement name="StartCenterSection" picking-mode="Ignore" class="start-center-section">
+            <ui:VisualElement name="StartLogoFrame" picking-mode="Ignore" class="start-logo-frame">
+                <ui:VisualElement name="OfficialLogoUnified" picking-mode="Ignore" class="official-logo-unified"/>
+            </ui:VisualElement>
+            
+            <ui:Label name="LblBrandSubtitle" text="तुमचा जादूई वाचन सोबती" picking-mode="Ignore" class="start-brand-subtitle"/>
+        </ui:VisualElement>
+
+        <!-- ── 3. Bottom Actions: Clean, Consistent, Centered Button Hierarchy ── -->
+        <ui:VisualElement name="StartActionsContainer" picking-mode="Ignore" class="start-actions-container">
+            
+            <!-- Primary Action: 'सुरुवात करा' (Get Started) -->
+            <ui:Button name="BtnGetStarted" picking-mode="Position" class="start-action-btn start-action-btn--primary">
+                <ui:Label name="LblGetStartedTitle" text="सुरुवात करा" picking-mode="Ignore" class="start-action-title start-action-title--primary"/>
+                <ui:Label name="LblGetStartedSub" text="तुमची वाचन रचना निवडा" picking-mode="Ignore" class="start-action-sub start-action-sub--primary"/>
+            </ui:Button>
+
+            <!-- Secondary Action 1: 'पुढे वाचा' (Continue Reading) -->
+            <ui:Button name="BtnContinueReading" picking-mode="Position" class="start-action-btn start-action-btn--secondary">
+                <ui:Label name="LblContinueReadingTitle" text="पुढे वाचा" picking-mode="Ignore" class="start-action-title start-action-title--secondary"/>
+                <ui:Label name="LblContinueReadingSub" text="थेट कॅमेऱ्याने पुस्तक वाचा" picking-mode="Ignore" class="start-action-sub start-action-sub--secondary"/>
+            </ui:Button>
+
+            <!-- Secondary Action 2: 'नमुना पुस्तक' (Demo Practice Card) -->
+            <ui:Button name="BtnDemoPractice" picking-mode="Position" class="start-action-btn start-action-btn--secondary">
+                <ui:Label name="LblDemoPracticeTitle" text="नमुना पुस्तक" picking-mode="Ignore" class="start-action-title start-action-title--secondary"/>
+                <ui:Label name="LblDemoPracticeSub" text="सराव करण्यासाठी उदाहरण" picking-mode="Ignore" class="start-action-sub start-action-sub--secondary"/>
+            </ui:Button>
+
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,205 @@
+/* ── AksharAR Start Screen Responsive USS ──
+   Canvas reference resolution: 1080x2400 (ScreenSpacePanelSettings)
+   Scale with Screen Size match: 0.5
+   Bold, prominent touch targets tailored for children & phone ergonomics
+── */
+
+.start-fullscreen-root,
+.start-lang-label,
+.start-brand-subtitle,
+.start-action-title,
+.start-action-sub,
+Label,
+Button {
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-font-definition: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular%20SDF.asset?fileID=11400000&guid=5fe2459c440cb534d91e6f7990e7d096&type=2#NeevA-Dyslexia-Regular SDF");
+    -unity-text-generator: advanced;
+}
+
+.start-fullscreen-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #FAF5E8; /* Warm dyslexia-friendly light background */
+    padding-left: 56px;
+    padding-right: 56px;
+    padding-top: 72px;
+    padding-bottom: 64px;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ── 1. Top Navigation Bar: Large, Chunky, Easy to Tap ── */
+.start-top-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 130px;
+    flex-shrink: 0;
+}
+
+.start-lang-btn {
+    height: 114px;
+    border-radius: 57px;
+    background-color: #1F5368;
+    padding-left: 52px;
+    padding-right: 52px;
+    justify-content: center;
+    align-items: center;
+    border-width: 0;
+    transition-property: scale, background-color;
+    transition-duration: 0.15s;
+}
+
+.start-lang-btn:active {
+    scale: 0.96;
+    background-color: #2D6B84;
+}
+
+.start-lang-label {
+    font-size: 52px;
+    -unity-font-style: bold;
+    color: #FFFFFF;
+    -unity-text-align: middle-center;
+}
+
+.start-settings-btn {
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+    background-color: #F8E3C5;
+    border-width: 0;
+    justify-content: center;
+    align-items: center;
+    transition-property: scale, background-color;
+    transition-duration: 0.15s;
+}
+
+.start-settings-btn:active {
+    scale: 0.94;
+    background-color: #F1D4AC;
+}
+
+.start-settings-icon {
+    width: 68px;
+    height: 68px;
+    background-image: resource("Icons/Icon_Settings");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: #D97706;
+}
+
+/* ── 2. Hero Center Section: Official Logo Artwork ── */
+.start-center-section {
+    width: 100%;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    margin-top: 6px;
+    margin-bottom: 20px;
+}
+
+.start-logo-frame {
+    width: 800px;
+    height: 780px;
+    max-height: 44%;
+    align-items: center;
+    justify-content: center;
+}
+
+.official-logo-unified {
+    width: 100%;
+    height: 100%;
+    background-image: resource("Textures/AksharAR_Single_Logo");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.start-brand-subtitle {
+    font-size: 48px;
+    color: #4A5B65;
+    -unity-font-style: bold;
+    margin-top: 20px;
+    -unity-text-align: middle-center;
+}
+
+/* ── 3. Bottom Actions: Large, Consistent, Centered Button Hierarchy ── */
+.start-actions-container {
+    width: 100%;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Base Shared Button Architecture (Height: 180px, Generous touch target) */
+.start-action-btn {
+    width: 100%;
+    height: 180px;
+    border-radius: 46px;
+    align-items: center;
+    justify-content: center;
+    padding-left: 32px;
+    padding-right: 32px;
+    margin-bottom: 20px;
+    transition-property: scale, background-color, border-color;
+    transition-duration: 0.15s;
+}
+
+/* Primary Action Variant ('सुरुवात करा') */
+.start-action-btn--primary {
+    background-color: #00B074;
+    border-width: 0;
+}
+
+.start-action-btn--primary:active {
+    scale: 0.97;
+    background-color: #009663;
+}
+
+/* Secondary Action Variant ('पुढे वाचा' & 'नमुना पुस्तक') */
+.start-action-btn--secondary {
+    background-color: #FFFFFF;
+    border-width: 4px;
+    border-color: #E6D8C3;
+}
+
+.start-action-btn--secondary:active {
+    scale: 0.97;
+    background-color: #FFFDF9;
+    border-color: #00B074;
+}
+
+/* Shared Typography (Bold, Readable, Strictly Center-Aligned) */
+.start-action-title {
+    font-size: 58px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+}
+
+.start-action-title--primary {
+    color: #FFFFFF;
+}
+
+.start-action-title--secondary {
+    color: #1E293B;
+}
+
+.start-action-sub {
+    font-size: 32px;
+    -unity-text-align: middle-center;
+    margin-top: 4px;
+    padding: 0;
+}
+
+.start-action-sub--primary {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.start-action-sub--secondary {
+    color: #64748B;
+}
