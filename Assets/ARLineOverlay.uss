@@ -38,15 +38,15 @@
 
 /* ── 1. Top Horizon Level Pill ── */
 .level-pill {
-    position: absolute;
-    top: 52px;
+    position: relative;
+    top: 0;
     align-self: center;
-    height: 84px;
-    padding-left: 36px;
-    padding-right: 36px;
-    border-radius: 42px;
+    height: 104px;
+    padding-left: 44px;
+    padding-right: 44px;
+    border-radius: 52px;
     background-color: rgba(4, 8, 16, 0.88);
-    border-width: 3px;
+    border-width: 3.5px;
     border-color: rgba(255, 255, 255, 0.25);
     align-items: center;
     justify-content: center;
@@ -66,7 +66,7 @@
 }
 
 .level-pill-text {
-    font-size: 34px;
+    font-size: 42px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: #3399FF;
@@ -129,6 +129,7 @@
     width: 86%;
     height: 38%;
     overflow: visible;
+    border-radius: 24px;
 }
 
 .reading-tint {
@@ -139,8 +140,9 @@
     bottom: 0;
     width: 100%;
     height: 100%;
-    border-radius: 12px;
-    background-color: rgba(255, 255, 255, 0.18);
+    border-radius: 24px;
+    background-image: resource("Textures/Blur_Overlay");
+    -unity-background-scale-mode: stretch-to-fill;
     transition-property: opacity;
     transition-duration: 0.25s;
     opacity: 1;
@@ -165,6 +167,7 @@
     left: 0;
     border-top-width: 12px;
     border-left-width: 12px;
+    border-top-left-radius: 24px;
 }
 
 .corner-tr {
@@ -172,6 +175,7 @@
     right: 0;
     border-top-width: 12px;
     border-right-width: 12px;
+    border-top-right-radius: 24px;
 }
 
 .corner-bl {
@@ -179,6 +183,7 @@
     left: 0;
     border-bottom-width: 12px;
     border-left-width: 12px;
+    border-bottom-left-radius: 24px;
 }
 
 .corner-br {
@@ -186,16 +191,17 @@
     right: 0;
     border-bottom-width: 12px;
     border-right-width: 12px;
+    border-bottom-right-radius: 24px;
 }
 
 .reading-box--level .corner-bracket {
     border-color: #00E676;
 }
 
-/* Drag Handles */
+/* ── Tactile Bookmark Ribbon Drag Handles ── */
 .drag-handle-bottom {
     position: absolute;
-    bottom: -72px;
+    bottom: -68px;
     left: 0;
     right: 0;
     margin-left: auto;
@@ -203,62 +209,100 @@
     width: 380px;
     height: 110px;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
-.handle-pill-h {
-    width: 180px;
-    height: 22px;
-    border-radius: 11px;
-    background-color: #3399FF;
-    transition-property: background-color, scale;
+.bookmark-ribbon-bottom {
+    width: 140px;
+    height: 48px;
+    border-bottom-left-radius: 18px;
+    border-bottom-right-radius: 18px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    background-color: #388BFD;
+    border-left-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 4px;
+    border-color: rgba(255, 255, 255, 0.4);
+    align-items: center;
+    justify-content: center;
+    transition-property: background-color, scale, border-color;
     transition-duration: 0.15s;
 }
 
-.drag-handle-bottom:active .handle-pill-h {
-    scale: 1.15 1.25;
-    background-color: #66DDFF;
+.bookmark-ribbon-stitch-h {
+    position: absolute;
+    top: 6px;
+    width: 80%;
+    height: 2px;
+    background-color: rgba(255, 255, 255, 0.55);
+    border-radius: 1px;
 }
 
-.handle-label-h {
-    font-size: 34px;
-    color: rgba(255, 255, 255, 0.88);
+.bookmark-ribbon-icon-h {
+    font-size: 22px;
+    color: #FFFFFF;
     -unity-text-align: middle-center;
     margin-top: 6px;
 }
 
+.drag-handle-bottom:active .bookmark-ribbon-bottom {
+    scale: 1.15 1.18;
+    background-color: #58A6FF;
+    border-color: #FFFFFF;
+}
+
 .drag-handle-right {
     position: absolute;
-    right: -72px;
+    right: -68px;
     top: 0;
     bottom: 0;
     margin-top: auto;
     margin-bottom: auto;
     width: 110px;
     height: 340px;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
-.handle-pill-v {
-    width: 22px;
-    height: 180px;
-    border-radius: 11px;
-    background-color: #3399FF;
-    transition-property: background-color, scale;
+.bookmark-ribbon-right {
+    width: 48px;
+    height: 140px;
+    border-top-right-radius: 18px;
+    border-bottom-right-radius: 18px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    background-color: #388BFD;
+    border-top-width: 3px;
+    border-bottom-width: 3px;
+    border-right-width: 4px;
+    border-color: rgba(255, 255, 255, 0.4);
+    align-items: center;
+    justify-content: center;
+    transition-property: background-color, scale, border-color;
     transition-duration: 0.15s;
 }
 
-.drag-handle-right:active .handle-pill-v {
-    scale: 1.25 1.15;
-    background-color: #66DDFF;
+.bookmark-ribbon-stitch-v {
+    position: absolute;
+    left: 6px;
+    height: 80%;
+    width: 2px;
+    background-color: rgba(255, 255, 255, 0.55);
+    border-radius: 1px;
 }
 
-.handle-label-v {
-    font-size: 30px;
-    color: rgba(255, 255, 255, 0.88);
+.bookmark-ribbon-icon-v {
+    font-size: 22px;
+    color: #FFFFFF;
     -unity-text-align: middle-center;
-    margin-left: 8px;
+    margin-left: 6px;
+}
+
+.drag-handle-right:active .bookmark-ribbon-right {
+    scale: 1.18 1.15;
+    background-color: #58A6FF;
+    border-color: #FFFFFF;
 }
 
 .drag-handle-corner {
@@ -271,26 +315,44 @@
     justify-content: center;
 }
 
-.handle-dot {
-    width: 46px;
-    height: 46px;
-    border-radius: 23px;
-    background-color: #3399FF;
+.bookmark-bead-corner {
+    width: 52px;
+    height: 52px;
+    border-radius: 26px;
+    background-color: #F1C40F;
     border-width: 4px;
-    border-color: rgba(255, 255, 255, 0.95);
-    transition-property: background-color, scale;
+    border-color: #FFFFFF;
+    align-items: center;
+    justify-content: center;
+    transition-property: background-color, scale, border-color;
     transition-duration: 0.15s;
 }
 
-.drag-handle-corner:active .handle-dot {
-    scale: 1.25 1.25;
-    background-color: #66DDFF;
+.bookmark-bead-glint {
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.85);
+    margin-right: 12px;
+    margin-bottom: 12px;
 }
 
-.reading-box--level .handle-pill-h,
-.reading-box--level .handle-pill-v,
-.reading-box--level .handle-dot {
+.drag-handle-corner:active .bookmark-bead-corner {
+    scale: 1.25 1.25;
+    background-color: #FFE066;
+    border-color: #FFFFFF;
+}
+
+/* ── Green Level Aligned State ── */
+.reading-box--level .bookmark-ribbon-bottom,
+.reading-box--level .bookmark-ribbon-right {
     background-color: #00E676;
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.reading-box--level .bookmark-bead-corner {
+    background-color: #00E676;
+    border-color: #FFFFFF;
 }
 
 /* ── 3. Camera Bottom Bar ── */
@@ -300,106 +362,70 @@
     left: 0;
     right: 0;
     width: 100%;
-    height: 420px;
+    height: 410px;
     background-color: rgba(3, 5, 8, 0.94);
     align-items: center;
     justify-content: flex-start;
-    padding-top: 24px;
+    padding-top: 20px;
+    padding-bottom: 24px;
 }
 
 .mode-carousel {
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    height: 110px;
-    margin-bottom: 24px;
+    height: 126px;
+    margin-bottom: 26px;
 }
 
 .mode-tab {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-left: 28px;
-    padding-right: 28px;
-    padding-top: 12px;
-    padding-bottom: 12px;
-    margin-left: 20px;
-    margin-right: 20px;
-    min-height: 90px;
+    padding-left: 36px;
+    padding-right: 36px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-left: 36px;
+    margin-right: 36px;
+    min-height: 110px;
     background-color: transparent;
     border-width: 0;
 }
 
-/* ── Rhythmic Verse & Prose Text Block Visual Icons (No Emojis) ── */
-.mode-icon {
-    width: 48px;
-    height: 36px;
-    justify-content: space-between;
-    margin-right: 18px;
-}
-
-.mode-icon--poem {
-    align-items: center;
-}
-
-.mode-icon--chapter {
-    align-items: flex-start;
-}
-
-.verse-bar {
-    height: 6px;
-    border-radius: 3px;
-    background-color: rgba(255, 255, 255, 0.45);
-    align-self: center;
-}
-
-.verse-bar--1 { width: 24px; }
-.verse-bar--2 { width: 48px; }
-.verse-bar--3 { width: 32px; }
-
-.prose-bar {
-    height: 6px;
-    border-radius: 3px;
-    background-color: rgba(255, 255, 255, 0.45);
-    align-self: flex-start;
-}
-
-.prose-bar--1 { width: 48px; }
-.prose-bar--2 { width: 48px; }
-.prose-bar--3 { width: 32px; }
-
 /* ── Bilingual Text Labels (Dyslexia Devanagari + Latin Subtitle) ── */
 .mode-text-group {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
 }
 
 .mode-label-devanagari {
     -unity-text-generator: advanced;
-    font-size: 56px;
-    color: rgba(255, 255, 255, 0.72);
+    font-size: 58px;
+    color: rgba(255, 255, 255, 0.45);
     -unity-font-style: bold;
-    -unity-text-align: middle-left;
+    -unity-text-align: middle-center;
     margin: 0;
     padding: 0;
 }
 
 .mode-label-latin {
-    font-size: 28px;
-    color: rgba(255, 255, 255, 0.52);
-    -unity-text-align: middle-left;
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.35);
+    -unity-text-align: middle-center;
     margin: 0;
-    margin-top: 4px;
+    margin-top: 2px;
     padding: 0;
 }
 
 .mode-dot {
-    width: 18px;
-    height: 18px;
-    border-radius: 9px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
     background-color: #FFB300;
-    margin-left: 18px;
+    margin-top: 8px;
+    margin-left: 0;
     align-self: center;
 }
 
@@ -408,14 +434,6 @@
 }
 
 /* ── Active Selection Accent ── */
-.mode-tab--active .verse-bar {
-    background-color: #FFB300;
-}
-
-.mode-tab--active .prose-bar {
-    background-color: #FFB300;
-}
-
 .mode-tab--active .mode-label-devanagari {
     color: #FFB300;
     -unity-font-style: bold;
@@ -426,14 +444,15 @@
     -unity-font-style: bold;
 }
 
+
 .camera-controls-row {
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
     width: 100%;
-    height: 190px;
-    padding-left: 40px;
-    padding-right: 40px;
+    height: 200px;
+    padding-left: 48px;
+    padding-right: 48px;
 }
 
 .control-side-slot {
@@ -508,11 +527,11 @@
 }
 
 .quick-rescan-btn {
-    width: 104px;
-    height: 104px;
-    border-radius: 52px;
-    background-color: rgba(15, 23, 42, 0.88);
-    border-width: 2.5px;
+    width: 132px;
+    height: 132px;
+    border-radius: 66px;
+    background-color: rgba(15, 23, 42, 0.92);
+    border-width: 3.5px;
     border-color: rgba(56, 189, 248, 0.85);
     align-items: center;
     justify-content: center;
@@ -522,14 +541,14 @@
 }
 
 .quick-rescan-btn:active {
-    scale: 0.90 0.90;
+    scale: 0.92 0.92;
     background-color: rgba(56, 189, 248, 0.35);
     border-color: #38BDF8;
 }
 
 .quick-rescan-icon {
-    width: 58px;
-    height: 58px;
+    width: 72px;
+    height: 72px;
     background-image: resource("Icons/Icon_Refresh");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: #FFFFFF;
@@ -575,7 +594,7 @@
 }
 
 .camera-bar--landscape .mode-tab {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     background-color: transparent;
@@ -633,8 +652,9 @@
 }
 
 .camera-bar--landscape .quick-rescan-btn {
-    width: 100px;
-    height: 100px;
+    width: 128px;
+    height: 128px;
+    border-radius: 64px;
     align-self: center;
 }
 
@@ -675,9 +695,19 @@
     position: absolute;
     right: 0px;
     top: 0px;
-    width: 88px;
-    height: 88px;
-    border-radius: 44px;
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+}
+
+.hud-overlay--landscape .home-top-button,
+.home-top-button.home-button--landscape {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
 }
 
 /* Container rules covering the absolute boundaries of the 2048x2898 Canvas */
@@ -767,31 +797,70 @@
     scale: 1.02;
 }
 
-/* ── Top Bar Controls (Level Pill + Accessibility Settings) ── */
+/* ── Top Bar Controls (Home + Level Pill + Accessibility Settings) ── */
 .top-controls-container {
     position: absolute;
     top: 52px;
     left: 28px;
     right: 28px;
-    height: 128px;
+    height: 120px;
     flex-direction: row;
     align-items: center;
     justify-content: center;
 }
 
-.settings-top-button {
+.home-top-button {
     position: absolute;
-    right: 0px;
-    width: 96px;
-    height: 96px;
-    border-radius: 48px;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
     background-color: rgba(15, 23, 42, 0.94);
-    border-width: 3.5px;
+    border-width: 4px;
     border-color: rgb(56, 189, 248);
     align-items: center;
     justify-content: center;
     padding: 0;
+    transition-property: scale, background-color, border-color;
+    transition-duration: 0.15s;
+}
+
+.home-top-button:active {
+    scale: 0.92;
+    background-color: rgb(2, 132, 199);
+    border-color: rgb(255, 255, 255);
+}
+
+.home-button-icon {
+    width: 64px;
+    height: 64px;
+    background-image: resource("Icons/Icon_Home");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
     margin: 0;
+    padding: 0;
+}
+
+.settings-top-button {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 120px;
+    height: 120px;
+    border-radius: 60px;
+    background-color: rgba(15, 23, 42, 0.94);
+    border-width: 4px;
+    border-color: rgb(56, 189, 248);
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     transition-property: scale, background-color, border-color;
     transition-duration: 0.15s;
 }
@@ -803,8 +872,8 @@
 }
 
 .settings-button-icon {
-    width: 52px;
-    height: 52px;
+    width: 68px;
+    height: 68px;
     background-image: resource("Icons/Icon_Settings");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: rgb(255, 255, 255);
@@ -870,6 +939,39 @@
     width: 100%;
     height: 112px;
     flex-shrink: 0;
+}
+
+.wizard-back-top-btn {
+    width: 88px;
+    height: 88px;
+    border-radius: 44px;
+    background-color: rgba(30, 41, 59, 0.85);
+    border-width: 3px;
+    border-color: rgba(56, 189, 248, 0.65);
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    margin-right: 28px;
+    padding: 0;
+    transition-property: scale, background-color, border-color;
+    transition-duration: 0.15s;
+    flex-shrink: 0;
+}
+
+.wizard-back-top-btn:active {
+    scale: 0.92;
+    background-color: rgba(56, 189, 248, 0.35);
+    border-color: rgb(56, 189, 248);
+}
+
+.wizard-back-top-icon {
+    width: 44px;
+    height: 44px;
+    background-image: resource("Icons/Icon_Back");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    margin: 0;
+    padding: 0;
 }
 
 .wizard-brand-group {

@@ -17,15 +17,21 @@
                 <ui:VisualElement name="CornerBL" picking-mode="Ignore" class="corner-bracket corner-bl"/>
                 <ui:VisualElement name="CornerBR" picking-mode="Ignore" class="corner-bracket corner-br"/>
                 <ui:VisualElement name="BottomHandle" picking-mode="Position" class="drag-handle-bottom">
-                    <ui:VisualElement name="BottomHandlePill" picking-mode="Ignore" class="handle-pill-h"/>
-                    <ui:Label text="═  ↕  ═" picking-mode="Ignore" class="handle-label-h"/>
+                    <ui:VisualElement name="BottomRibbonTab" picking-mode="Ignore" class="bookmark-ribbon-bottom">
+                        <ui:VisualElement name="BottomRibbonStitch" picking-mode="Ignore" class="bookmark-ribbon-stitch-h"/>
+                        <ui:Label text="▼" picking-mode="Ignore" class="bookmark-ribbon-icon-h"/>
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="RightHandle" picking-mode="Position" class="drag-handle-right">
-                    <ui:VisualElement name="RightHandlePill" picking-mode="Ignore" class="handle-pill-v"/>
-                    <ui:Label text="║&#10;↔&#10;║" picking-mode="Ignore" class="handle-label-v"/>
+                    <ui:VisualElement name="RightRibbonTab" picking-mode="Ignore" class="bookmark-ribbon-right">
+                        <ui:VisualElement name="RightRibbonStitch" picking-mode="Ignore" class="bookmark-ribbon-stitch-v"/>
+                        <ui:Label text="▶" picking-mode="Ignore" class="bookmark-ribbon-icon-v"/>
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="CornerHandle" picking-mode="Position" class="drag-handle-corner">
-                    <ui:VisualElement name="CornerDot" picking-mode="Ignore" class="handle-dot"/>
+                    <ui:VisualElement name="CornerBead" picking-mode="Ignore" class="bookmark-bead-corner">
+                        <ui:VisualElement name="CornerBeadGlint" picking-mode="Ignore" class="bookmark-bead-glint"/>
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -33,25 +39,15 @@
         <ui:VisualElement name="BottomBar" picking-mode="Ignore" class="camera-bottom-bar">
             <ui:VisualElement name="ModeCarousel" picking-mode="Ignore" class="mode-carousel">
                 <ui:Button name="TabPoem" picking-mode="Position" class="mode-tab mode-tab--active">
-                    <ui:VisualElement name="PoemIcon" picking-mode="Ignore" class="mode-icon mode-icon--poem">
-                        <ui:VisualElement picking-mode="Ignore" class="verse-bar verse-bar--1"/>
-                        <ui:VisualElement picking-mode="Ignore" class="verse-bar verse-bar--2"/>
-                        <ui:VisualElement picking-mode="Ignore" class="verse-bar verse-bar--3"/>
-                    </ui:VisualElement>
                     <ui:VisualElement picking-mode="Ignore" class="mode-text-group">
-                        <ui:Label name="PoemLabelDevanagari" text="कविता" picking-mode="Ignore" class="mode-label-devanagari" style="font-size: 46px;"/>
+                        <ui:Label name="PoemLabelDevanagari" text="कविता" picking-mode="Ignore" class="mode-label-devanagari"/>
                         <ui:Label name="PoemLabelLatin" text="Kavita" picking-mode="Ignore" class="mode-label-latin"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="PoemDot" picking-mode="Ignore" class="mode-dot"/>
                 </ui:Button>
                 <ui:Button name="TabChapter" picking-mode="Position" class="mode-tab">
-                    <ui:VisualElement name="ChapterIcon" picking-mode="Ignore" class="mode-icon mode-icon--chapter">
-                        <ui:VisualElement picking-mode="Ignore" class="prose-bar prose-bar--1"/>
-                        <ui:VisualElement picking-mode="Ignore" class="prose-bar prose-bar--2"/>
-                        <ui:VisualElement picking-mode="Ignore" class="prose-bar prose-bar--3"/>
-                    </ui:VisualElement>
                     <ui:VisualElement picking-mode="Ignore" class="mode-text-group">
-                        <ui:Label name="ChapterLabelDevanagari" text="धडा " picking-mode="Ignore" class="mode-label-devanagari" style="font-size: 46px;"/>
+                        <ui:Label name="ChapterLabelDevanagari" text="धडा" picking-mode="Ignore" class="mode-label-devanagari"/>
                         <ui:Label name="ChapterLabelLatin" text="Dhada" picking-mode="Ignore" class="mode-label-latin"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="ChapterDot" picking-mode="Ignore" class="mode-dot mode-dot--hidden"/>
@@ -72,8 +68,11 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- Top Controls & Level Pill (Rendered Above Viewfinder & Sidebar) -->
+        <!-- Top Controls: Home, Level Pill & Accessibility Settings -->
         <ui:VisualElement name="TopControlsContainer" picking-mode="Ignore" class="top-controls-container">
+            <ui:Button name="HomeButton" picking-mode="Position" class="home-top-button">
+                <ui:VisualElement name="HomeButtonIcon" picking-mode="Ignore" class="home-button-icon"/>
+            </ui:Button>
             <ui:VisualElement name="LevelPill" picking-mode="Ignore" class="level-pill level-pill--tilted">
                 <ui:Label name="LevelPillText" text="📐 TILT 0°" picking-mode="Ignore" class="level-pill-text"/>
             </ui:VisualElement>

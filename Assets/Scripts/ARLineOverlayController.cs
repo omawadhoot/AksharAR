@@ -50,9 +50,11 @@ public class ARLineOverlayController : MonoBehaviour
     private Button tabChapter;
     private Label poemLabelDevanagari;
     private Label chapterLabelDevanagari;
+    private Label chapterLabelLatin;
     private VisualElement poemDot;
     private VisualElement chapterDot;
     private Button accessibilitySettingsBtn;
+    private Button homeButton;
 
     private Texture2D currentFreezeTexture;
     private float lastScanClickTimestamp = -1f;
@@ -132,6 +134,21 @@ public class ARLineOverlayController : MonoBehaviour
         }
 
         UpdateShutterButtonState();
+    }
+
+    private void OnEnable()
+    {
+        AppLanguageManager.OnLanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnDisable()
+    {
+        AppLanguageManager.OnLanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(AppLanguage lang)
+    {
+        UpdateLocalizedModeLabels();
     }
 
     private void OnDestroy()
@@ -223,6 +240,17 @@ public class ARLineOverlayController : MonoBehaviour
             }
         }
 
+        var homeIconElem = rootElement.Q<VisualElement>("HomeButtonIcon");
+        if (homeIconElem != null)
+        {
+            var homeTex = Resources.Load<Texture2D>("Icons/Icon_Home");
+            if (homeTex != null)
+            {
+                homeIconElem.style.backgroundImage = new StyleBackground(homeTex);
+            }
+        }
+
+        homeButton = rootElement.Q<Button>("HomeButton");
         accessibilitySettingsBtn = rootElement.Q<Button>("AccessibilitySettingsButton");
 
         tabPoem = rootElement.Q<Button>("TabPoem");
@@ -232,9 +260,13 @@ public class ARLineOverlayController : MonoBehaviour
 
         poemLabelDevanagari = rootElement.Q<Label>("PoemLabelDevanagari");
         chapterLabelDevanagari = rootElement.Q<Label>("ChapterLabelDevanagari");
+        chapterLabelLatin = rootElement.Q<Label>("ChapterLabelLatin");
         ApplyDyslexiaFont(poemLabelDevanagari);
         ApplyDyslexiaFont(chapterLabelDevanagari);
+        ApplyDyslexiaFont(chapterLabelLatin);
         ApplyDyslexiaFont(shutterIcon);
+
+        UpdateLocalizedModeLabels();
 
         BindCallbacks();
 
@@ -280,6 +312,16 @@ public class ARLineOverlayController : MonoBehaviour
             quickRescanBtn.RegisterCallback(quickRescanPointerDownCallback);
             quickRescanBtn.RegisterCallback<ClickEvent>(evt => OnRescanButtonClicked());
             quickRescanBtn.clicked += OnRescanButtonClicked;
+        }
+
+        if (homeButton != null)
+        {
+            homeButton.RegisterCallback<ClickEvent>(evt =>
+            {
+                OnHomeButtonClicked();
+                evt.StopPropagation();
+            });
+            homeButton.clicked += OnHomeButtonClicked;
         }
 
         if (accessibilitySettingsBtn != null)
@@ -347,6 +389,11 @@ public class ARLineOverlayController : MonoBehaviour
         {
             accessibilitySettingsBtn.clicked -= OpenAccessibilityWizard;
         }
+
+        if (homeButton != null)
+        {
+            homeButton.clicked -= OnHomeButtonClicked;
+        }
     }
 
     private void SwitchReadingMode(ReadingMode mode)
@@ -380,6 +427,18 @@ public class ARLineOverlayController : MonoBehaviour
 
         if (accessibilitySettingsBtn != null)
             accessibilitySettingsBtn.style.display = DisplayStyle.Flex;
+    }
+
+    private void UpdateLocalizedModeLabels()
+    {
+        if (poemLabelDevanagari != null)
+            poemLabelDevanagari.text = AppLanguageManager.ModePoemDevanagari;
+
+        if (chapterLabelDevanagari != null)
+            chapterLabelDevanagari.text = AppLanguageManager.ModeChapterDevanagari;
+
+        if (chapterLabelLatin != null)
+            chapterLabelLatin.text = AppLanguageManager.ModeChapterLatin;
     }
 
     private void EnsureDyslexiaFont()
@@ -508,6 +567,37 @@ public class ARLineOverlayController : MonoBehaviour
         yield return null;
 
         UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Onboarding");
+    }
+
+    private bool isTransitioningToStart = false;
+
+    public void OnHomeButtonClicked()
+    {
+        if (isTransitioningToStart) return;
+        isTransitioningToStart = true;
+        Debug.Log("[ARLineOverlayController] >>> HOME BUTTON CLICKED <<< Returning to StartScreen.");
+        StartCoroutine(TransitionToStartScreenRoutine());
+    }
+
+    private System.Collections.IEnumerator TransitionToStartScreenRoutine()
+    {
+        if (homeButton != null)
+            homeButton.SetEnabled(false);
+
+        yield return new WaitForEndOfFrame();
+
+        Screen.autorotateToLandscapeLeft = false;
+        Screen.autorotateToLandscapeRight = false;
+        Screen.autorotateToPortraitUpsideDown = false;
+        Screen.autorotateToPortrait = true;
+        Screen.orientation = ScreenOrientation.Portrait;
+#if UNITY_EDITOR
+        ReadingWindowViewfinder.SetEditorGameViewOrientation(false);
+#endif
+
+        yield return null;
+
+        UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("StartScreen");
     }
 
     public void OnRescanButtonClicked()
