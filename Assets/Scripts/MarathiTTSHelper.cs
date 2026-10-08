@@ -93,6 +93,28 @@ public class MarathiTTSHelper : MonoBehaviour
     }
 #endif
 
+    private static AppLanguage currentLanguage = AppLanguage.Marathi;
+
+    public static void SetLanguage(AppLanguage lang)
+    {
+        currentLanguage = lang;
+#if UNITY_ANDROID && !UNITY_EDITOR
+        if (instance != null && instance.ttsInstance != null && instance.isAndroidTtsReady)
+        {
+            try
+            {
+                string code = (lang == AppLanguage.Hindi) ? "hi" : "mr";
+                AndroidJavaObject loc = new AndroidJavaObject("java.util.Locale", code, "IN");
+                instance.ttsInstance.Call<int>("setLanguage", loc);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MarathiTTSHelper] SetLanguage error: {ex.Message}");
+            }
+        }
+#endif
+    }
+
     public static void Speak(string text)
     {
         Instance.SpeakInternal(text);
