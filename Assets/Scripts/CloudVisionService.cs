@@ -523,7 +523,8 @@ public class CloudVisionService : MonoBehaviour
 
         if (wordTexts.Count == 0 || minX >= maxX || minY >= maxY) return;
 
-        string plateText = string.Join(" ", wordTexts).Trim();
+        string rawText = string.Join(" ", wordTexts).Trim();
+        string plateText = NormalizePunctuationSpacing(rawText);
         if (string.IsNullOrEmpty(plateText) || IsNoisePlate(plateText)) return;
 
         float width = maxX - minX;
@@ -803,7 +804,8 @@ public class CloudVisionService : MonoBehaviour
     {
         if (plateWords == null || plateWords.Count == 0) return;
 
-        string plateText = string.Join(" ", plateWords.Select(w => w.text)).Trim();
+        string rawText = string.Join(" ", plateWords.Select(w => w.text)).Trim();
+        string plateText = NormalizePunctuationSpacing(rawText);
         if (string.IsNullOrEmpty(plateText) || IsNoisePlate(plateText)) return;
 
         // Base the vertical bounding box on the actual lexical words in the plate (prevents punctuation/dandas from biasing Y)
@@ -825,5 +827,21 @@ public class CloudVisionService : MonoBehaviour
             text = plateText,
             boundingBox = new Rect(minX, minY, lineW, lineH)
         });
+    }
+
+    /// <summary>
+    /// Removes unnatural spaces before closing punctuation marks (e.g. "गेंडा ." -> "गेंडा.")
+    /// caused by Cloud Vision returning punctuation marks as separate word tokens.
+    /// </summary>
+    public static string NormalizePunctuationSpacing(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        // 1. Remove space before closing punctuation: . , ! ? : ; । ॥ ) ] } " ”
+        string cleaned = System.Text.RegularExpressions.Regex.Replace(text, @"\s+([.,!?:;।॥\)\]\}\u201D""])", "$1");
+        // 2. Remove space after opening punctuation: ( [ { " “
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"([\(\[\{\u201C""])\s+", "$1");
+        // 3. Ensure a space exists after comma, colon, semicolon if directly followed by a word
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"([,;:])([^\s\d.,;:])", "$1 $2");
+        return cleaned.Trim();
     }
 }

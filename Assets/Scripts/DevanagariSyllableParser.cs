@@ -224,16 +224,24 @@ public static class DevanagariSyllableParser
                     continue;
                 }
 
-                string currentHex = useColorA ? hexA : hexB;
+                bool isPunct = akshar.Length > 0 && char.IsPunctuation(akshar[0]);
+                string currentHex = isPunct ? hexA : (useColorA ? hexA : hexB);
                 sb.Append($"<color=#{currentHex}>{akshar}</color>");
 
-                // Add non-breaking subtle separator between syllables inside the same word (never after last syllable)
-                if (insertSeparators && k < akshars.Count - 1 && !string.IsNullOrWhiteSpace(akshars[k + 1]))
+                // Add non-breaking subtle separator between syllables inside the same word (never before or after punctuation)
+                if (insertSeparators && !isPunct && k < akshars.Count - 1 && !string.IsNullOrWhiteSpace(akshars[k + 1]))
                 {
-                    sb.Append(separatorTag);
+                    bool nextIsPunct = akshars[k + 1].Length > 0 && char.IsPunctuation(akshars[k + 1][0]);
+                    if (!nextIsPunct)
+                    {
+                        sb.Append(separatorTag);
+                    }
                 }
 
-                useColorA = !useColorA; // Alternate on next syllable
+                if (!isPunct)
+                {
+                    useColorA = !useColorA; // Alternate on next syllable
+                }
             }
 
             if (w < words.Length - 1)
