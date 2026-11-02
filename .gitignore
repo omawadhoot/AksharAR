@@ -77,8 +77,26 @@ InitTestScene*.unity*
 # Backend Proxy Node.js & Vercel Ignores
 backend-proxy/node_modules/
 backend-proxy/.env
+backend-proxy/.env.*
 backend-proxy/.vercel/
 backend-proxy/*.log
+.env
+.env.*
 
-# Unity Auto-Recovery Scenes
+# Unity Auto-Recovery & Generated Schemas
 /[Aa]ssets/_Recovery/
+/UIElementsSchema/
+
+# Android Signing Keys & Credentials
+*.keystore
+*.jks
+*google-services.json
+*service-account*.json
+
+# Internal Documentation, Patent Drafts, Posters & Helper Scripts
+/Patent_Drawings/
+/Poster/
+AksharAR_Architecture_Guide.pdf
+generate_architecture_pdf.py
+__pycache__/
+*.pyc
