@@ -668,6 +668,17 @@
     height: 100%;
 }
 
+.hud-overlay--landscape .freeze-frame-text-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 300px;
+    width: auto;
+    height: 100%;
+    overflow: hidden;
+}
+
 .hud-overlay--landscape .top-controls-container,
 .top-controls-container.top-controls-container--landscape {
     position: absolute;
@@ -768,9 +779,19 @@
 
 .freeze-frame-card {
     position: absolute;
-    border-radius: 8px;
+    border-radius: 18px;
+    border-width: 1.5px;
+    border-color: rgba(0, 0, 0, 0.08);
     transition-property: opacity, transform;
     transition-duration: 0.2s;
+}
+
+.freeze-frame-card--natural {
+    border-color: rgba(120, 95, 45, 0.12);
+}
+
+.freeze-frame-card--tinted {
+    border-color: rgba(0, 0, 0, 0.09);
 }
 
 .freeze-frame-line {
@@ -780,20 +801,21 @@
     white-space: nowrap;
     overflow: visible;
     background-color: transparent;
-    padding-left: 4px;
-    padding-right: 4px;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    margin: 0;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-top: -3px;
+    margin-bottom: -3px;
     border-width: 0;
-    border-radius: 4px;
+    border-radius: 8px;
     transition-property: background-color, color, scale;
     transition-duration: 0.15s;
 }
 
 .freeze-frame-line:active,
 .freeze-frame-line--highlighted {
-    background-color: rgba(255, 215, 0, 0.35);
+    background-color: rgba(255, 215, 0, 0.40);
     scale: 1.02;
 }
 
@@ -1362,4 +1384,698 @@
 .wizard-btn--next:active {
     background-color: rgb(3, 105, 161);
     scale: 0.96;
+}
+
+/* ══════════════════════════════════════════════════════════════════════ */
+/* 2D Focus Reader: Isolated Modal for Distraction-Free Reading          */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+.card-focus-reader-btn {
+    position: absolute;
+    background-color: #0284C7;
+    border-color: rgba(255, 255, 255, 0.45);
+    border-width: 2px;
+    border-radius: 24px;
+    color: #FFFFFF;
+    font-size: 22px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding-left: 18px;
+    padding-right: 18px;
+    height: 48px;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.card-focus-reader-btn:active {
+    background-color: #0369A1;
+    scale: 0.95;
+}
+
+.focus-reader-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(6, 11, 19);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.focus-reader-backdrop {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(6, 11, 19);
+    padding-left: 48px;
+    padding-right: 48px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ── Full-Width Header Bar ── */
+.focus-reader-header {
+    width: 100%;
+    max-width: 2304px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.focus-reader-title-group {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.focus-reader-title {
+    font-size: 34px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    letter-spacing: 1.5px;
+}
+
+.focus-reader-subtitle {
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.70);
+    margin-top: 4px;
+}
+
+.focus-reader-header-actions {
+    flex-direction: row;
+    align-items: center;
+}
+
+.focus-audio-btn {
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 28px;
+    border-radius: 22px;
+    border-width: 2px;
+    border-color: #10B981;
+    background-color: rgba(16, 185, 129, 0.22);
+    margin-right: 14px;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-audio-btn:active {
+    scale: 0.95;
+}
+
+.focus-audio-btn--muted {
+    border-color: #EF4444;
+    background-color: rgba(239, 68, 68, 0.22);
+}
+
+.focus-audio-icon {
+    font-size: 28px;
+    color: #FFFFFF;
+    margin-right: 10px;
+}
+
+.focus-audio-label {
+    font-size: 22px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+}
+
+.focus-reveal-all-btn {
+    padding: 12px 26px;
+    border-radius: 22px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.10);
+    margin-right: 14px;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-reveal-all-btn:active {
+    scale: 0.95;
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+.focus-reveal-all-label {
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.focus-close-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 29px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.28);
+    background-color: rgba(255, 255, 255, 0.12);
+    justify-content: center;
+    align-items: center;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-close-btn:active {
+    scale: 0.92;
+    background-color: rgba(239, 68, 68, 0.45);
+}
+
+.focus-close-icon {
+    font-size: 28px;
+    color: #FFFFFF;
+    -unity-text-align: middle-center;
+}
+
+/* ── Full-Width Kindle-Style Slate Card (Breathable 4-Line Viewport) ── */
+.focus-reader-slate-card {
+    width: 100%;
+    max-width: 2304px;
+    flex-grow: 1;
+    border-radius: 32px;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.14);
+    background-color: rgb(250, 248, 242);
+    padding-left: 64px;
+    padding-right: 64px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.focus-reader-lines-container {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: stretch;
+}
+
+/* ── Individual Kindle Reading Line ── */
+.focus-kindle-line {
+    width: 100%;
+    min-height: 110px;
+    padding-left: 44px;
+    padding-right: 44px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-radius: 24px;
+    border-width: 3px;
+    border-color: transparent;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    justify-content: center;
+    align-items: flex-start;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.18s;
+}
+
+.focus-kindle-line:active {
+    scale: 0.992;
+}
+
+.focus-kindle-line--revealed {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.focus-kindle-line--active {
+    border-color: rgb(2, 132, 199);
+    background-color: rgba(2, 132, 199, 0.12);
+    scale: 1.008;
+}
+
+.focus-kindle-line--masked {
+    border-color: rgba(0, 0, 0, 0.12);
+    border-style: dashed;
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.focus-kindle-line-text {
+    font-size: 44px;
+    color: rgb(15, 23, 42);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-left;
+    -unity-text-generator: advanced;
+}
+
+.focus-kindle-line-placeholder {
+    font-size: 30px;
+    color: rgba(71, 85, 105, 0.65);
+    -unity-font-style: italic;
+    -unity-text-align: middle-left;
+}
+
+/* ── Ergonomic Centered Footer Stepping Bar ── */
+.focus-reader-footer {
+    width: 100%;
+    max-width: 2304px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 6px;
+}
+
+.focus-nav-btn {
+    padding: 14px 44px;
+    border-radius: 24px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.22);
+    background-color: rgba(255, 255, 255, 0.10);
+    margin-left: 20px;
+    margin-right: 20px;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-nav-btn:active {
+    scale: 0.95;
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+.focus-nav-btn:disabled {
+    opacity: 0.35;
+}
+
+.focus-nav-btn--next {
+    background-color: rgb(2, 132, 199);
+    border-color: rgb(56, 189, 248);
+}
+
+.focus-nav-btn--next:active {
+    background-color: rgb(3, 105, 161);
+}
+
+.focus-nav-label {
+    font-size: 26px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+}
+
+.focus-progress-badge {
+    padding: 12px 36px;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.12);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.focus-progress-label {
+    font-size: 26px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+}\n
+/* ══════════════════════════════════════════════════════════════════
+   2D Focus Reader: Cleanly Isolated Modal Styles (Accessibility Tuned)
+   ══════════════════════════════════════════════════════════════════ */
+.card-focus-reader-btn {
+    border-radius: 24px;
+    border-width: 2px;
+    border-color: #38BDF8;
+    background-color: #0284C7;
+    color: #FFFFFF;
+    font-size: 22px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding-left: 20px;
+    padding-right: 20px;
+    height: 52px;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.card-focus-reader-btn:active {
+    background-color: #0369A1;
+    scale: 0.95;
+}
+
+.focus-reader-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(6, 11, 19);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.focus-reader-backdrop {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(6, 11, 19);
+    padding-left: 48px;
+    padding-right: 48px;
+    padding-top: 18px;
+    padding-bottom: 24px;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ── Full-Width Header Bar ── */
+.focus-reader-header {
+    width: 100%;
+    max-width: 2304px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+
+.focus-reader-title-group {
+    flex-direction: column;
+    justify-content: center;
+}
+
+.focus-reader-title {
+    font-size: 34px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    letter-spacing: 1.5px;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+.focus-reader-subtitle {
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-top: 4px;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+.focus-reader-header-actions {
+    flex-direction: row;
+    align-items: center;
+}
+
+.focus-audio-btn {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
+    padding-left: 28px;
+    padding-right: 28px;
+    border-radius: 32px;
+    border-width: 2px;
+    border-color: #10B981;
+    background-color: rgba(16, 185, 129, 0.28);
+    margin-right: 16px;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-audio-btn:active {
+    scale: 0.95;
+}
+
+.focus-audio-btn--muted {
+    border-color: #EF4444;
+    background-color: rgba(239, 68, 68, 0.28);
+}
+
+.focus-audio-icon {
+    font-size: 30px;
+    color: #FFFFFF;
+    margin-right: 10px;
+}
+
+.focus-audio-label {
+    font-size: 24px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+.focus-reveal-all-btn {
+    min-height: 64px;
+    padding-left: 28px;
+    padding-right: 28px;
+    border-radius: 32px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.35);
+    background-color: rgba(255, 255, 255, 0.16);
+    margin-right: 16px;
+    justify-content: center;
+    align-items: center;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-reveal-all-btn:active {
+    scale: 0.95;
+    background-color: rgba(255, 255, 255, 0.26);
+}
+
+.focus-reveal-all-label {
+    font-size: 24px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+.focus-close-btn {
+    width: 68px;
+    height: 68px;
+    min-width: 68px;
+    min-height: 68px;
+    border-radius: 34px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.35);
+    background-color: rgba(255, 255, 255, 0.16);
+    justify-content: center;
+    align-items: center;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-close-btn:active {
+    scale: 0.92;
+    background-color: rgba(239, 68, 68, 0.60);
+    border-color: #EF4444;
+}
+
+.focus-close-icon {
+    font-size: 34px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* ── Full-Width Kindle-Style Slate Card (Breathable 4-Line Viewport) ── */
+.focus-reader-slate-card {
+    width: 100%;
+    max-width: 2304px;
+    flex-grow: 1;
+    border-radius: 32px;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.14);
+    background-color: rgb(250, 248, 242);
+    padding-left: 64px;
+    padding-right: 64px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.focus-reader-lines-container {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: stretch;
+}
+
+/* ── Individual Kindle Reading Line ── */
+.focus-kindle-line {
+    width: 100%;
+    min-height: 110px;
+    padding-left: 44px;
+    padding-right: 44px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-radius: 24px;
+    border-width: 3px;
+    border-color: transparent;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    justify-content: center;
+    align-items: flex-start;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.18s;
+}
+
+.focus-kindle-line:active {
+    scale: 0.992;
+}
+
+.focus-kindle-line--revealed {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.focus-kindle-line--active {
+    border-color: rgb(2, 132, 199);
+    background-color: rgba(2, 132, 199, 0.12);
+    scale: 1.008;
+}
+
+.focus-kindle-line--masked {
+    border-color: rgba(0, 0, 0, 0.12);
+    border-style: dashed;
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.focus-kindle-line-text {
+    font-size: 44px;
+    color: rgb(15, 23, 42);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-left;
+    -unity-text-generator: advanced;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+}
+
+.focus-kindle-line-placeholder {
+    font-size: 30px;
+    color: rgba(71, 85, 105, 0.65);
+    -unity-font-style: italic;
+    -unity-text-align: middle-left;
+    -unity-text-generator: advanced;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+}
+
+/* ── Split Landscape Thumb-Friendly Stepping Bar ── */
+.focus-reader-footer {
+    width: 100%;
+    max-width: 2304px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 6px;
+    padding-bottom: 12px;
+}
+
+.focus-footer-center {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.focus-nav-btn {
+    min-height: 68px;
+    padding-left: 36px;
+    padding-right: 36px;
+    border-radius: 34px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.28);
+    background-color: rgba(255, 255, 255, 0.14);
+    justify-content: center;
+    align-items: center;
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-nav-btn:active {
+    scale: 0.95;
+    background-color: rgba(255, 255, 255, 0.24);
+}
+
+.focus-nav-btn:disabled {
+    opacity: 0.30;
+}
+
+.focus-nav-btn--next {
+    background-color: rgb(2, 132, 199);
+    border-color: rgb(56, 189, 248);
+}
+
+.focus-nav-btn--next:active {
+    background-color: rgb(3, 105, 161);
+}
+
+.focus-nav-btn--done {
+    background-color: rgb(16, 185, 129);
+    border-color: rgb(52, 211, 153);
+}
+
+.focus-nav-btn--done:active {
+    background-color: rgb(5, 150, 105);
+}
+
+.focus-nav-label {
+    font-size: 28px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+.focus-replay-btn {
+    min-height: 60px;
+    padding-left: 26px;
+    padding-right: 26px;
+    margin-left: 18px;
+    border-radius: 30px;
+    border-width: 2px;
+    border-color: rgba(56, 189, 248, 0.40);
+    background-color: rgba(2, 132, 199, 0.22);
+    justify-content: center;
+    align-items: center;
+    transition-property: background-color, scale;
+    transition-duration: 0.15s;
+}
+
+.focus-replay-btn:active {
+    scale: 0.95;
+    background-color: rgba(2, 132, 199, 0.40);
+}
+
+.focus-replay-label {
+    font-size: 24px;
+    color: rgb(186, 230, 253);
+    -unity-font-style: bold;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
+}
+
+.focus-progress-badge {
+    min-height: 60px;
+    padding-left: 32px;
+    padding-right: 32px;
+    border-radius: 30px;
+    background-color: rgba(255, 255, 255, 0.14);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.22);
+    justify-content: center;
+    align-items: center;
+}
+
+.focus-progress-label {
+    font-size: 28px;
+    color: #FFFFFF;
+    -unity-font-style: bold;
+    -unity-font: url("project://database/Assets/Fonts/NeevA-Dyslexia-Regular.ttf?fileID=12800000&guid=83e005baf2790934ebb370ef42525d05&type=3#NeevA-Dyslexia-Regular");
+    -unity-text-generator: advanced;
 }

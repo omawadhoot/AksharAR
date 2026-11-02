@@ -1,10 +1,9 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/ARLineOverlay.uss?fileID=7433441132597879392&amp;guid=ea9a53b44882d6d45aec87ea626c1e73&amp;type=3#ARLineOverlay"/>
-    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%;">
-        <ui:VisualElement name="FreezeFrameBackdrop" picking-mode="Ignore" class="freeze-frame-backdrop" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
-        <ui:VisualElement name="FreezeFrameVignette" picking-mode="Ignore" class="freeze-frame-vignette" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
-        <ui:VisualElement name="FreezeFrameTextContainer" picking-mode="Position" class="freeze-frame-text-container" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;" />
-        
+    <ui:VisualElement name="HUDOverlay" picking-mode="Ignore" class="hud-overlay" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: flex;">
+        <ui:VisualElement name="FreezeFrameBackdrop" picking-mode="Ignore" class="freeze-frame-backdrop" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;"/>
+        <ui:VisualElement name="FreezeFrameVignette" picking-mode="Ignore" class="freeze-frame-vignette" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;"/>
+        <ui:VisualElement name="FreezeFrameTextContainer" picking-mode="Position" class="freeze-frame-text-container" style="position: absolute; left: 0; top: 0; right: 0; bottom: 0; width: 100%; height: 100%; display: none;"/>
         <ui:VisualElement name="ViewfinderRoot" picking-mode="Ignore" class="viewfinder-root">
             <ui:VisualElement name="TopMask" picking-mode="Ignore" class="viewfinder-mask top-mask"/>
             <ui:VisualElement name="BottomMask" picking-mode="Ignore" class="viewfinder-mask bottom-mask"/>
@@ -35,7 +34,6 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-
         <ui:VisualElement name="BottomBar" picking-mode="Ignore" class="camera-bottom-bar">
             <ui:VisualElement name="ModeCarousel" picking-mode="Ignore" class="mode-carousel">
                 <ui:Button name="TabPoem" picking-mode="Position" class="mode-tab mode-tab--active">
@@ -67,8 +65,6 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-
-        <!-- Top Controls: Home, Level Pill & Accessibility Settings -->
         <ui:VisualElement name="TopControlsContainer" picking-mode="Ignore" class="top-controls-container">
             <ui:Button name="HomeButton" picking-mode="Position" class="home-top-button">
                 <ui:VisualElement name="HomeButtonIcon" picking-mode="Ignore" class="home-button-icon"/>
@@ -80,6 +76,47 @@
                 <ui:VisualElement name="SettingsButtonIcon" picking-mode="Ignore" class="settings-button-icon"/>
                 <ui:Label text="सुलभता" picking-mode="Ignore" class="settings-button-label"/>
             </ui:Button>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="FocusReaderOverlay" picking-mode="Position" class="focus-reader-overlay" style="display: none;">
+        <ui:VisualElement name="FocusReaderBackdrop" picking-mode="Position" class="focus-reader-backdrop">
+            <ui:VisualElement name="FocusReaderHeader" picking-mode="Ignore" class="focus-reader-header">
+                <ui:VisualElement picking-mode="Ignore" class="focus-reader-title-group">
+                    <ui:Label name="FocusReaderTitle" text="धडा वाचन कक्ष  •  FOCUS READER" class="focus-reader-title"/>
+                    <ui:Label name="FocusReaderSubtitle" text="ओळीवर टॅप करून वाचा किंवा ऐका" class="focus-reader-subtitle"/>
+                </ui:VisualElement>
+                <ui:VisualElement picking-mode="Ignore" class="focus-reader-header-actions">
+                    <ui:Button name="FocusAudioToggleBtn" picking-mode="Position" class="focus-audio-btn">
+                        <ui:Label name="FocusAudioIcon" text="🔊" picking-mode="Ignore" class="focus-audio-icon"/>
+                        <ui:Label name="FocusAudioLabel" text="आवाज: चालू" picking-mode="Ignore" class="focus-audio-label"/>
+                    </ui:Button>
+                    <ui:Button name="FocusRevealAllBtn" picking-mode="Position" class="focus-reveal-all-btn">
+                        <ui:Label name="FocusRevealAllLabel" text="सर्व दाखवा" picking-mode="Ignore" class="focus-reveal-all-label"/>
+                    </ui:Button>
+                    <ui:Button name="FocusCloseBtn" picking-mode="Position" class="focus-close-btn">
+                        <ui:Label text="✕" picking-mode="Ignore" class="focus-close-icon"/>
+                    </ui:Button>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="FocusReaderSlateCard" picking-mode="Position" class="focus-reader-slate-card">
+                <ui:VisualElement name="FocusReaderLinesContainer" picking-mode="Position" class="focus-reader-lines-container"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="FocusReaderFooter" picking-mode="Ignore" class="focus-reader-footer">
+                <ui:Button name="FocusPrevLineBtn" picking-mode="Position" class="focus-nav-btn focus-nav-btn--prev">
+                    <ui:Label name="FocusPrevLineLabel" text="◀ मागील ओळ" picking-mode="Ignore" class="focus-nav-label"/>
+                </ui:Button>
+                <ui:VisualElement picking-mode="Ignore" class="focus-footer-center">
+                    <ui:VisualElement picking-mode="Ignore" class="focus-progress-badge">
+                        <ui:Label name="FocusLineProgress" text="ओळ १ / १०" picking-mode="Ignore" class="focus-progress-label"/>
+                    </ui:VisualElement>
+                    <ui:Button name="FocusReplayAudioBtn" picking-mode="Position" class="focus-replay-btn">
+                        <ui:Label name="FocusReplayAudioLabel" text="🔁 पुन्हा ऐका" picking-mode="Ignore" class="focus-replay-label"/>
+                    </ui:Button>
+                </ui:VisualElement>
+                <ui:Button name="FocusNextLineBtn" picking-mode="Position" class="focus-nav-btn focus-nav-btn--next">
+                    <ui:Label name="FocusNextLineLabel" text="पुढील ओळ ▶" picking-mode="Ignore" class="focus-nav-label"/>
+                </ui:Button>
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

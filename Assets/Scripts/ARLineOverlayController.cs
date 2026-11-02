@@ -71,6 +71,31 @@ public class ARLineOverlayController : MonoBehaviour
     private System.Action onPoemClicked;
     private System.Action onChapterClicked;
 
+    // 2D Focus Reader UI Elements & State
+    private VisualElement focusReaderOverlay;
+    private VisualElement focusReaderSlateCard;
+    private VisualElement focusReaderLinesContainer;
+    private Button focusAudioToggleBtn;
+    private Label focusAudioIcon;
+    private Label focusAudioLabel;
+    private Button focusRevealAllBtn;
+    private Label focusRevealAllLabel;
+    private Button focusCloseBtn;
+    private Button focusPrevLineBtn;
+    private Label focusPrevLineLabel;
+    private Button focusNextLineBtn;
+    private Label focusNextLineLabel;
+    private Button focusReplayAudioBtn;
+    private Label focusLineProgress;
+
+    public bool IsFocusReaderOpen { get; private set; } = false;
+    private bool isFocusAudioEnabled = true;
+    private bool isFocusRevealAll = false;
+    private int focusWindowStartIndex = 0;
+    private int focusActiveLineIndex = 0;
+    private HashSet<int> focusRevealedLineIndices = new HashSet<int>();
+    private List<string> cachedFocusLines = new List<string>();
+
     private void Awake()
     {
         DisableLegacyCanvasIfPresent();
@@ -281,6 +306,7 @@ public class ARLineOverlayController : MonoBehaviour
 
         SetScanButtonText("📷 Scan Page");
         ApplyOrientationLayout(initialMode == ReadingMode.Chapter || Screen.width > Screen.height);
+        InitializeFocusReaderElements();
         Debug.Log("[ARLineOverlayController] UI Toolkit Camera HUD initialized successfully.");
     }
 
@@ -394,6 +420,12 @@ public class ARLineOverlayController : MonoBehaviour
         {
             homeButton.clicked -= OnHomeButtonClicked;
         }
+
+        if (focusCloseBtn != null) focusCloseBtn.clicked -= CloseFocusReader;
+        if (focusAudioToggleBtn != null) focusAudioToggleBtn.clicked -= ToggleFocusAudio;
+        if (focusRevealAllBtn != null) focusRevealAllBtn.clicked -= ToggleFocusRevealAll;
+        if (focusPrevLineBtn != null) focusPrevLineBtn.clicked -= StepFocusPrevLine;
+        if (focusNextLineBtn != null) focusNextLineBtn.clicked -= StepFocusNextLine;
     }
 
     private void SwitchReadingMode(ReadingMode mode)
@@ -809,6 +841,11 @@ public class ARLineOverlayController : MonoBehaviour
 
     public void ResetScanButton()
     {
+        if (IsFocusReaderOpen)
+        {
+            CloseFocusReader();
+        }
+
         isReadingMode = false;
         isScanningActive = false;
 
@@ -839,10 +876,15 @@ public class ARLineOverlayController : MonoBehaviour
             return;
         }
 
-        // 1. Completely hide the viewfinder so the reader enjoys an unobstructed view:
+        // 1. Query viewfinder Crop Rect BEFORE hiding it to ensure valid UI Toolkit geometry:
         if (cachedViewfinder == null)
             cachedViewfinder = FindFirstObjectByType<ReadingWindowViewfinder>();
 
+        Rect normCrop = (cachedViewfinder != null) 
+            ? cachedViewfinder.GetNormalizedCropRect() 
+            : new Rect(0.07f, 0.31f, 0.86f, 0.38f);
+
+        // Completely hide the viewfinder so the reader enjoys an unobstructed view:
         if (cachedViewfinder != null)
             cachedViewfinder.SetVisibility(false);
 
@@ -865,10 +907,8 @@ public class ARLineOverlayController : MonoBehaviour
         // 3. Compute viewport screen geometry
         float panelW = (rootElement != null && rootElement.layout.width > 10f) ? rootElement.layout.width : (float)Screen.width;
         float panelH = (rootElement != null && rootElement.layout.height > 10f) ? rootElement.layout.height : (float)Screen.height;
-
-        Rect normCrop = (cachedViewfinder != null) 
-            ? cachedViewfinder.GetNormalizedCropRect() 
-            : new Rect(0.07f, 0.31f, 0.86f, 0.38f);
+        bool isLandscape = panelW > panelH;
+        float maxSafeRight = isLandscape ? (panelW - 320f) : (panelW - 16f);
 
         float boxLeft = normCrop.x * panelW;
         float boxTop = (1.0f - normCrop.y - normCrop.height) * panelH;
@@ -916,9 +956,10 @@ public class ARLineOverlayController : MonoBehaviour
             float scaledW = Mathf.Max(30f, line.width * scaleX);
             float scaledH = Mathf.Max(24f, line.height * scaleY);
 
+            string cleanText = CloudVisionService.NormalizePunctuationSpacing(line.text);
             layouts.Add(new FreezeLineLayoutData
             {
-                text = line.text,
+                text = cleanText,
                 screenX = boxLeft + scaledX,
                 screenY = boxTop + scaledY,
                 width = scaledW,
@@ -926,8 +967,8 @@ public class ARLineOverlayController : MonoBehaviour
             });
         }
 
-        float hMarginPx = 20f;
-        float vMarginPx = 16f;
+        float hMarginPx = 24f;
+        float vMarginPx = 20f;
 
         bool insertSeparators = activeProfile.ShouldInsertSeparators();
 
@@ -943,12 +984,43 @@ public class ARLineOverlayController : MonoBehaviour
             blockCard.AddToClassList("freeze-frame-card--tinted");
         }
 
-        blockCard.style.left = Mathf.Max(0f, boxLeft + stanzaMinX - hMarginPx);
+        float cardLeft = Mathf.Max(0f, boxLeft + stanzaMinX - hMarginPx);
+        float rawCardWidth = (stanzaMaxX - stanzaMinX) + (hMarginPx * 2f);
+        float clampedCardWidth = Mathf.Min(rawCardWidth, Mathf.Max(60f, maxSafeRight - cardLeft));
+
+        blockCard.style.left = cardLeft;
         blockCard.style.top = Mathf.Max(0f, boxTop + stanzaMinY - vMarginPx);
-        blockCard.style.width = (stanzaMaxX - stanzaMinX) + (hMarginPx * 2f);
+        blockCard.style.width = clampedCardWidth;
         blockCard.style.height = (stanzaMaxY - stanzaMinY) + (vMarginPx * 2f);
         blockCard.style.backgroundColor = new StyleColor(finalSubstrateColor);
         freezeFrameTextContainer.Add(blockCard);
+
+        cachedFocusLines = layouts.Select(l => l.text).ToList();
+
+        // In Chapter Mode (or Landscape), provide a dedicated "📖 वाचन कक्ष (Focus Reader)" launch button
+        if (isLandscape || (cachedViewfinder != null && cachedViewfinder.ActiveReadingMode == ReadingMode.Chapter))
+        {
+            Button focusReaderBtn = new Button { name = "CardFocusReaderBtn" };
+            focusReaderBtn.AddToClassList("card-focus-reader-btn");
+            focusReaderBtn.text = "📖 वाचन कक्ष (Focus Reader)";
+            
+            var capturedLines = new List<string>(cachedFocusLines);
+            focusReaderBtn.RegisterCallback<ClickEvent>(evt =>
+            {
+                OpenFocusReader(capturedLines);
+                evt.StopPropagation();
+            });
+
+            float btnW = 310f;
+            float btnH = 48f;
+            focusReaderBtn.style.position = Position.Absolute;
+            focusReaderBtn.style.top = Mathf.Max(12f, boxTop + stanzaMinY - 58f);
+            focusReaderBtn.style.left = Mathf.Max(cardLeft, cardLeft + clampedCardWidth - btnW);
+            focusReaderBtn.style.width = btnW;
+            focusReaderBtn.style.height = btnH;
+
+            freezeFrameTextContainer.Add(focusReaderBtn);
+        }
 
         EnsureDyslexiaFont();
 
@@ -1015,13 +1087,13 @@ public class ARLineOverlayController : MonoBehaviour
         // 10. Multi-Stage Layout Fit Policy (Width & Font-Floor Adjustment)
         if (createdLabels.Count > 0)
         {
-            StartCoroutine(OptimizeFreezeFittingLoop(createdLabels, targetWidths, harmonizedFontSize, blockCard, boxLeft + stanzaMinX, hMarginPx, panelW));
+            StartCoroutine(OptimizeFreezeFittingLoop(createdLabels, targetWidths, harmonizedFontSize, blockCard, cardLeft, hMarginPx, panelW, isLandscape));
         }
 
         Debug.Log($"[Freeze-Frame AR] Rendered {createdLabels.Count} lines with Profile [Severity={activeProfile.severity}, Palette={activeProfile.colorPalette}, Tint={activeProfile.substrateTint}, Separators={insertSeparators}]");
     }
 
-    private IEnumerator OptimizeFreezeFittingLoop(List<Label> labels, List<float> targetWidths, float baseFontSize, VisualElement blockCard, float cardLeftX, float hMarginPx, float maxScreenWidth)
+    private IEnumerator OptimizeFreezeFittingLoop(List<Label> labels, List<float> targetWidths, float baseFontSize, VisualElement blockCard, float cardLeftX, float hMarginPx, float maxScreenWidth, bool isLandscape)
     {
         for (int i = 0; i < labels.Count; i++)
         {
@@ -1030,7 +1102,7 @@ public class ARLineOverlayController : MonoBehaviour
 
         yield return null;
 
-        float maxAllowedRight = maxScreenWidth - 16f;
+        float maxAllowedRight = isLandscape ? (maxScreenWidth - 320f) : (maxScreenWidth - 16f);
         float actualMaxRight = cardLeftX;
         bool needsFontScaleDown = false;
 
@@ -1050,10 +1122,23 @@ public class ARLineOverlayController : MonoBehaviour
             }
         }
 
-        // Policy Step 1 & 2: Scale font down toward readable floor (85%) if overflowing boundary
+        // Policy Step 1 & 2: Scale font down toward readable floor if overflowing boundary
         if (needsFontScaleDown)
         {
-            float reducedFontSize = Mathf.Max(18f, baseFontSize * 0.88f);
+            float maxOverflowRatio = 1f;
+            for (int i = 0; i < labels.Count; i++)
+            {
+                if (labels[i] == null) continue;
+                float lineRight = labels[i].layout.x + labels[i].layout.width;
+                if (lineRight > maxAllowedRight)
+                {
+                    float avail = Mathf.Max(50f, maxAllowedRight - labels[i].layout.x);
+                    float ratio = avail / Mathf.Max(50f, labels[i].layout.width);
+                    if (ratio < maxOverflowRatio) maxOverflowRatio = ratio;
+                }
+            }
+
+            float reducedFontSize = Mathf.Clamp(baseFontSize * maxOverflowRatio, 18f, baseFontSize);
             for (int i = 0; i < labels.Count; i++)
             {
                 labels[i].style.fontSize = reducedFontSize;
@@ -1069,10 +1154,11 @@ public class ARLineOverlayController : MonoBehaviour
             }
         }
 
-        // Policy Step 3: Expand card into free page margin up to screen boundary
+        // Policy Step 3: Expand card into free page margin up to screen / rail boundary
         if (blockCard != null && actualMaxRight > cardLeftX)
         {
-            float requiredW = Mathf.Min(maxScreenWidth - cardLeftX - 8f, (actualMaxRight - cardLeftX) + (hMarginPx * 2f));
+            float maxCardRight = isLandscape ? (maxScreenWidth - 320f) : (maxScreenWidth - 16f);
+            float requiredW = Mathf.Min(maxCardRight - cardLeftX, (actualMaxRight - cardLeftX) + (hMarginPx * 2f));
             blockCard.style.width = Mathf.Max(blockCard.style.width.value.value, requiredW);
         }
     }
@@ -1199,5 +1285,366 @@ public class ARLineOverlayController : MonoBehaviour
 
         if (quickRescanBtn != null)
             quickRescanBtn.SetEnabled(true);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // 2D Focus Reader: Cleanly Isolated Modal Controller
+    // ══════════════════════════════════════════════════════════════════════
+
+    private void InitializeFocusReaderElements()
+    {
+        if (rootElement == null) return;
+
+        focusReaderOverlay = rootElement.Q<VisualElement>("FocusReaderOverlay");
+        if (focusReaderOverlay == null) return;
+
+        focusReaderSlateCard = focusReaderOverlay.Q<VisualElement>("FocusReaderSlateCard");
+        focusReaderLinesContainer = focusReaderOverlay.Q<VisualElement>("FocusReaderLinesContainer");
+        focusAudioToggleBtn = focusReaderOverlay.Q<Button>("FocusAudioToggleBtn");
+        focusAudioIcon = focusReaderOverlay.Q<Label>("FocusAudioIcon");
+        focusAudioLabel = focusReaderOverlay.Q<Label>("FocusAudioLabel");
+        focusRevealAllBtn = focusReaderOverlay.Q<Button>("FocusRevealAllBtn");
+        focusRevealAllLabel = focusReaderOverlay.Q<Label>("FocusRevealAllLabel");
+        focusCloseBtn = focusReaderOverlay.Q<Button>("FocusCloseBtn");
+        focusPrevLineBtn = focusReaderOverlay.Q<Button>("FocusPrevLineBtn");
+        focusPrevLineLabel = focusReaderOverlay.Q<Label>("FocusPrevLineLabel");
+        focusNextLineBtn = focusReaderOverlay.Q<Button>("FocusNextLineBtn");
+        focusNextLineLabel = focusReaderOverlay.Q<Label>("FocusNextLineLabel");
+        focusReplayAudioBtn = focusReaderOverlay.Q<Button>("FocusReplayAudioBtn");
+        focusLineProgress = focusReaderOverlay.Q<Label>("FocusLineProgress");
+
+        ApplyDyslexiaFont(focusReaderOverlay.Q<Label>("FocusReaderTitle"));
+        ApplyDyslexiaFont(focusReaderOverlay.Q<Label>("FocusReaderSubtitle"));
+        ApplyDyslexiaFont(focusAudioLabel);
+        ApplyDyslexiaFont(focusRevealAllLabel);
+        ApplyDyslexiaFont(focusPrevLineLabel);
+        ApplyDyslexiaFont(focusNextLineLabel);
+        ApplyDyslexiaFont(focusLineProgress);
+        if (focusReplayAudioBtn != null)
+        {
+            ApplyDyslexiaFont(focusReplayAudioBtn.Q<Label>("FocusReplayAudioLabel"));
+        }
+
+        if (focusCloseBtn != null)
+        {
+            focusCloseBtn.clicked -= CloseFocusReader;
+            focusCloseBtn.clicked += CloseFocusReader;
+        }
+
+        if (focusAudioToggleBtn != null)
+        {
+            focusAudioToggleBtn.clicked -= ToggleFocusAudio;
+            focusAudioToggleBtn.clicked += ToggleFocusAudio;
+        }
+
+        if (focusRevealAllBtn != null)
+        {
+            focusRevealAllBtn.clicked -= ToggleFocusRevealAll;
+            focusRevealAllBtn.clicked += ToggleFocusRevealAll;
+        }
+
+        if (focusPrevLineBtn != null)
+        {
+            focusPrevLineBtn.clicked -= StepFocusPrevLine;
+            focusPrevLineBtn.clicked += StepFocusPrevLine;
+        }
+
+        if (focusNextLineBtn != null)
+        {
+            focusNextLineBtn.clicked -= StepFocusNextLine;
+            focusNextLineBtn.clicked += StepFocusNextLine;
+        }
+
+        if (focusReplayAudioBtn != null)
+        {
+            focusReplayAudioBtn.clicked -= ReplayFocusAudio;
+            focusReplayAudioBtn.clicked += ReplayFocusAudio;
+        }
+
+        // Default to hidden
+        focusReaderOverlay.style.display = DisplayStyle.None;
+    }
+
+    /// <summary>
+    /// Opens the 2D Focus Reader in Landscape with the provided chapter text lines.
+    /// Completely hides the AR HUD so no elements bleed or intercept touches.
+    /// </summary>
+    public void OpenFocusReader(List<string> lines)
+    {
+        if (lines == null || lines.Count == 0)
+        {
+            Debug.LogWarning("[ARLineOverlayController] Cannot open Focus Reader: lines list is empty.");
+            return;
+        }
+
+        if (focusReaderOverlay == null)
+        {
+            InitializeFocusReaderElements();
+        }
+
+        cachedFocusLines = new List<string>(lines);
+        IsFocusReaderOpen = true;
+        focusWindowStartIndex = 0;
+        focusActiveLineIndex = 0;
+        isFocusRevealAll = false;
+        focusRevealedLineIndices.Clear();
+        focusRevealedLineIndices.Add(0); // Reveal the first line initially so it's ready to read
+
+        MarathiTTSHelper.Stop();
+
+        // 1. Completely hide the underlying AR HUD
+        VisualElement hudOverlay = rootElement != null ? rootElement.Q<VisualElement>("HUDOverlay") : null;
+        if (hudOverlay != null)
+        {
+            hudOverlay.style.display = DisplayStyle.None;
+        }
+
+        // 2. Display the isolated Focus Reader modal
+        if (focusReaderOverlay != null)
+        {
+            focusReaderOverlay.style.display = DisplayStyle.Flex;
+            focusReaderOverlay.BringToFront();
+        }
+
+        // 3. Apply calibrated dyslexia substrate color to slate card
+        if (focusReaderSlateCard != null)
+        {
+            var profileMgr = DyslexiaProfileManager.Instance;
+            if (profileMgr != null)
+            {
+                Color slatePaperColor = profileMgr.Profile.GetSubstrateColor(new Color(0.98f, 0.97f, 0.94f, 1f));
+                focusReaderSlateCard.style.backgroundColor = new StyleColor(slatePaperColor);
+            }
+        }
+
+        UpdateFocusAudioButtonUI();
+        if (focusRevealAllLabel != null) focusRevealAllLabel.text = "सर्व दाखवा";
+
+        RenderFocusWindow();
+        Debug.Log($"[ARLineOverlayController] 2D Focus Reader opened cleanly with {cachedFocusLines.Count} lines.");
+    }
+
+    /// <summary>
+    /// Closes the 2D Focus Reader and returns to the Freeze & Frame AR screen cleanly.
+    /// </summary>
+    public void CloseFocusReader()
+    {
+        IsFocusReaderOpen = false;
+        MarathiTTSHelper.Stop();
+
+        if (focusReaderOverlay != null)
+        {
+            focusReaderOverlay.style.display = DisplayStyle.None;
+        }
+
+        // Restore the underlying AR HUD
+        VisualElement hudOverlay = rootElement != null ? rootElement.Q<VisualElement>("HUDOverlay") : null;
+        if (hudOverlay != null)
+        {
+            hudOverlay.style.display = DisplayStyle.Flex;
+        }
+
+        Debug.Log("[ARLineOverlayController] Closed 2D Focus Reader, restored AR HUD cleanly.");
+    }
+
+    public void ToggleFocusAudio()
+    {
+        isFocusAudioEnabled = !isFocusAudioEnabled;
+        UpdateFocusAudioButtonUI();
+        if (!isFocusAudioEnabled)
+        {
+            MarathiTTSHelper.Stop();
+        }
+    }
+
+    private void UpdateFocusAudioButtonUI()
+    {
+        if (focusAudioToggleBtn != null)
+            focusAudioToggleBtn.EnableInClassList("focus-audio-btn--muted", !isFocusAudioEnabled);
+
+        if (focusAudioIcon != null)
+            focusAudioIcon.text = isFocusAudioEnabled ? "🔊" : "🔇";
+
+        if (focusAudioLabel != null)
+            focusAudioLabel.text = isFocusAudioEnabled ? "आवाज: चालू" : "आवाज: बंद";
+    }
+
+    public void ToggleFocusRevealAll()
+    {
+        isFocusRevealAll = !isFocusRevealAll;
+        if (focusRevealAllLabel != null)
+            focusRevealAllLabel.text = isFocusRevealAll ? "पुन्हा लपवा" : "सर्व दाखवा";
+
+        if (isFocusRevealAll && cachedFocusLines != null)
+        {
+            for (int i = 0; i < cachedFocusLines.Count; i++)
+            {
+                focusRevealedLineIndices.Add(i);
+            }
+        }
+
+        RenderFocusWindow();
+    }
+
+    public void ReplayFocusAudio()
+    {
+        if (cachedFocusLines == null || cachedFocusLines.Count == 0) return;
+        if (focusActiveLineIndex >= 0 && focusActiveLineIndex < cachedFocusLines.Count)
+        {
+            MarathiTTSHelper.Speak(cachedFocusLines[focusActiveLineIndex]);
+        }
+    }
+
+    public void StepFocusNextLine()
+    {
+        if (cachedFocusLines == null || cachedFocusLines.Count == 0) return;
+        int total = cachedFocusLines.Count;
+
+        // If user is on the final line and taps to complete, cleanly finish and return to AR
+        if (focusActiveLineIndex >= total - 1)
+        {
+            CloseFocusReader();
+            return;
+        }
+
+        focusActiveLineIndex++;
+
+        if (focusActiveLineIndex >= focusWindowStartIndex + 4)
+        {
+            focusWindowStartIndex = Mathf.Min(Mathf.Max(0, total - 4), focusWindowStartIndex + 1);
+        }
+
+        focusRevealedLineIndices.Add(focusActiveLineIndex);
+
+        if (isFocusAudioEnabled)
+        {
+            MarathiTTSHelper.Speak(cachedFocusLines[focusActiveLineIndex]);
+        }
+
+        RenderFocusWindow();
+    }
+
+    public void StepFocusPrevLine()
+    {
+        if (cachedFocusLines == null || cachedFocusLines.Count == 0) return;
+
+        if (focusActiveLineIndex > 0)
+        {
+            focusActiveLineIndex--;
+        }
+
+        if (focusActiveLineIndex < focusWindowStartIndex)
+        {
+            focusWindowStartIndex = Mathf.Max(0, focusWindowStartIndex - 1);
+        }
+
+        if (isFocusAudioEnabled)
+        {
+            MarathiTTSHelper.Speak(cachedFocusLines[focusActiveLineIndex]);
+        }
+
+        RenderFocusWindow();
+    }
+
+    public void RenderFocusWindow()
+    {
+        if (focusReaderLinesContainer == null || cachedFocusLines == null || cachedFocusLines.Count == 0) return;
+
+        focusReaderLinesContainer.Clear();
+
+        var profileMgr = DyslexiaProfileManager.Instance;
+        DyslexiaProfile profile = profileMgr != null ? profileMgr.Profile : new DyslexiaProfile();
+        Color textCol = profile.GetSyllableColorA();
+        Color secondaryCol = profile.GetSyllableColorB();
+        bool useAlt = profile.severity != DyslexiaSeverity.Mild;
+        bool insertSeps = profile.severity == DyslexiaSeverity.Intensive;
+        float letSpace = profile.GetLetterSpacingEm();
+        float wordSpace = profile.GetWordSpacingMultiplier();
+
+        int totalLines = cachedFocusLines.Count;
+        int visibleCount = Mathf.Min(4, totalLines - focusWindowStartIndex);
+
+        for (int i = 0; i < visibleCount; i++)
+        {
+            int lineIdx = focusWindowStartIndex + i;
+            string rawLine = cachedFocusLines[lineIdx];
+
+            VisualElement lineSlot = new VisualElement();
+            lineSlot.AddToClassList("focus-kindle-line");
+
+            bool isRevealed = focusRevealedLineIndices.Contains(lineIdx) || isFocusRevealAll;
+            bool isActive = (lineIdx == focusActiveLineIndex);
+
+            if (isRevealed)
+            {
+                lineSlot.AddToClassList("focus-kindle-line--revealed");
+                if (isActive)
+                {
+                    lineSlot.AddToClassList("focus-kindle-line--active");
+                }
+
+                string formattedText = DevanagariSyllableParser.ColorizeSyllablesRichText(
+                    rawLine, textCol, secondaryCol, useAlt, insertSeps, letSpace, wordSpace
+                );
+                Label textLabel = new Label(formattedText);
+                textLabel.AddToClassList("focus-kindle-line-text");
+                ApplyDyslexiaFont(textLabel);
+                textLabel.style.color = new StyleColor(textCol);
+                lineSlot.Add(textLabel);
+            }
+            else
+            {
+                lineSlot.AddToClassList("focus-kindle-line--masked");
+                Label placeholderLabel = new Label("📖 टॅप करून वाचा  (Tap to read)");
+                placeholderLabel.AddToClassList("focus-kindle-line-placeholder");
+                ApplyDyslexiaFont(placeholderLabel);
+                lineSlot.Add(placeholderLabel);
+            }
+
+            int capturedIdx = lineIdx;
+            lineSlot.RegisterCallback<ClickEvent>(evt =>
+            {
+                focusActiveLineIndex = capturedIdx;
+                focusRevealedLineIndices.Add(capturedIdx);
+
+                if (isFocusAudioEnabled)
+                {
+                    MarathiTTSHelper.Speak(cachedFocusLines[capturedIdx]);
+                }
+
+                RenderFocusWindow();
+                evt.StopPropagation();
+            });
+
+            focusReaderLinesContainer.Add(lineSlot);
+        }
+
+        if (focusLineProgress != null)
+        {
+            focusLineProgress.text = $"ओळ {focusActiveLineIndex + 1} / {totalLines}";
+        }
+
+        if (focusPrevLineBtn != null)
+        {
+            focusPrevLineBtn.SetEnabled(focusWindowStartIndex > 0 || focusActiveLineIndex > 0);
+        }
+
+        if (focusNextLineBtn != null)
+        {
+            bool isLastLine = (focusActiveLineIndex >= totalLines - 1);
+            focusNextLineBtn.EnableInClassList("focus-nav-btn--done", isLastLine);
+            focusNextLineBtn.EnableInClassList("focus-nav-btn--next", !isLastLine);
+
+            if (focusNextLineLabel != null)
+            {
+                focusNextLineLabel.text = isLastLine ? "✓ वाचन पूर्ण" : "पुढील ओळ ▶";
+            }
+            focusNextLineBtn.SetEnabled(true);
+        }
+
+        if (focusReplayAudioBtn != null)
+        {
+            focusReplayAudioBtn.SetEnabled(isFocusAudioEnabled);
+        }
     }
 }
