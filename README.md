@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="Assets/Icons/AppIcon.png" alt="AksharAR App Icon" width="128" />
+
 # AksharAR
 ### Devanagari-Centric AR Assistive Framework for Dyslexic Children
 
