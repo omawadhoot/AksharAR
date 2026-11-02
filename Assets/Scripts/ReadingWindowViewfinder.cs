@@ -94,6 +94,8 @@ public class ReadingWindowViewfinder : MonoBehaviour
     private int lastScreenWidth = -1;
     private int lastScreenHeight = -1;
     private bool isViewfinderVisible = true;
+    private Rect cachedNormalizedCropRect = new Rect(0.07f, 0.31f, 0.86f, 0.38f);
+    private bool hasCachedCropRect = false;
 
     private void Awake()
     {
@@ -121,6 +123,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         CheckScreenSizeChange();
         UpdateDeviceTiltAndReticleColor();
         HandleTwoFingerPinch();
+        UpdateCachedCropRect();
     }
 
     private void InitializeUIToolkit()
@@ -617,10 +620,7 @@ public class ReadingWindowViewfinder : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Returns the normalized UV Rect [0..1] of the reading window relative to the full screen.
-    /// </summary>
-    public Rect GetNormalizedCropRect()
+    private void UpdateCachedCropRect()
     {
         if (readingBox != null && readingBox.layout.width > 10f && rootElement != null && rootElement.layout.width > 10f)
         {
@@ -630,12 +630,44 @@ public class ReadingWindowViewfinder : MonoBehaviour
             float bottom = 1.0f - (readingBox.worldBound.yMax / panelH);
             float width = readingBox.worldBound.width / panelW;
             float height = readingBox.worldBound.height / panelH;
-            return new Rect(left, bottom, width, height);
+
+            if (width > 0.05f && height > 0.05f)
+            {
+                cachedNormalizedCropRect = new Rect(left, bottom, width, height);
+                hasCachedCropRect = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns the normalized UV Rect [0..1] of the reading window relative to the full screen.
+    /// Safely relies on cached real-time UI Toolkit bounds to prevent zero-bound glitches when UI is hidden.
+    /// </summary>
+    public Rect GetNormalizedCropRect()
+    {
+        UpdateCachedCropRect();
+
+        if (hasCachedCropRect)
+        {
+            return cachedNormalizedCropRect;
         }
 
-        float fallbackLeft = (1f - windowWidthNormalized) / 2f;
-        float fallbackBottom = windowCenterYNormalized - (windowHeightNormalized / 2f);
-        return new Rect(fallbackLeft, fallbackBottom, windowWidthNormalized, windowHeightNormalized);
+        // Fallback: Compute geometrically accurate bounds accounting for the 300px landscape camera bar
+        float panelW = (rootElement != null && rootElement.layout.width > 10f) ? rootElement.layout.width : (float)Screen.width;
+        float panelH = (rootElement != null && rootElement.layout.height > 10f) ? rootElement.layout.height : (float)Screen.height;
+        bool isLandscape = panelW > panelH;
+
+        float activeW = isLandscape ? Mathf.Max(100f, panelW - 300f) : panelW;
+        float boxLeftPx = ((1f - windowWidthNormalized) / 2f) * activeW;
+        float boxWidthPx = windowWidthNormalized * activeW;
+
+        float normLeft = boxLeftPx / panelW;
+        float normWidth = boxWidthPx / panelW;
+        float normBottom = windowCenterYNormalized - (windowHeightNormalized / 2f);
+
+        cachedNormalizedCropRect = new Rect(normLeft, normBottom, normWidth, windowHeightNormalized);
+        hasCachedCropRect = true;
+        return cachedNormalizedCropRect;
     }
 
     /// <summary>
